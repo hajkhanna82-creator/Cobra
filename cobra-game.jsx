@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { supabase } from "./src/supabase.js";
+import { useRoom, saveRoomDB, loadRoomDB } from "./src/useRoom.js";
 
 const SUITS=["♠","♥","♦","♣"];
 const VALUES=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
@@ -172,19 +174,9 @@ const haptic={
   error(){try{if(navigator.vibrate)navigator.vibrate([50,20,50]);}catch(e){}},
 };
 
-const POLL_MS=1800;
-function saveRoom(c,s){
-  try{
-    if(window.storage&&window.storage.set)return window.storage.set("cobra:"+c,JSON.stringify(s),true);
-  }catch(e){}
-  return Promise.resolve();
-}
-function loadRoom(c){
-  try{
-    if(window.storage&&window.storage.get)return window.storage.get("cobra:"+c,true).then(function(r){return r?JSON.parse(r.value):null;});
-  }catch(e){}
-  return Promise.resolve(null);
-}
+// saveRoom / loadRoom now delegate to Supabase (see src/useRoom.js)
+function saveRoom(c,s){return saveRoomDB(c,s)||Promise.resolve();}
+function loadRoom(c){return loadRoomDB(c).then(function(r){return r||null;});}
 
 const GS=`
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
@@ -499,7 +491,7 @@ export default function Cobra(){
   const [flashScores,setFlashScores]=useState([]);
 
   const toastT=useRef(null);
-  const pollRef=useRef(null);
+  const pollRef=useRef(null); // kept for legacy; unused when Supabase is active
   const timerRef=useRef(null);
   const audioInit=useRef(false);
   const yourTurnTimer=useRef(null);
@@ -508,6 +500,24 @@ export default function Cobra(){
   useEffect(function(){phaseRef.current=phase;},[phase]);
   useEffect(function(){handsRef.current=hands;},[hands]);
   const H=myIdx;
+
+  // ── Supabase Realtime ────────────────────────────────
+  const onRoomUpdate=useCallback(function(room){
+    if(!room)return;
+    setOnlinePlayers(room.players.map(function(p){return p.name;}));
+    setOnlineStatus(room.players.length+"/"+room.maxPlayers);
+    if(room.status==="started"&&room.gameState){
+      var gs=room.gameState;
+      setHands(gs.hands);setDeck(gs.deck);setOpenPile(gs.openPile);
+      setMyPlayed(gs.myPlayed||[]);setCurrentPlayer(gs.currentPlayer);
+      setPhase(gs.phase);setScores(gs.scores);
+      setNames(room.players.map(function(p){return p.name;}));
+      setNPlayers(room.players.length);
+      setScreen("game");
+    }
+  },[]);
+
+  const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate});
 
   useEffect(function(){
     var m=document.querySelector('meta[name="theme-color"]');
@@ -552,8 +562,9 @@ export default function Cobra(){
 
   const goScreen=useCallback(function(s){
     audio.init();audio.resume();
+    if(s==="home")rtUnsubscribe();
     setScreen(s);
-  },[]);
+  },[rtUnsubscribe]);
 
   const pop=function(msg,type,ms){
     type=type||"info";ms=ms||2600;
@@ -636,8 +647,10 @@ export default function Cobra(){
     setRoomCode(code);setIsHost(true);setMyIdx(0);
     var room={code:code,host:myName,players:[{name:myName,idx:0}],maxPlayers:4,status:"lobby",gameState:null,ts:Date.now()};
     saveRoom(code,room).then(function(){
+      startLobbyPoll(code); // subscribe first so we hear our own broadcast
+      rtBroadcast(room);
       setOnlinePlayers([myName]);goScreen("lobby");
-      startLobbyPoll(code);pop("Room "+code+" created!","success");
+      pop("Room "+code+" created!","success");
       audio.init();audio.resume();audio.win();
     });
   }
@@ -654,27 +667,18 @@ export default function Cobra(){
       saveRoom(code,room).then(function(){
         setRoomCode(code);setIsHost(false);setMyIdx(idx);
         setOnlinePlayers(room.players.map(function(p){return p.name;}));
-        goScreen("lobby");startLobbyPoll(code);pop("Joined!","success");
+        startLobbyPoll(code);
+        rtBroadcast(room); // tell host + others a new player joined
+        goScreen("lobby");pop("Joined!","success");
       });
     });
   }
 
   function startLobbyPoll(code){
-    clearInterval(pollRef.current);
-    pollRef.current=setInterval(function(){
-      loadRoom(code).then(function(room){
-        if(!room)return;
-        setOnlinePlayers(room.players.map(function(p){return p.name;}));
-        setOnlineStatus(room.players.length+"/"+room.maxPlayers);
-        if(room.status==="started"&&room.gameState){
-          var gs=room.gameState;
-          setHands(gs.hands);setDeck(gs.deck);setOpenPile(gs.openPile);setMyPlayed(gs.myPlayed||[]);
-          setCurrentPlayer(gs.currentPlayer);setPhase(gs.phase);setScores(gs.scores);
-          setNames(room.players.map(function(p){return p.name;}));setNPlayers(room.players.length);
-          clearInterval(pollRef.current);goScreen("game");
-        }
-      });
-    },POLL_MS);
+    // Subscribe to Realtime channel for instant updates
+    rtSubscribe(code);
+    // Also load current DB state immediately (handles late-joiners / refresh)
+    loadRoom(code).then(function(room){if(room)onRoomUpdate(room);});
   }
 
   function startOnlineGame(){
@@ -685,10 +689,11 @@ export default function Cobra(){
       var gs={hands:h,deck:d,openPile:{cards:[],owner:-1},myPlayed:[],currentPlayer:0,phase:"declare",scores:Array(n).fill(0)};
       room.status="started";room.gameState=gs;
       saveRoom(roomCode,room).then(function(){
+        rtBroadcast(room); // push to all players simultaneously
         setNames(room.players.map(function(p){return p.name;}));setNPlayers(n);
         setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
         setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(Array(n).fill(0));
-        clearInterval(pollRef.current);goScreen("game");
+        goScreen("game");
       });
     });
   }
@@ -706,7 +711,9 @@ export default function Cobra(){
       saveRoom(globalCode,room).then(function(){
         setRoomCode(globalCode);setIsHost(idx===0);setMyIdx(idx);
         setOnlinePlayers(room.players.map(function(p){return p.name;}));
-        goScreen("lobby");startLobbyPoll(globalCode);
+        startLobbyPoll(globalCode);
+        rtBroadcast(room); // announce new player to everyone in global lobby
+        goScreen("lobby");
         pop("Finding players...","success");
       });
     });
