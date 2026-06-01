@@ -173,8 +173,18 @@ const haptic={
 };
 
 const POLL_MS=1800;
-function saveRoom(c,s){try{return window.storage.set("cobra:"+c,JSON.stringify(s),true);}catch(e){return Promise.resolve();}}
-function loadRoom(c){try{return window.storage.get("cobra:"+c,true).then(function(r){return r?JSON.parse(r.value):null;});}catch(e){return Promise.resolve(null);}}
+function saveRoom(c,s){
+  try{
+    if(window.storage&&window.storage.set)return window.storage.set("cobra:"+c,JSON.stringify(s),true);
+  }catch(e){}
+  return Promise.resolve();
+}
+function loadRoom(c){
+  try{
+    if(window.storage&&window.storage.get)return window.storage.get("cobra:"+c,true).then(function(r){return r?JSON.parse(r.value):null;});
+  }catch(e){}
+  return Promise.resolve(null);
+}
 
 const GS=`
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
@@ -507,25 +517,6 @@ export default function Cobra(){
     if(!v){v=document.createElement('meta');v.name='viewport';document.head.appendChild(v);}
     v.content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
     document.title='COBRA';
-    // Inject PWA manifest
-    if(!document.querySelector('link[rel="manifest"]')){
-      var mf=document.createElement('link');
-      mf.rel='manifest';
-      var manifest={
-        name:"COBRA - The Card Game",
-        short_name:"COBRA",
-        description:"The ultimate card game",
-        start_url:"/",
-        display:"standalone",
-        background_color:"#010603",
-        theme_color:"#010603",
-        orientation:"portrait",
-        icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>",sizes:"any",type:"image/svg+xml"}]
-      };
-      var blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
-      mf.href=URL.createObjectURL(blob);
-      document.head.appendChild(mf);
-    }
     // iOS Safari AudioContext fix — resume on visibility change
     function handleVis(){
       if(document.visibilityState==="visible"){
@@ -881,7 +872,6 @@ export default function Cobra(){
   }
 
   function finishRound(ns,res){
-    audio.scoreUpdate();
     var loser=ns.findIndex(function(s){return s>=LOSE;});
     var resWithScores=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
     var ned={results:resWithScores,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
