@@ -1,69 +1,54 @@
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const applePng = path.resolve('node_modules/emoji-datasource-apple/img/apple/64/1f40d.png');
 
-// Real Twemoji 🐍 SVG (unicode 1f40d) on dark background
-const twemojiSnake = fs.readFileSync(
-  path.resolve('node_modules/@twemoji/svg/1f40d.svg'), 'utf8'
-);
-
-// Wrap in a sized container with dark background and padding
-const snakeSvg = (size, withBg = true) => {
-  const pad = Math.round(size * 0.12);
+// Snake on dark rounded background
+const makeIcon = async (size, rounded = true) => {
+  const pad = Math.round(size * 0.1);
   const inner = size - pad * 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-  ${withBg ? `<rect width="${size}" height="${size}" rx="${Math.round(size * 0.22)}" fill="#010603"/>` : ''}
-  <svg x="${pad}" y="${pad}" width="${inner}" height="${inner}" viewBox="0 0 36 36">
-    ${twemojiSnake.replace(/<svg[^>]*>/, '').replace('</svg>', '')}
-  </svg>
-</svg>`;
+  const rx = rounded ? Math.round(size * 0.22) : 0;
+
+  const bg = Buffer.from(
+    `<svg width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${rx}" fill="#010603"/></svg>`
+  );
+  const snake = await sharp(applePng).resize(inner, inner).png().toBuffer();
+
+  return sharp(bg)
+    .composite([{ input: snake, left: pad, top: pad }])
+    .png()
+    .toBuffer();
 };
 
 // ── PWA Icons ──────────────────────────────────────────────────────────────
 const iconsDir = path.resolve('public/icons');
 fs.mkdirSync(iconsDir, { recursive: true });
 
-const iconSizes = [
-  { name: 'icon-72.png',           size: 72  },
-  { name: 'icon-96.png',           size: 96  },
-  { name: 'icon-128.png',          size: 128 },
-  { name: 'icon-144.png',          size: 144 },
-  { name: 'icon-152.png',          size: 152 },
-  { name: 'icon-180.png',          size: 180 },
-  { name: 'icon-192.png',          size: 192 },
-  { name: 'icon-384.png',          size: 384 },
-  { name: 'icon-512.png',          size: 512 },
-  { name: 'icon-512-maskable.png', size: 512 },
-];
-
-for (const { name, size } of iconSizes) {
-  await sharp(Buffer.from(snakeSvg(size, true)))
-    .png()
-    .toFile(path.join(iconsDir, name));
-  console.log(`✓ icons/${name}`);
+const iconSizes = [72, 96, 128, 144, 152, 180, 192, 384, 512];
+for (const size of iconSizes) {
+  const buf = await makeIcon(size);
+  await sharp(buf).toFile(path.join(iconsDir, `icon-${size}.png`));
+  console.log(`✓ icons/icon-${size}.png`);
 }
+// maskable — no rounding
+const maskable = await makeIcon(512, false);
+await sharp(maskable).toFile(path.join(iconsDir, 'icon-512-maskable.png'));
+console.log('✓ icons/icon-512-maskable.png');
 
 // ── Favicon ────────────────────────────────────────────────────────────────
 const publicDir = path.resolve('public');
 
-// SVG favicon (browser tab)
-const faviconSvgContent = snakeSvg(32, true);
-fs.writeFileSync(path.join(publicDir, 'favicon.svg'), faviconSvgContent);
-console.log('✓ favicon.svg');
-
 const pngs = await Promise.all(
   [16, 32, 48].map(async (size) => {
-    const buf = await sharp(Buffer.from(snakeSvg(size, true))).png().toBuffer();
-    await sharp(Buffer.from(snakeSvg(size, true))).png().toFile(path.join(publicDir, `favicon-${size}.png`));
+    const buf = await makeIcon(size);
+    await sharp(buf).toFile(path.join(publicDir, `favicon-${size}.png`));
     console.log(`✓ favicon-${size}.png`);
     return { size, buf };
   })
 );
 
-// Build ICO
+// ICO
 const ICONDIR_SIZE = 6, ENTRY_SIZE = 16, count = pngs.length;
 const headerSize = ICONDIR_SIZE + ENTRY_SIZE * count;
 let offset = headerSize;
@@ -79,6 +64,13 @@ pngs.forEach(({ size, buf }, i) => {
 });
 fs.writeFileSync(path.join(publicDir, 'favicon.ico'), Buffer.concat([header, ...pngs.map(p => p.buf)]));
 console.log('✓ favicon.ico');
+
+// SVG favicon just references the 32px png as base64
+const b64 = (await makeIcon(32)).toString('base64');
+fs.writeFileSync(path.join(publicDir, 'favicon.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"><image width="32" height="32" xlink:href="data:image/png;base64,${b64}"/></svg>`
+);
+console.log('✓ favicon.svg');
 
 // ── Splash Screens ─────────────────────────────────────────────────────────
 const splashDir = path.resolve('public/splash');
@@ -98,7 +90,7 @@ const screens = [
 
 for (const { w, h, name } of screens) {
   const iconSize = Math.round(Math.min(w, h) * 0.28);
-  const icon = await sharp(Buffer.from(snakeSvg(iconSize, true))).png().toBuffer();
+  const icon = await makeIcon(iconSize);
   await sharp({ create: { width: w, height: h, channels: 4, background: { r:1, g:6, b:3, alpha:1 } } })
     .composite([{ input: icon, gravity: 'center' }])
     .png()
@@ -106,4 +98,4 @@ for (const { w, h, name } of screens) {
   console.log(`✓ splash/${name}`);
 }
 
-console.log('\nAll assets generated with real Twemoji 🐍');
+console.log('\nAll assets generated with Apple 🐍');
