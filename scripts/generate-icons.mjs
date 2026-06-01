@@ -5,21 +5,21 @@ import path from 'path';
 const outDir = path.resolve('public/icons');
 fs.mkdirSync(outDir, { recursive: true });
 
-// Snake emoji SVG on dark green background
+// Snake emoji on transparent background
 const svgIcon = (size) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" rx="${Math.round(size * 0.22)}" fill="#010603"/>
   <text
     x="50%"
     y="54%"
     dominant-baseline="middle"
     text-anchor="middle"
-    font-size="${Math.round(size * 0.62)}"
+    font-size="${Math.round(size * 0.82)}"
     font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif"
   >🐍</text>
 </svg>`;
 
-// Maskable icon — emoji fills more of the canvas (safe zone is inner 80%)
+// Maskable icon — needs opaque background so OS doesn't clip to transparency
+// Keep dark green for maskable so it looks good on adaptive icon shapes
 const svgMaskable = (size) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <rect width="${size}" height="${size}" fill="#010603"/>
