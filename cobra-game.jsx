@@ -337,15 +337,68 @@ const Divider=({c})=><div style={{height:1,background:"linear-gradient(90deg,tra
 const SLabel=({children})=><p style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#8aad80",letterSpacing:2,marginBottom:12,textAlign:"center",textTransform:"uppercase"}}>{children}</p>;
 function ThinkingDots(){return(<div style={{display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(function(i){return(<div key={i} className="think_dot" style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",animationDelay:(i*0.22)+"s"}}/>);})}</div>);}
 
-function SoundControls({muted,musicMuted,onToggleSfx,onToggleMusic}){
+function MenuButton({onClick,active}){
   return(
-    <div style={{position:"fixed",bottom:16,right:16,zIndex:100,display:"flex",gap:7}}>
-      {[{fn:onToggleSfx,on:"🔊",off:"🔇",a:!muted},{fn:onToggleMusic,on:"🎶",off:"🎵",a:!musicMuted}].map(function(b,i){return(
-        <button key={i} onClick={b.fn} style={{width:44,height:44,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:b.a?"#d4a843":"#4b5563",transition:"all 0.2s",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>
-          {b.a?b.on:b.off}
-        </button>
-      );})}
-    </div>
+    <button onClick={onClick} style={{position:"fixed",top:16,right:16,zIndex:200,width:40,height:40,borderRadius:10,border:active?"1.5px solid #d4a843":"1px solid rgba(212,168,67,0.3)",background:"rgba(1,10,4,0.82)",backdropFilter:"blur(10px)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#d4a843",transition:"all 0.2s",touchAction:"manipulation",WebkitTapHighlightColor:"transparent",boxShadow:active?"0 0 16px rgba(212,168,67,0.25)":"none"}}>
+      {active?"✕":"☰"}
+    </button>
+  );
+}
+
+function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats}){
+  var winRate=gameStats.rounds>0?Math.round(gameStats.wins/gameStats.rounds*100):0;
+  return(
+    <>
+      <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:190,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(2px)",opacity:open?1:0,pointerEvents:open?"auto":"none",transition:"opacity 0.3s ease"}}/>
+      <div style={{position:"fixed",top:0,right:0,bottom:0,zIndex:195,width:"min(300px,88vw)",background:"rgba(1,10,4,0.96)",borderLeft:"1px solid rgba(212,168,67,0.25)",transform:open?"translateX(0)":"translateX(100%)",transition:"transform 0.45s cubic-bezier(.22,1.4,.36,1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid rgba(212,168,67,0.12)"}}>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:14,letterSpacing:4,margin:0}}>SETTINGS</h2>
+        </div>
+        <div style={{padding:"18px 20px 0"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>AUDIO</div>
+          {[{label:"Sound Effects",active:!sfxMuted,onToggle:onToggleSfx},{label:"Music",active:!musicMuted,onToggle:onToggleMusic}].map(function(item){
+            return(
+              <div key={item.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                <span style={{fontFamily:"Crimson Text,serif",color:"#8aad8a",fontSize:15}}>{item.label}</span>
+                <button onClick={item.onToggle} style={{width:46,height:26,borderRadius:13,border:"none",background:item.active?"#d4a843":"rgba(255,255,255,0.1)",cursor:"pointer",position:"relative",transition:"background 0.25s",padding:0,touchAction:"manipulation",WebkitTapHighlightColor:"transparent",flexShrink:0}}>
+                  <span style={{position:"absolute",top:3,left:item.active?23:3,width:20,height:20,borderRadius:"50%",background:item.active?"#3a2a00":"rgba(255,255,255,0.7)",transition:"left 0.25s",display:"block"}}/>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{margin:"6px 20px",height:1,background:"rgba(212,168,67,0.1)"}}/>
+        <div style={{padding:"14px 20px 0"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>GAME</div>
+          <button onClick={function(){onHowToPlay();onClose();}} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",cursor:"pointer",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,color:"#d4a843",display:"flex",alignItems:"center",gap:10,touchAction:"manipulation",WebkitTapHighlightColor:"transparent",transition:"background 0.2s"}}>
+            <span style={{fontSize:16}}>📖</span> HOW TO PLAY
+          </button>
+        </div>
+        <div style={{margin:"18px 20px 0",height:1,background:"rgba(212,168,67,0.1)"}}/>
+        <div style={{padding:"14px 20px 0"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>STATISTICS</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {[["🏆",gameStats.wins,"Wins"],["🃏",gameStats.rounds,"Rounds"],["🐍",gameStats.cobras,"Cobras"],["🔥",gameStats.streak||0,"Streak"]].map(function(row){return(
+              <div key={row[2]} style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.12)",borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
+                <div style={{fontSize:22}}>{row[0]}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:700,color:"#d4a843",marginTop:4}}>{row[1]}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#5a7a60",letterSpacing:1,marginTop:2}}>{row[2]}</div>
+              </div>
+            );})}
+          </div>
+          {gameStats.rounds>0&&(
+            <div style={{marginTop:10,padding:"10px 14px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.1)",borderRadius:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontFamily:"Crimson Text,serif",color:"#8aad8a",fontSize:14}}>Win Rate</span>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:700,color:"#d4a843"}}>{winRate}%</span>
+            </div>
+          )}
+        </div>
+        <div style={{flex:1}}/>
+        <div style={{padding:"14px 20px 28px",borderTop:"1px solid rgba(212,168,67,0.08)",marginTop:20}}>
+          <p style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#1a3020",letterSpacing:2,textAlign:"center",margin:0}}>COBRA v2.0 PREMIUM</p>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -467,8 +520,9 @@ export default function Cobra(){
   const [isHost,setIsHost]=useState(false);
   const [onlineStatus,setOnlineStatus]=useState("");
   const [cpuThinking,setCpuThinking]=useState(false);
-  const [sfxMuted,setSfxMuted]=useState(false);
-  const [musicMuted,setMusicMuted]=useState(false);
+  const [sfxMuted,setSfxMuted]=useState(function(){try{return localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){return false;}});
+  const [musicMuted,setMusicMuted]=useState(function(){try{return localStorage.getItem("cobra_mus_muted")==="1";}catch(e){return false;}});
+  const [showSettings,setShowSettings]=useState(false);
   const [showTutorial,setShowTutorial]=useState(false);
   const [tutorialDone,setTutorialDone]=useState(false);
   const [earnedAch,setEarnedAch]=useState(null);
@@ -902,8 +956,8 @@ export default function Cobra(){
     }
   }
 
-  const sfxToggle=function(){audio.toggleMute();setSfxMuted(function(v){return!v;});};
-  const musToggle=function(){audio.toggleMusic();setMusicMuted(function(v){return!v;});};
+  const sfxToggle=function(){audio.toggleMute();setSfxMuted(function(v){var n=!v;try{localStorage.setItem("cobra_sfx_muted",n?"1":"0");}catch(e){}return n;});};
+  const musToggle=function(){audio.toggleMusic();setMusicMuted(function(v){var n=!v;try{localStorage.setItem("cobra_mus_muted",n?"1":"0");}catch(e){}return n;});};
 
   if(showSplash)return(
     <div>
@@ -916,7 +970,7 @@ export default function Cobra(){
   if(screen==="achievements")return(
     <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
       <style>{GS}</style>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
         <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
         <div style={{textAlign:"center",marginBottom:20}}>
@@ -952,6 +1006,7 @@ export default function Cobra(){
           </div>
         </div>
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -964,7 +1019,7 @@ export default function Cobra(){
           <div key={i} className="orb_float" style={{position:"absolute",top:o.t,left:o.l,right:o.r,width:o.w,height:o.w,borderRadius:"50%",background:"radial-gradient(circle,"+o.c+",transparent 70%)",animationDelay:(i*2.8)+"s"}}/>
         );})}
       </div>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:400,width:"100%"}} className="anim_up">
         <div className="float" style={{marginBottom:10}}>
           <span style={{fontSize:88,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
@@ -1025,6 +1080,7 @@ export default function Cobra(){
             }}>RESET STATS</button>
         )}
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1032,7 +1088,7 @@ export default function Cobra(){
   if(screen==="howto")return(
     <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
       <style>{GS}</style>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:440,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
         <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
         <div className="panel" style={{padding:28}}>
@@ -1067,6 +1123,7 @@ export default function Cobra(){
           <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:4}} onClick={function(){audio.buttonClick();goScreen("home");}}>GOT IT</button>
         </div>
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1076,7 +1133,7 @@ export default function Cobra(){
     return(
       <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
         <style>{GS}</style>
-        <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+        <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
         <div style={{maxWidth:400,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
           <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
           <div className="panel" style={{padding:28}}>
@@ -1125,6 +1182,7 @@ export default function Cobra(){
             <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:14}} onClick={function(){audio.buttonClick();haptic.medium();setNames(ln);startCPU();}}>DEAL CARDS</button>
           </div>
         </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
   }
@@ -1133,7 +1191,7 @@ export default function Cobra(){
   if(screen==="setupRoom")return(
     <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
       <style>{GS}</style>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:400,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
         <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
         <div className="panel" style={{padding:28}}>
@@ -1154,6 +1212,7 @@ export default function Cobra(){
           <button className="btn_btn_outline_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5}} onClick={function(){audio.buttonClick();joinRoom();}}>JOIN ROOM</button>
         </div>
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1161,7 +1220,7 @@ export default function Cobra(){
   if(screen==="setupGlobal")return(
     <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
       <style>{GS}</style>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:400,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
         <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
         <div className="panel" style={{padding:28}}>
@@ -1179,6 +1238,7 @@ export default function Cobra(){
           <button className="btn_btn_green" style={{width:"100%",padding:16,fontSize:14,letterSpacing:2.5}} onClick={joinGlobal}>PLAY NOW</button>
         </div>
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1186,7 +1246,7 @@ export default function Cobra(){
   if(screen==="lobby")return(
     <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
       <style>{GS}</style>
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:420,width:"100%",textAlign:"center",position:"relative",zIndex:1}} className="anim_up">
         <p style={{fontFamily:"Cinzel,serif",color:"#4ade80",fontSize:12,letterSpacing:4,marginBottom:6}}>{roomCode==="COBRA_GLOBAL"?"GLOBAL ROOM":"ROOM CODE"}</p>
         <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:54,fontWeight:900,letterSpacing:14,marginBottom:6,textShadow:"0 0 32px rgba(212,168,67,0.45)"}}>{roomCode}</div>
@@ -1211,6 +1271,7 @@ export default function Cobra(){
           </div>
         }
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1284,7 +1345,7 @@ export default function Cobra(){
     return(
       <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:24,overflowY:"auto"}}>
         <style>{GS}</style>
-        <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+        <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
         <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
           <div style={{textAlign:"center",marginBottom:20,padding:"20px",background:redWinner?"rgba(212,168,67,0.08)":redCobra?"rgba(185,28,28,0.08)":"rgba(0,0,0,0.2)",borderRadius:20,border:redWinner?"1px solid rgba(212,168,67,0.2)":redCobra?"1px solid rgba(185,28,28,0.2)":"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{fontSize:48,marginBottom:8}}>{redWinner?"👑":redCobra?"🐍":"🃏"}</div>
@@ -1339,6 +1400,7 @@ export default function Cobra(){
             </button>
           </div>
         </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
   }
@@ -1349,7 +1411,7 @@ export default function Cobra(){
     return(
       <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
         <style>{GS}</style>
-        <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+        <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
         <div style={{maxWidth:420,width:"100%",textAlign:"center",position:"relative",zIndex:1}} className="anim_up">
           <div style={{fontSize:70,marginBottom:8,animation:"cobraBounce 1.2s ease-in-out 3"}}>👑</div>
           <h1 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:32,letterSpacing:7,margin:"0 0 4px",textShadow:"0 0 30px rgba(212,168,67,0.5)"}}>WINNER</h1>
@@ -1386,6 +1448,7 @@ export default function Cobra(){
             </button>
           </div>
         </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
   }
@@ -1443,7 +1506,7 @@ export default function Cobra(){
           </div>
         </div>
       )}
-      <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       {/* Exit confirm */}
       {showExitConfirm&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,background:"rgba(0,0,0,0.88)",backdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
@@ -1661,6 +1724,7 @@ export default function Cobra(){
           })}
         </div>
       </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
     </div>
   );
 }
