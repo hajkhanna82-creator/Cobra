@@ -422,7 +422,7 @@ function SplashScreen({onDone}){
     <div style={{position:"fixed",inset:0,background:"#010603",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:9999,animation:"fadeIn 0.3s ease"}}>
       <div style={{animation:"splashPop 0.6s cubic-bezier(.22,1.4,.36,1) both"}}>
         <div style={{marginBottom:16,animation:"float 2s ease-in-out infinite"}}>
-          <span style={{fontSize:80,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
+          <img src="/icons/icon-192.png" alt="COBRA" style={{width:96,height:96,display:"block"}}/>
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:12,background:"linear-gradient(175deg,#f4cc52,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",textAlign:"center",marginBottom:8}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:16,letterSpacing:6,textAlign:"center"}}>the ultimate card game</p>
@@ -967,7 +967,7 @@ export default function Cobra(){
       <SoundControls muted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle}/>
       <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:400,width:"100%"}} className="anim_up">
         <div className="float" style={{marginBottom:10}}>
-          <span style={{fontSize:76,lineHeight:1,display:"block"}}>🐍</span>
+          <img src="/icons/icon-192.png" alt="COBRA" style={{width:88,height:88,display:"block",margin:"0 auto"}}/>
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:10}}>the card game</p>
