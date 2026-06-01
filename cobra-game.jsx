@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "./src/supabase.js";
 import { useRoom, saveRoomDB, loadRoomDB } from "./src/useRoom.js";
+import QRCode from "qrcode";
 
 const SUITS=["♠","♥","♦","♣"];
 const VALUES=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
@@ -9,6 +10,7 @@ const cvHigh=c=>c.value==="A"?14:VM[c.value];
 const COBRA_PEN=30,LOSE=100,DECLARE_MAX=30,TURN_SEC=30;
 const CPU_P=[{thinkMs:1200,risk:0.25},{thinkMs:800,risk:0.65},{thinkMs:1500,risk:0.45},{thinkMs:700,risk:0.7}];
 const EMOJIS=["👀","🔥","😂","🐍","💀","😤","🤡","👑"];
+const AVATAR_EMOJIS=["😎","🤠","👑","🐍","🔥","💀","🎭","🃏"];
 const ACHIEVEMENTS=[
   {id:"first_win",icon:"🏆",name:"First Blood",desc:"Win your first round"},
   {id:"low_score",icon:"💎",name:"Diamond Hand",desc:"Declare with total 5 or under"},
@@ -172,6 +174,10 @@ const haptic={
   medium(){try{if(navigator.vibrate)navigator.vibrate(25);}catch(e){}},
   success(){try{if(navigator.vibrate)navigator.vibrate([10,5,20]);}catch(e){}},
   error(){try{if(navigator.vibrate)navigator.vibrate([50,20,50]);}catch(e){}},
+  cardPlay(){try{if(navigator.vibrate)navigator.vibrate([15,5,10]);}catch(e){}},
+  declare(){try{if(navigator.vibrate)navigator.vibrate([20,10,20,10,40]);}catch(e){}},
+  cobra(){try{if(navigator.vibrate)navigator.vibrate([80,30,80]);}catch(e){}},
+  win(){try{if(navigator.vibrate)navigator.vibrate([10,5,10,5,10,5,40]);}catch(e){}},
 };
 
 // saveRoom / loadRoom now delegate to Supabase (see src/useRoom.js)
@@ -225,6 +231,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes scoreFlash{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
 @keyframes borderGlow{0%,100%{box-shadow:0 0 8px rgba(185,28,28,0.3)}50%{box-shadow:0 0 28px rgba(185,28,28,0.8),0 0 50px rgba(185,28,28,0.4)}}
 @keyframes cobraShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-8px)}20%{transform:translateX(8px)}30%{transform:translateX(-6px)}40%{transform:translateX(6px)}50%{transform:translateX(-4px)}60%{transform:translateX(4px)}70%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+@keyframes elimBounce{0%,100%{transform:scale(1) translateY(0)}30%{transform:scale(1.3) translateY(-20px)}60%{transform:scale(0.9) translateY(-8px)}}
+@keyframes elimFadeIn{from{opacity:0}to{opacity:1}}
+.elim_shake{animation:shake 0.5s ease-in-out infinite;}
 .anim_up{animation:fadeUp 0.34s cubic-bezier(.22,1,.36,1) both;}
 .anim_up_screen_in{animation:fadeUp 0.34s cubic-bezier(.22,1,.36,1) both,screenIn 0.28s cubic-bezier(.22,1,.36,1) both;}
 .anim_in{animation:fadeIn 0.22s ease both;}
@@ -306,8 +316,8 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
   );
 }
 
-function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores}){
-  flashScores=flashScores||[];
+function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars}){
+  flashScores=flashScores||[];avatars=avatars||[];
   return(
     <div style={{display:"flex",gap:5,justifyContent:"center",flexWrap:"wrap"}}>
       {names.slice(0,nPlayers).map(function(n,i){
@@ -319,7 +329,7 @@ function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores}){
             boxShadow:active?"0 0 20px rgba(212,168,67,0.18)":danger?"0 0 14px rgba(185,28,28,0.22)":"none",
             opacity:out?0.45:1,
             transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,marginBottom:2,color:out?"#4b5563":active?"#d4a843":danger?"#f87171":warn?"#f59e0b":"#2a3d20",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:60}}>{out?"ELIMINATED":n}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,marginBottom:2,color:out?"#4b5563":active?"#d4a843":danger?"#f87171":warn?"#f59e0b":"#2a3d20",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:60}}>{avatars[i]?<span style={{marginRight:2}}>{avatars[i]}</span>:null}{out?"ELIMINATED":n}</div>
             <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,lineHeight:1,color:out?"#4b5563":danger?"#f87171":warn?"#fbbf24":active?"#d4a843":"#1a2d14",animation:flashScores[i]?"scoreFlash 0.6s ease both":"none",transition:"color 0.4s"}}>
               {s}
               {flashScores[i]&&<span style={{fontSize:10,color:"#f87171",marginLeft:3,animation:"scoreFlash 0.6s ease both"}}>!</span>}
@@ -647,6 +657,13 @@ export default function Cobra(){
   const [playingCardIds,setPlayingCardIds]=useState([]);
   const [pickingUp,setPickingUp]=useState(false);
   const [flashScores,setFlashScores]=useState([]);
+  const [myAvatar,setMyAvatar]=useState("😎");
+  const [installPrompt,setInstallPrompt]=useState(null);
+  const [installDismissed,setInstallDismissed]=useState(function(){try{return localStorage.getItem("cobra_install_dismissed")==="1";}catch(e){return false;}});
+  const [showQR,setShowQR]=useState(false);
+  const [qrDataUrl,setQrDataUrl]=useState("");
+  const [elimAnim,setElimAnim]=useState(null); // {name, idx}
+  const prevPlayersCount=useRef(0);
 
   const toastT=useRef(null);
   const pollRef=useRef(null); // kept for legacy; unused when Supabase is active
@@ -662,7 +679,15 @@ export default function Cobra(){
   // ── Supabase Realtime ────────────────────────────────
   const onRoomUpdate=useCallback(function(room){
     if(!room)return;
-    setOnlinePlayers(room.players.map(function(p){return p.name;}));
+    var newPlayers=room.players.map(function(p){return p.name;});
+    // Detect join: player count increased
+    if(prevPlayersCount.current>0&&newPlayers.length>prevPlayersCount.current){
+      var joined=newPlayers[newPlayers.length-1];
+      pop(joined+" joined the room!","success",2400);
+      try{audio.init();audio.resume();var ctx=audio._ctx;if(ctx&&audio._sfxGain&&!audio._muted){var o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=880;g.gain.setValueAtTime(0.0001,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08,ctx.currentTime+0.01);g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.3);o.connect(g);g.connect(audio._sfxGain);o.start();o.stop(ctx.currentTime+0.35);}}catch(e){}
+    }
+    prevPlayersCount.current=newPlayers.length;
+    setOnlinePlayers(newPlayers);
     setOnlineStatus(room.players.length+"/"+room.maxPlayers);
     if(room.status==="started"&&room.gameState){
       var gs=room.gameState;
@@ -676,6 +701,13 @@ export default function Cobra(){
   },[]);
 
   const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate});
+
+  // PWA install prompt listener
+  useEffect(function(){
+    function handleInstall(e){e.preventDefault();setInstallPrompt(e);}
+    window.addEventListener("beforeinstallprompt",handleInstall);
+    return function(){window.removeEventListener("beforeinstallprompt",handleInstall);};
+  },[]);
 
   useEffect(function(){
     var m=document.querySelector('meta[name="theme-color"]');
@@ -805,6 +837,7 @@ export default function Cobra(){
     setRoomCode(code);setIsHost(true);setMyIdx(0);
     var room={code:code,host:myName,players:[{name:myName,idx:0}],maxPlayers:4,status:"lobby",gameState:null,ts:Date.now()};
     saveRoom(code,room).then(function(){
+      setMode("online");
       startLobbyPoll(code); // subscribe first so we hear our own broadcast
       rtBroadcast(room);
       setOnlinePlayers([myName]);goScreen("lobby");
@@ -823,6 +856,7 @@ export default function Cobra(){
       var idx=room.players.length;
       room.players.push({name:myName,idx:idx});
       saveRoom(code,room).then(function(){
+        setMode("online");
         setRoomCode(code);setIsHost(false);setMyIdx(idx);
         setOnlinePlayers(room.players.map(function(p){return p.name;}));
         startLobbyPoll(code);
@@ -867,6 +901,7 @@ export default function Cobra(){
       var idx=room.players.length;
       room.players.push({name:myName.trim(),idx:idx});
       saveRoom(globalCode,room).then(function(){
+        setMode("online");
         setRoomCode(globalCode);setIsHost(idx===0);setMyIdx(idx);
         setOnlinePlayers(room.players.map(function(p){return p.name;}));
         startLobbyPoll(globalCode);
@@ -894,7 +929,7 @@ export default function Cobra(){
   function doPlay(){
     if(!sel.length){pop("Select cards to play","warning");return;}
     if(!isValidSeq(sel)){pop("Not a valid sequence","error");haptic.error();return;}
-    audio.init();audio.resume();audio.cardPlay();haptic.light();
+    audio.init();audio.resume();audio.cardPlay();haptic.cardPlay();
     setPrevHand([...hands[H]]);
     setPlayingCardIds(sel.map(function(c){return c.id;}));
     var played=sel.slice();
@@ -1005,7 +1040,7 @@ export default function Cobra(){
   function doDeclare(){
     var myTotal=ht(hands[H]);
     if(myTotal>DECLARE_MAX){pop("Need total 30 or under to declare (yours: "+myTotal+")","error");haptic.error();return;}
-    audio.init();audio.resume();audio.declare();haptic.medium();
+    audio.init();audio.resume();audio.declare();haptic.declare();
     var totals=hands.map(function(h){return ht(h);});
     var minT=Math.min.apply(null,totals);
     var iWin=myTotal===minT&&totals.filter(function(t){return t===minT;}).length===1;
@@ -1013,7 +1048,7 @@ export default function Cobra(){
     if(iWin){
       ns=ns.map(function(s,i){return i===H?s:s+totals[i];});
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?0:totals[i],cobra:false,winner:i===H};});
-      setTimeout(function(){audio.win();haptic.success();},600);
+      setTimeout(function(){audio.win();haptic.win();},600);
       unlockAch("first_win");
       if(myTotal<=5)unlockAch("low_score");
       var elapsed=(Date.now()-roundStart)/1000;
@@ -1028,7 +1063,7 @@ export default function Cobra(){
     } else {
       var pen=COBRA_PEN+myTotal;ns[H]+=pen;
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?pen:0,cobra:i===H,winner:false};});
-      setTimeout(function(){audio.cobraStrike();haptic.error();},300);
+      setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
     }
@@ -1046,7 +1081,10 @@ export default function Cobra(){
     setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});setPrevHand(null);
     if(loser>=0){
       var winner=ns.indexOf(Math.min.apply(null,ns));
-      setGameOverData({scores:ns,winner:winner,loser:loser});setScreen("gameOver");
+      setGameOverData({scores:ns,winner:winner,loser:loser});
+      // Show elimination animation then go to gameOver
+      setElimAnim({name:names[loser],idx:loser});
+      setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
     } else {setScreen("roundEnd");}
   }
 
@@ -1182,6 +1220,22 @@ export default function Cobra(){
             }}>RESET STATS</button>
         )}
       </div>
+      {/* PWA Install Banner */}
+      {!installDismissed&&(installPrompt||/iphone|ipad|ipod/i.test(navigator.userAgent))&&(
+        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:300,background:"linear-gradient(135deg,#a87020,#d4a843,#c49030)",padding:"14px 20px calc(14px + env(safe-area-inset-bottom))",display:"flex",alignItems:"center",gap:12,boxShadow:"0 -4px 24px rgba(0,0,0,0.5)"}}>
+          <span style={{fontSize:22,flexShrink:0}}>📲</span>
+          <span style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"#120c00",flex:1,lineHeight:1.4}}>
+            {installPrompt?"Add COBRA to your home screen":"/iphone|ipad|ipod/i".test(navigator.userAgent)?"Tap Share → Add to Home Screen":"Add COBRA to your home screen"}
+          </span>
+          {installPrompt&&(
+            <button onClick={function(){
+              installPrompt.prompt();
+              installPrompt.userChoice.then(function(){setInstallPrompt(null);try{localStorage.setItem("cobra_install_dismissed","1");}catch(e){}setInstallDismissed(true);});
+            }} style={{background:"rgba(0,0,0,0.25)",border:"1.5px solid rgba(0,0,0,0.3)",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,color:"#120c00",padding:"8px 14px",cursor:"pointer",flexShrink:0,touchAction:"manipulation",fontWeight:700}}>INSTALL</button>
+          )}
+          <button onClick={function(){setInstallDismissed(true);try{localStorage.setItem("cobra_install_dismissed","1");}catch(e){};}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#120c00",flexShrink:0,touchAction:"manipulation",padding:4}}>✕</button>
+        </div>
+      )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
@@ -1275,6 +1329,12 @@ export default function Cobra(){
                 );
               })}
             </div>
+            <SLabel>YOUR AVATAR</SLabel>
+            <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+              {AVATAR_EMOJIS.map(function(em){return(
+                <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+              );})}
+            </div>
             <SLabel>YOUR NAME</SLabel>
             <input defaultValue={names[0]} onChange={function(e){ln[0]=e.target.value;}} style={{marginBottom:16}} placeholder="Your name"/>
             <SLabel>CPU NAMES</SLabel>
@@ -1302,6 +1362,12 @@ export default function Cobra(){
             <h2 style={{fontFamily:"Cinzel,serif",color:"#60a5fa",fontSize:22,letterSpacing:4,marginTop:8}}>MULTIPLAYER</h2>
           </div>
           <Divider c="#60a5fa"/>
+          <SLabel>YOUR AVATAR</SLabel>
+          <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+            {AVATAR_EMOJIS.map(function(em){return(
+              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #60a5fa":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(96,165,250,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+            );})}
+          </div>
           <SLabel>YOUR NAME</SLabel>
           <input value={myName} onChange={function(e){setMyName(e.target.value);}} style={{marginBottom:20}} placeholder="Your name"/>
           <button className="btn_btn_blue" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5,marginBottom:14}} onClick={function(){audio.buttonClick();haptic.medium();createRoom();}}>CREATE ROOM</button>
@@ -1331,6 +1397,12 @@ export default function Cobra(){
             <h2 style={{fontFamily:"Cinzel,serif",color:"#4ade80",fontSize:22,letterSpacing:4,marginTop:8}}>ONLINE GAMEPLAY</h2>
           </div>
           <Divider c="#4ade80"/>
+          <SLabel>YOUR AVATAR</SLabel>
+          <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+            {AVATAR_EMOJIS.map(function(em){return(
+              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #4ade80":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(74,222,128,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+            );})}
+          </div>
           <SLabel>YOUR NAME</SLabel>
           <input value={myName} onChange={function(e){setMyName(e.target.value);}} style={{marginBottom:20}} placeholder="Enter your name"/>
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"rgba(74,222,128,0.06)",border:"1px solid rgba(74,222,128,0.15)",borderRadius:12,marginBottom:20}}>
@@ -1357,12 +1429,43 @@ export default function Cobra(){
           {onlinePlayers.map(function(p,i){return(
             <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:i===myIdx?"rgba(212,168,67,0.09)":"rgba(0,0,0,0.22)",borderRadius:12,marginBottom:8,border:i===myIdx?"1px solid rgba(212,168,67,0.25)":"1px solid rgba(255,255,255,0.04)"}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",boxShadow:"0 0 8px #4ade80"}} className="shimmer"/>
+              {i===myIdx&&<span style={{fontSize:18}}>{myAvatar}</span>}
               <span style={{fontFamily:"Crimson Text,serif",fontSize:16,color:i===myIdx?"#d4a843":"#9ca3af",flex:1,textAlign:"left"}}>{p}</span>
               {i===0&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#1a3020",letterSpacing:2}}>HOST</span>}
               {i===myIdx&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2}}>YOU</span>}
+              {isHost&&i!==0&&i!==myIdx&&(
+                <button onClick={function(){
+                  audio.buttonClick();haptic.light();
+                  loadRoom(roomCode).then(function(room){
+                    if(!room)return;
+                    room.players=room.players.filter(function(_,pi){return pi!==i;}).map(function(pl,ni){return Object.assign({},pl,{idx:ni});});
+                    saveRoom(roomCode,room).then(function(){rtBroadcast(room);});
+                  });
+                }} style={{width:26,height:26,borderRadius:"50%",border:"1px solid rgba(248,113,113,0.4)",background:"rgba(185,28,28,0.15)",color:"#f87171",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",flexShrink:0}}>✕</button>
+              )}
             </div>
           );})}
         </div>
+        {/* Share / Copy / QR invite buttons */}
+        {roomCode&&roomCode!=="COBRA_GLOBAL"&&(
+          <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+            <button className="btn_btn_outline_gold" style={{flex:1,padding:"10px 6px",fontSize:10,letterSpacing:1,minHeight:40}}
+              onClick={function(){
+                var url="https://cobra-silk.vercel.app/?room="+roomCode;
+                navigator.clipboard&&navigator.clipboard.writeText(url).then(function(){pop("Copied!","success",1500);}).catch(function(){pop(url,"info",3000);});
+              }}>📋 Copy Link</button>
+            <button className="btn_btn_outline_gold" style={{flex:1,padding:"10px 6px",fontSize:10,letterSpacing:1,minHeight:40}}
+              onClick={function(){
+                var url="https://cobra-silk.vercel.app/?room="+roomCode;
+                window.open("https://wa.me/?text=Join my COBRA game! Code: "+roomCode+"%0A"+encodeURIComponent(url),"_blank");
+              }}>💬 WhatsApp</button>
+            <button className="btn_btn_outline_gold" style={{flex:1,padding:"10px 6px",fontSize:10,letterSpacing:1,minHeight:40}}
+              onClick={function(){
+                var url="https://cobra-silk.vercel.app/?room="+roomCode;
+                QRCode.toDataURL(url,{width:220,margin:2,color:{dark:"#d4a843",light:"#010603"}}).then(function(d){setQrDataUrl(d);setShowQR(true);});
+              }}>📱 QR Code</button>
+          </div>
+        )}
         {isHost
           ?<button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3}} disabled={onlinePlayers.length<2} onClick={function(){audio.buttonClick();startOnlineGame();}}>
             {onlinePlayers.length<2?"WAITING...":"START GAME"}
@@ -1373,6 +1476,17 @@ export default function Cobra(){
           </div>
         }
       </div>
+      {/* QR Code Modal */}
+      {showQR&&(
+        <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.88)",backdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={function(){setShowQR(false);}}>
+          <div style={{background:"rgba(2,8,4,0.98)",border:"2px solid rgba(212,168,67,0.5)",borderRadius:22,padding:28,textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,0.9)"}} onClick={function(e){e.stopPropagation();}}>
+            <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:14,letterSpacing:3,marginBottom:16}}>SCAN TO JOIN</div>
+            {qrDataUrl&&<img src={qrDataUrl} alt="QR" style={{width:200,height:200,borderRadius:12,display:"block",margin:"0 auto"}}/>}
+            <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:24,fontWeight:900,letterSpacing:8,marginTop:16}}>{roomCode}</div>
+            <button className="btn_btn_ghost" style={{marginTop:16,padding:"10px 24px",fontSize:11}} onClick={function(){setShowQR(false);}}>CLOSE</button>
+          </div>
+        </div>
+      )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
@@ -1541,7 +1655,13 @@ export default function Cobra(){
           </div>
           <div style={{display:"flex",gap:10}}>
             <button className="btn_btn_gold" style={{flex:2,padding:16,fontSize:13,letterSpacing:2}}
-              onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}}>
+              onClick={function(){
+                audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
+                setGameOverData(null);
+                if(mode==="cpu"){startCPU();}
+                else if(mode==="online"&&isHost){startOnlineGame();}
+                else{deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}
+              }}>
               🔄 REMATCH
             </button>
             <button className="btn_btn_ghost" style={{flex:1,padding:16,fontSize:12,letterSpacing:1.5}}
@@ -1666,7 +1786,7 @@ export default function Cobra(){
             </div>
           </div>
         </div>
-        <ScoreStrip names={names} scores={scores} currentPlayer={currentPlayer} nPlayers={nPlayers} flashScores={flashScores}/>
+        <ScoreStrip names={names} scores={scores} currentPlayer={currentPlayer} nPlayers={nPlayers} flashScores={flashScores} avatars={Array.from({length:nPlayers},function(_,i){return i===H?myAvatar:null;})}/>
       </div>
 
       {/* OPPONENTS */}
@@ -1826,6 +1946,14 @@ export default function Cobra(){
           })}
         </div>
       </div>
+      {/* Elimination overlay */}
+      {elimAnim&&(
+        <div style={{position:"fixed",inset:0,zIndex:600,background:"radial-gradient(ellipse at center,rgba(60,0,0,0.97) 0%,rgba(0,0,0,0.99) 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"elimFadeIn 0.3s ease"}}>
+          <div style={{animation:"elimBounce 0.6s ease-in-out infinite",fontSize:90,marginBottom:24}}>💀</div>
+          <h1 style={{fontFamily:"Cinzel,serif",fontSize:28,fontWeight:900,letterSpacing:4,background:"linear-gradient(135deg,#ef4444,#991b1b)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",textAlign:"center",animation:"shake 0.4s ease-in-out infinite",padding:"0 24px"}}>{elimAnim.name.toUpperCase()} ELIMINATED</h1>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"rgba(248,113,113,0.7)",fontSize:18,marginTop:14}}>Reached 100 points</p>
+        </div>
+      )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
     </div>
   );
