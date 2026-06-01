@@ -66,18 +66,26 @@ export function useRoom({ onRoomUpdate }) {
  */
 export async function saveRoomDB(code, room) {
   if (!supabase) return
-  await supabase
-    .from('cobra_rooms')
-    .upsert({ id: code, data: room, updated_at: new Date().toISOString() })
+  try {
+    await supabase
+      .from('cobra_rooms')
+      .upsert({ id: code, data: room, updated_at: new Date().toISOString() })
+  } catch (e) {
+    // DB table may not exist yet — Realtime broadcast still works
+  }
 }
 
 export async function loadRoomDB(code) {
   if (!supabase) return null
-  const { data, error } = await supabase
-    .from('cobra_rooms')
-    .select('data')
-    .eq('id', code)
-    .single()
-  if (error || !data) return null
-  return data.data
+  try {
+    const { data, error } = await supabase
+      .from('cobra_rooms')
+      .select('data')
+      .eq('id', code)
+      .single()
+    if (error || !data) return null
+    return data.data
+  } catch (e) {
+    return null
+  }
 }
