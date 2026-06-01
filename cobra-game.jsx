@@ -182,6 +182,7 @@ const GS=`
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:#010603;height:100%;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
+html{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
 @media(max-width:375px){html{font-size:14px;}}
 @media(min-width:428px){html{font-size:17px;}}
 ::-webkit-scrollbar{width:3px;height:3px}
@@ -339,63 +340,164 @@ function ThinkingDots(){return(<div style={{display:"flex",gap:5,alignItems:"cen
 
 function MenuButton({onClick,active}){
   return(
-    <button onClick={onClick} style={{position:"fixed",top:16,right:16,zIndex:200,width:40,height:40,borderRadius:10,border:active?"1.5px solid #d4a843":"1px solid rgba(212,168,67,0.3)",background:"rgba(1,10,4,0.82)",backdropFilter:"blur(10px)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#d4a843",transition:"all 0.2s",touchAction:"manipulation",WebkitTapHighlightColor:"transparent",boxShadow:active?"0 0 16px rgba(212,168,67,0.25)":"none"}}>
+    <button onClick={onClick} style={{
+      position:"fixed",
+      top:"calc(16px + env(safe-area-inset-top))",
+      right:"calc(16px + env(safe-area-inset-right))",
+      zIndex:200,width:42,height:42,borderRadius:12,
+      border:active?"1.5px solid #d4a843":"1px solid rgba(212,168,67,0.35)",
+      background:active?"rgba(212,168,67,0.12)":"rgba(1,10,4,0.85)",
+      backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",
+      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+      fontSize:19,color:"#d4a843",
+      transition:"all 0.2s cubic-bezier(.22,1,.36,1)",
+      touchAction:"manipulation",WebkitTapHighlightColor:"transparent",
+      boxShadow:active?"0 0 20px rgba(212,168,67,0.3), inset 0 1px 0 rgba(212,168,67,0.2)":"0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"
+    }}>
       {active?"✕":"☰"}
+    </button>
+  );
+}
+
+function PremiumToggle({active,onToggle}){
+  return(
+    <button onClick={onToggle} style={{
+      width:50,height:28,borderRadius:14,border:"none",
+      background:active?"linear-gradient(135deg,#d4a843,#b8882a)":"rgba(255,255,255,0.08)",
+      cursor:"pointer",position:"relative",
+      transition:"background 0.3s cubic-bezier(.22,1,.36,1)",
+      padding:0,touchAction:"manipulation",WebkitTapHighlightColor:"transparent",
+      flexShrink:0,boxShadow:active?"0 0 12px rgba(212,168,67,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"
+    }}>
+      <span style={{
+        position:"absolute",top:4,left:active?26:4,
+        width:20,height:20,borderRadius:"50%",
+        background:active?"#1a0f00":"rgba(255,255,255,0.5)",
+        transition:"left 0.3s cubic-bezier(.22,1.4,.36,1)",
+        display:"block",
+        boxShadow:"0 1px 4px rgba(0,0,0,0.4)"
+      }}/>
     </button>
   );
 }
 
 function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats}){
   var winRate=gameStats.rounds>0?Math.round(gameStats.wins/gameStats.rounds*100):0;
+  var bestStreak=gameStats.bestStreak||0;
   return(
     <>
-      <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:190,background:"rgba(0,0,0,0.55)",backdropFilter:"blur(2px)",opacity:open?1:0,pointerEvents:open?"auto":"none",transition:"opacity 0.3s ease"}}/>
-      <div style={{position:"fixed",top:0,right:0,bottom:0,zIndex:195,width:"min(300px,88vw)",background:"rgba(1,10,4,0.96)",borderLeft:"1px solid rgba(212,168,67,0.25)",transform:open?"translateX(0)":"translateX(100%)",transition:"transform 0.45s cubic-bezier(.22,1.4,.36,1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
-        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid rgba(212,168,67,0.12)"}}>
-          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:14,letterSpacing:4,margin:0}}>SETTINGS</h2>
+      {/* Overlay */}
+      <div onClick={onClose} style={{
+        position:"fixed",inset:0,zIndex:190,
+        background:"rgba(0,0,0,0.6)",
+        backdropFilter:"blur(3px)",WebkitBackdropFilter:"blur(3px)",
+        opacity:open?1:0,pointerEvents:open?"auto":"none",
+        transition:"opacity 0.35s ease"
+      }}/>
+
+      {/* Panel */}
+      <div style={{
+        position:"fixed",top:0,right:0,bottom:0,zIndex:195,
+        width:"min(310px,90vw)",
+        background:"linear-gradient(180deg,rgba(2,12,5,0.98) 0%,rgba(1,8,3,0.99) 100%)",
+        borderLeft:"1px solid rgba(212,168,67,0.2)",
+        transform:open?"translateX(0)":"translateX(105%)",
+        transition:"transform 0.45s cubic-bezier(.22,1.4,.36,1)",
+        display:"flex",flexDirection:"column",overflowY:"auto",
+        paddingTop:"env(safe-area-inset-top)",
+        paddingBottom:"env(safe-area-inset-bottom)",
+        boxShadow:"-20px 0 60px rgba(0,0,0,0.7)"
+      }}>
+
+        {/* Header */}
+        <div style={{padding:"18px 22px 14px",borderBottom:"1px solid rgba(212,168,67,0.1)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <div>
+            <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:13,letterSpacing:5,margin:0}}>SETTINGS</h2>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:11,marginTop:2}}>COBRA v2.0 PREMIUM</div>
+          </div>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>✕</button>
         </div>
-        <div style={{padding:"18px 20px 0"}}>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>AUDIO</div>
-          {[{label:"Sound Effects",active:!sfxMuted,onToggle:onToggleSfx},{label:"Music",active:!musicMuted,onToggle:onToggleMusic}].map(function(item){
-            return(
-              <div key={item.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                <span style={{fontFamily:"Crimson Text,serif",color:"#8aad8a",fontSize:15}}>{item.label}</span>
-                <button onClick={item.onToggle} style={{width:46,height:26,borderRadius:13,border:"none",background:item.active?"#d4a843":"rgba(255,255,255,0.1)",cursor:"pointer",position:"relative",transition:"background 0.25s",padding:0,touchAction:"manipulation",WebkitTapHighlightColor:"transparent",flexShrink:0}}>
-                  <span style={{position:"absolute",top:3,left:item.active?23:3,width:20,height:20,borderRadius:"50%",background:item.active?"#3a2a00":"rgba(255,255,255,0.7)",transition:"left 0.25s",display:"block"}}/>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{margin:"6px 20px",height:1,background:"rgba(212,168,67,0.1)"}}/>
-        <div style={{padding:"14px 20px 0"}}>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>GAME</div>
-          <button onClick={function(){onHowToPlay();onClose();}} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",cursor:"pointer",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,color:"#d4a843",display:"flex",alignItems:"center",gap:10,touchAction:"manipulation",WebkitTapHighlightColor:"transparent",transition:"background 0.2s"}}>
-            <span style={{fontSize:16}}>📖</span> HOW TO PLAY
-          </button>
-        </div>
-        <div style={{margin:"18px 20px 0",height:1,background:"rgba(212,168,67,0.1)"}}/>
-        <div style={{padding:"14px 20px 0"}}>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4a",letterSpacing:3,marginBottom:14}}>STATISTICS</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[["🏆",gameStats.wins,"Wins"],["🃏",gameStats.rounds,"Rounds"],["🐍",gameStats.cobras,"Cobras"],["🔥",gameStats.streak||0,"Streak"]].map(function(row){return(
-              <div key={row[2]} style={{background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.12)",borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
-                <div style={{fontSize:22}}>{row[0]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:700,color:"#d4a843",marginTop:4}}>{row[1]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#5a7a60",letterSpacing:1,marginTop:2}}>{row[2]}</div>
+
+        <div style={{padding:"0 22px",flex:1}}>
+
+          {/* AUDIO */}
+          <div style={{paddingTop:20}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+              <span>🔊</span> AUDIO
+            </div>
+            {[
+              {label:"Sound Effects",sub:"Game sounds & feedback",active:!sfxMuted,onToggle:onToggleSfx},
+              {label:"Music",sub:"Ambient background music",active:!musicMuted,onToggle:onToggleMusic}
+            ].map(function(item){return(
+              <div key={item.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,gap:12}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"Crimson Text,serif",color:"#c8d8c8",fontSize:15,lineHeight:1.2}}>{item.label}</div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:12,marginTop:1}}>{item.sub}</div>
+                </div>
+                <PremiumToggle active={item.active} onToggle={item.onToggle}/>
               </div>
             );})}
           </div>
-          {gameStats.rounds>0&&(
-            <div style={{marginTop:10,padding:"10px 14px",background:"rgba(212,168,67,0.04)",border:"1px solid rgba(212,168,67,0.1)",borderRadius:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontFamily:"Crimson Text,serif",color:"#8aad8a",fontSize:14}}>Win Rate</span>
-              <span style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:700,color:"#d4a843"}}>{winRate}%</span>
+
+          <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"4px 0 0"}}/>
+
+          {/* GAME */}
+          <div style={{paddingTop:18}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+              <span>🃏</span> GAME
             </div>
-          )}
+            <button onClick={function(){onHowToPlay();onClose();}} style={{
+              width:"100%",padding:"14px 18px",borderRadius:14,
+              border:"1px solid rgba(212,168,67,0.18)",
+              background:"rgba(212,168,67,0.05)",
+              cursor:"pointer",fontFamily:"Cinzel,serif",fontSize:10,
+              letterSpacing:2.5,color:"#d4a843",
+              display:"flex",alignItems:"center",gap:12,
+              touchAction:"manipulation",WebkitTapHighlightColor:"transparent",
+              transition:"all 0.2s"
+            }}>
+              <span style={{fontSize:18}}>📖</span>
+              <span>HOW TO PLAY</span>
+            </button>
+          </div>
+
+          <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"18px 0 0"}}/>
+
+          {/* STATISTICS */}
+          <div style={{paddingTop:18}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+              <span>📊</span> STATISTICS
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+              {[
+                {icon:"🏆",val:gameStats.wins,label:"Wins"},
+                {icon:"🃏",val:gameStats.rounds,label:"Rounds"},
+                {icon:"🐍",val:gameStats.cobras,label:"Cobras"},
+                {icon:"🔥",val:gameStats.streak||0,label:"Streak"},
+                {icon:"⚡",val:bestStreak,label:"Best Streak"},
+                {icon:"🎯",val:gameStats.rounds>0?winRate+"%":"—",label:"Win Rate"}
+              ].map(function(s){return(
+                <div key={s.label} style={{
+                  background:"rgba(212,168,67,0.04)",
+                  border:"1px solid rgba(212,168,67,0.1)",
+                  borderRadius:12,padding:"12px 8px",textAlign:"center"
+                }}>
+                  <div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:17,fontWeight:700,color:"#d4a843",lineHeight:1}}>{s.val}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#3a5a3a",letterSpacing:1,marginTop:4,textTransform:"uppercase"}}>{s.label}</div>
+                </div>
+              );})}
+            </div>
+          </div>
+
         </div>
-        <div style={{flex:1}}/>
-        <div style={{padding:"14px 20px 28px",borderTop:"1px solid rgba(212,168,67,0.08)",marginTop:20}}>
-          <p style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#1a3020",letterSpacing:2,textAlign:"center",margin:0}}>COBRA v2.0 PREMIUM</p>
+
+        {/* Footer */}
+        <div style={{padding:"14px 22px calc(14px + env(safe-area-inset-bottom))",borderTop:"1px solid rgba(212,168,67,0.07)",flexShrink:0,marginTop:16}}>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:6}}>
+            <span style={{fontSize:12}}>🐍</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#1a3020",letterSpacing:3}}>COBRA · THE ULTIMATE CARD GAME</span>
+          </div>
         </div>
       </div>
     </>
@@ -480,7 +582,7 @@ function SplashScreen({onDone}){
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:12,background:"linear-gradient(175deg,#f4cc52,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",textAlign:"center",marginBottom:8}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:16,letterSpacing:6,textAlign:"center"}}>the ultimate card game</p>
       </div>
-      <div style={{position:"absolute",bottom:60,display:"flex",gap:6}}>
+      <div style={{position:"absolute",bottom:"calc(60px + env(safe-area-inset-bottom))",display:"flex",gap:6}}>
         {[0,1,2].map(function(i){return(
           <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",opacity:0.6,animation:"thinkDot 1.2s ease-in-out infinite",animationDelay:(i*0.2)+"s"}}/>
         );})}
@@ -1534,7 +1636,7 @@ export default function Cobra(){
       )}
 
       {/* HEADER */}
-      <div style={{flexShrink:0,padding:"8px 16px 10px",position:"relative",zIndex:5,background:"linear-gradient(180deg,rgba(0,0,0,0.85)0%,rgba(0,0,0,0.12)100%)",borderBottom:"1px solid rgba(255,255,255,0.05)",backdropFilter:"blur(16px)"}}>
+      <div style={{flexShrink:0,padding:"calc(8px + env(safe-area-inset-top)) 16px 10px",position:"relative",zIndex:5,background:"linear-gradient(180deg,rgba(0,0,0,0.85)0%,rgba(0,0,0,0.12)100%)",borderBottom:"1px solid rgba(255,255,255,0.05)",backdropFilter:"blur(16px)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <div style={{fontFamily:"Cinzel,serif",fontSize:17,fontWeight:900,letterSpacing:3,background:"linear-gradient(135deg,#e8c052,#c49030)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>🐍 COBRA</div>
@@ -1659,7 +1761,7 @@ export default function Cobra(){
       )}
 
       {/* MY HAND */}
-      <div style={{flexShrink:0,padding:"7px 12px 8px",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)"}}>
+      <div style={{flexShrink:0,padding:"7px 12px calc(8px + env(safe-area-inset-bottom))",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5,gap:6}}>
           <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
             {!isMyTurn&&(
