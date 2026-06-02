@@ -228,6 +228,7 @@ input::placeholder{color:#2a3d28;}
 @keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(0.7);opacity:0}}
 @keyframes cardPickup{0%{transform:translateY(-80px) scale(0.7);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
+@keyframes particleFloat{0%{opacity:0;transform:translateY(0) translateX(0)}20%{opacity:0.12}80%{opacity:0.08}100%{opacity:0;transform:translateY(-120px) translateX(15px)}}
 @keyframes scoreFlash{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
 @keyframes borderGlow{0%,100%{box-shadow:0 0 8px rgba(185,28,28,0.3)}50%{box-shadow:0 0 28px rgba(185,28,28,0.8),0 0 50px rgba(185,28,28,0.4)}}
 @keyframes cobraShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -259,7 +260,14 @@ input::placeholder{color:#2a3d28;}
 .btn_btn_outline_gold:active{transform:scale(0.93);}
 `;
 
-function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx}){
+const CARD_THEMES={
+  classic:{bg:"linear-gradient(148deg,#091609,#040c04,#071007)",border:"rgba(20,60,20,0.9)",pat:"rgba(212,168,67,0.065)","pat2":"rgba(212,168,67,0.05)"},
+  midnight:{bg:"linear-gradient(148deg,#06061a,#030310,#04041a)",border:"rgba(20,20,80,0.9)",pat:"rgba(160,180,255,0.065)","pat2":"rgba(120,140,220,0.05)"},
+  crimson:{bg:"linear-gradient(148deg,#1a0505,#0d0303,#120404)",border:"rgba(80,10,10,0.9)",pat:"rgba(220,80,80,0.065)","pat2":"rgba(180,60,60,0.05)"},
+  emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.08)","pat2":"rgba(40,160,60,0.06)"},
+};
+
+function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx,theme}){
   const [hov,setHov]=useState(false);
   size=size||"md";dealIdx=dealIdx||0;
   const red=card&&isRed(card);
@@ -275,21 +283,23 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
     opacity:dimmed?0.3:1,userSelect:"none",overflow:"hidden",
     animationDelay:(dealIdx*0.07)+"s",WebkitTapHighlightColor:"transparent",touchAction:"manipulation"};
   const click=()=>{if(!clickable)return;audio.init();audio.resume();audio.cardSelect();haptic.light();onClick&&onClick();};
-  if(faceDown)return(
+  if(faceDown){
+    var th=CARD_THEMES[theme]||CARD_THEMES.classic;
+    return(
     <div onClick={clickable?click:undefined} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{width:base.width,height:base.height,borderRadius:base.borderRadius,flexShrink:0,position:"relative",
         cursor:base.cursor,transform:base.transform,transition:base.transition,opacity:base.opacity,
         userSelect:"none",overflow:"hidden",animationDelay:base.animationDelay,
         WebkitTapHighlightColor:"transparent",touchAction:"manipulation",
-        background:"linear-gradient(148deg,#091609,#040c04,#071007)",
-        border:glow?"2px solid #4ade80":selected?"2px solid #d4a843":"1.5px solid rgba(20,60,20,0.9)",
+        background:th.bg,
+        border:glow?"2px solid #4ade80":selected?"2px solid #d4a843":"1.5px solid "+th.border,
         boxShadow:glow?"0 0 20px rgba(74,222,128,0.5),0 8px 24px rgba(0,0,0,0.8)":selected?"0 0 20px rgba(212,168,67,0.55),0 10px 28px rgba(0,0,0,0.8)":"0 5px 18px rgba(0,0,0,0.72)"}}>
       <div style={{position:"absolute",top:3,left:3,right:3,bottom:3,borderRadius:d.r-2,border:"1px solid rgba(212,168,67,0.2)"}}/>
-      <div style={{position:"absolute",top:5,left:5,right:5,bottom:5,borderRadius:d.r-3,overflow:"hidden",backgroundImage:"repeating-linear-gradient(45deg,rgba(212,168,67,0.065)0,rgba(212,168,67,0.065)1px,transparent 1px,transparent 7px),repeating-linear-gradient(-45deg,rgba(212,168,67,0.05)0,rgba(212,168,67,0.05)1px,transparent 1px,transparent 7px)"}}/>
+      <div style={{position:"absolute",top:5,left:5,right:5,bottom:5,borderRadius:d.r-3,overflow:"hidden",backgroundImage:"repeating-linear-gradient(45deg,"+th.pat+"0,"+th.pat+"1px,transparent 1px,transparent 7px),repeating-linear-gradient(-45deg,"+th.pat2+"0,"+th.pat2+"1px,transparent 1px,transparent 7px)"}}/>
       <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:d.su*0.72,opacity:0.15}}>🐍</div>
       <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"linear-gradient(135deg,rgba(255,255,255,0.06)0%,transparent 45%,rgba(0,0,0,0.15)100%)",borderRadius:d.r}}/>
     </div>
-  );
+  );}
   return(
     <div onClick={clickable?click:undefined} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{width:base.width,height:base.height,borderRadius:base.borderRadius,flexShrink:0,position:"relative",
@@ -391,7 +401,7 @@ function PremiumToggle({active,onToggle}){
   );
 }
 
-function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats}){
+function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme}){
   var winRate=gameStats.rounds>0?Math.round(gameStats.wins/gameStats.rounds*100):0;
   var bestStreak=gameStats.bestStreak||0;
   return(
@@ -469,6 +479,28 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
               <span style={{fontSize:18}}>📖</span>
               <span>HOW TO PLAY</span>
             </button>
+          </div>
+
+          <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"18px 0 0"}}/>
+
+          {/* CARD THEME */}
+          <div style={{paddingTop:18}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+              <span>🎴</span> CARD THEME
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+              {[
+                {id:"classic",bg:"#091609",label:"Classic"},
+                {id:"midnight",bg:"#06061a",label:"Midnight"},
+                {id:"crimson",bg:"#1a0505",label:"Crimson"},
+                {id:"emerald",bg:"#021a06",label:"Emerald"},
+              ].map(function(t){return(
+                <button key={t.id} onClick={function(){if(setCardTheme){setCardTheme(t.id);try{localStorage.setItem("cobra_card_theme",t.id);}catch(e){}};}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",padding:0,touchAction:"manipulation"}}>
+                  <div style={{width:36,height:36,borderRadius:6,background:t.bg,border:cardTheme===t.id?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.15)",boxShadow:cardTheme===t.id?"0 0 10px rgba(212,168,67,0.5)":"none",transition:"all 0.2s"}}/>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:7,color:cardTheme===t.id?"#d4a843":"#3a5a3a",letterSpacing:1}}>{t.label.toUpperCase()}</span>
+                </button>
+              );})}
+            </div>
           </div>
 
           <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"18px 0 0"}}/>
@@ -578,6 +610,26 @@ function TurnTimer({seconds,total}){
   );
 }
 
+function TableParticles(){
+  var particles=[];
+  for(var i=0;i<14;i++){
+    var dur=(10+Math.random()*8).toFixed(1);
+    var delay=(Math.random()*8).toFixed(1);
+    var top=(Math.random()*90).toFixed(1);
+    var left=(Math.random()*95).toFixed(1);
+    var sz=Math.random()<0.5?3:4;
+    var color=i%2===0?"rgba(212,168,67,0.15)":"rgba(74,222,128,0.1)";
+    particles.push({id:i,dur:dur,delay:delay,top:top,left:left,sz:sz,color:color});
+  }
+  return(
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
+      {particles.map(function(p){return(
+        <div key={p.id} style={{position:"absolute",top:p.top+"%",left:p.left+"%",width:p.sz,height:p.sz,borderRadius:"50%",background:p.color,animation:"particleFloat "+p.dur+"s "+p.delay+"s ease-in-out infinite"}}/>
+      );})}
+    </div>
+  );
+}
+
 function SplashScreen({onDone}){
   useEffect(function(){
     var t=setTimeout(onDone,2200);
@@ -597,6 +649,53 @@ function SplashScreen({onDone}){
           <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",opacity:0.6,animation:"thinkDot 1.2s ease-in-out infinite",animationDelay:(i*0.2)+"s"}}/>
         );})}
       </div>
+    </div>
+  );
+}
+
+function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme,setCardTheme}){
+  const [leaders,setLeaders]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState(false);
+  useEffect(function(){
+    if(!supabase){setError(true);setLoading(false);return;}
+    supabase.from("cobra_scores").select("*").order("wins",{ascending:false}).limit(20).then(function(res){
+      if(res.error||!res.data){setError(true);setLoading(false);return;}
+      setLeaders(res.data);setLoading(false);
+    }).catch(function(){setError(true);setLoading(false);});
+  },[]);
+  return(
+    <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
+      <style>{GS}</style>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
+      <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
+        <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <span style={{fontSize:40}}>🏆</span>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>LEADERBOARD</h2>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
+        </div>
+        {loading&&<div style={{textAlign:"center",padding:40}}><ThinkingDots/></div>}
+        {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>Requires online connection</div>}
+        {leaders&&leaders.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet. Be the first!</div>}
+        {leaders&&leaders.map(function(row,i){
+          var medal=i===0?"👑":i===1?"🥈":i===2?"🥉":""+(i+1);
+          return(
+            <div key={row.id||i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",borderRadius:14,marginBottom:8,background:i===0?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.28)",border:i===0?"1.5px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.06)"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:i<3?22:14,width:28,textAlign:"center",flexShrink:0,color:i===0?"#d4a843":i===1?"#c0c0c0":i===2?"#cd7f32":"#3a5a3a"}}>{medal}</div>
+              <div style={{fontSize:22,flexShrink:0}}>{row.avatar||"😎"}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:i===0?"#d4a843":"#c8d8c8",letterSpacing:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.name}</div>
+              </div>
+              <div style={{textAlign:"right",flexShrink:0}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,color:i===0?"#d4a843":"#4ade80"}}>{row.wins}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1}}>WINS</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 }
@@ -663,7 +762,17 @@ export default function Cobra(){
   const [showQR,setShowQR]=useState(false);
   const [qrDataUrl,setQrDataUrl]=useState("");
   const [elimAnim,setElimAnim]=useState(null); // {name, idx}
+  const [cardTheme,setCardTheme]=useState(function(){try{return localStorage.getItem("cobra_card_theme")||"classic";}catch(e){return"classic";}});
+  const [chatMessages,setChatMessages]=useState([]);
+  const [chatOpen,setChatOpen]=useState(false);
+  const [chatInput,setChatInput]=useState("");
+  const [unreadChat,setUnreadChat]=useState(0);
+  const [isSpectator,setIsSpectator]=useState(false);
+  const chatChannelRef=useRef(null);
+  const chatScrollRef=useRef(null);
   const prevPlayersCount=useRef(0);
+  // Auto-scroll chat to bottom on new messages
+  useEffect(function(){if(chatScrollRef.current&&chatOpen)chatScrollRef.current.scrollTop=chatScrollRef.current.scrollHeight;},[chatMessages,chatOpen]);
 
   const toastT=useRef(null);
   const pollRef=useRef(null); // kept for legacy; unused when Supabase is active
@@ -752,7 +861,11 @@ export default function Cobra(){
 
   const goScreen=useCallback(function(s){
     audio.init();audio.resume();
-    if(s==="home")rtUnsubscribe();
+    if(s==="home"){
+      rtUnsubscribe();
+      if(chatChannelRef.current&&supabase){try{supabase.removeChannel(chatChannelRef.current);}catch(e){}chatChannelRef.current=null;}
+      setIsSpectator(false);setChatMessages([]);setUnreadChat(0);setChatOpen(false);
+    }
     setScreen(s);
   },[rtUnsubscribe]);
 
@@ -851,8 +964,13 @@ export default function Cobra(){
     if(!code){pop("Enter a room code","error");return;}
     loadRoom(code).then(function(room){
       if(!room){pop("Room not found","error");return;}
+      if(room.status==="started"){
+        // Offer spectator mode
+        setRoomCode(code);
+        goScreen("spectatePrompt");
+        return;
+      }
       if(room.players.length>=room.maxPlayers){pop("Room is full","error");return;}
-      if(room.status!=="lobby"){pop("Game already started","error");return;}
       var idx=room.players.length;
       room.players.push({name:myName,idx:idx});
       saveRoom(code,room).then(function(){
@@ -871,6 +989,19 @@ export default function Cobra(){
     rtSubscribe(code);
     // Also load current DB state immediately (handles late-joiners / refresh)
     loadRoom(code).then(function(room){if(room)onRoomUpdate(room);});
+    // Subscribe to chat channel
+    if(supabase){
+      try{
+        if(chatChannelRef.current)supabase.removeChannel(chatChannelRef.current);
+        var chatCh=supabase.channel("cobra-chat:"+code,{config:{broadcast:{self:false}}});
+        chatCh.on("broadcast",{event:"chat"},function(obj){
+          var payload=obj.payload;
+          setChatMessages(function(p){return[...p.slice(-49),payload];});
+          setChatOpen(function(open){if(!open)setUnreadChat(function(n){return n+1;});return open;});
+        }).subscribe();
+        chatChannelRef.current=chatCh;
+      }catch(e){}
+    }
   }
 
   function startOnlineGame(){
@@ -1053,7 +1184,9 @@ export default function Cobra(){
       if(myTotal<=5)unlockAch("low_score");
       var elapsed=(Date.now()-roundStart)/1000;
       if(elapsed<10)unlockAch("speed_win");
-      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}
+        if(supabase&&myName){try{supabase.from("cobra_scores").upsert({id:myName,name:myName,avatar:myAvatar||"😎",wins:g.wins+1,updated_at:new Date().toISOString()},{onConflict:"id"}).then(function(){}).catch(function(){});}catch(e){}}
+        return n;});
       // Confetti
       var conf=[];
       for(var ci=0;ci<22;ci++){
@@ -1146,7 +1279,7 @@ export default function Cobra(){
           </div>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1211,6 +1344,8 @@ export default function Cobra(){
             {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
           </div>
         </div>
+        <button className="btn_btn_outline_gold" style={{fontSize:12,padding:"13px",letterSpacing:2,marginTop:10,width:"100%"}}
+          onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#4a5a4a"}}
             onClick={function(){
@@ -1236,7 +1371,7 @@ export default function Cobra(){
           <button onClick={function(){setInstallDismissed(true);try{localStorage.setItem("cobra_install_dismissed","1");}catch(e){};}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#120c00",flexShrink:0,touchAction:"manipulation",padding:4}}>✕</button>
         </div>
       )}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1279,7 +1414,7 @@ export default function Cobra(){
           <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:4}} onClick={function(){audio.buttonClick();goScreen("home");}}>GOT IT</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1344,7 +1479,7 @@ export default function Cobra(){
             <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:14}} onClick={function(){audio.buttonClick();haptic.medium();setNames(ln);startCPU();}}>DEAL CARDS</button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
   }
@@ -1380,7 +1515,7 @@ export default function Cobra(){
           <button className="btn_btn_outline_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5}} onClick={function(){audio.buttonClick();joinRoom();}}>JOIN ROOM</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1412,7 +1547,7 @@ export default function Cobra(){
           <button className="btn_btn_green" style={{width:"100%",padding:16,fontSize:14,letterSpacing:2.5}} onClick={joinGlobal}>PLAY NOW</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1487,7 +1622,7 @@ export default function Cobra(){
           </div>
         </div>
       )}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
 
@@ -1616,7 +1751,7 @@ export default function Cobra(){
             </button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
   }
@@ -1670,7 +1805,48 @@ export default function Cobra(){
             </button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      </div>
+    );
+  }
+
+  // ─── LEADERBOARD ────────────────────────────────────
+  if(screen==="leaderboard"){
+    return <LeaderboardScreen goScreen={goScreen} showSettings={showSettings} setShowSettings={setShowSettings} sfxMuted={sfxMuted} musicMuted={musicMuted} sfxToggle={sfxToggle} musToggle={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme}/>;
+  }
+
+  // ─── SPECTATE PROMPT ────────────────────────────────
+  if(screen==="spectatePrompt"){
+    return(
+      <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
+        <style>{GS}</style>
+        <div style={{maxWidth:360,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
+          <div className="panel" style={{padding:32,textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>👁</div>
+            <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,marginBottom:8}}>GAME IN PROGRESS</h2>
+            <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#5a7a60",fontSize:16,marginBottom:24,lineHeight:1.6}}>This game has already started. You can spectate and watch live without playing.</p>
+            <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5,marginBottom:12}}
+              onClick={function(){
+                audio.buttonClick();haptic.medium();
+                setIsSpectator(true);setMyIdx(-1);setMode("online");
+                startLobbyPoll(roomCode);
+                loadRoom(roomCode).then(function(room){
+                  if(room&&room.status==="started"&&room.gameState){
+                    var gs=room.gameState;
+                    setHands(gs.hands);setDeck(gs.deck);setOpenPile(gs.openPile);
+                    setMyPlayed(gs.myPlayed||[]);setCurrentPlayer(gs.currentPlayer);
+                    setPhase(gs.phase);setScores(gs.scores);
+                    setNames(room.players.map(function(p){return p.name;}));
+                    setNPlayers(room.players.length);
+                    goScreen("game");
+                  }
+                });
+              }}>
+              👁 SPECTATE
+            </button>
+            <button className="btn_btn_ghost" style={{width:"100%",padding:14,fontSize:12,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1689,6 +1865,7 @@ export default function Cobra(){
   return(
     <div className="feltbg" style={{height:"100vh",maxHeight:"100vh",display:"flex",flexDirection:"column",overflow:"hidden",userSelect:"none"}}>
       <style>{GS}</style>
+      <TableParticles/>
       {showTutorial&&<Tutorial onDone={function(){setShowTutorial(false);setTutorialDone(true);}}/>}
       {earnedAch&&<AchievementBadge ach={earnedAch} onDone={function(){setEarnedAch(null);}}/>}
       {emojis.map(function(e){return(<EmojiFloat key={e.id} emoji={e.emoji} x={e.x} y={e.y}/>);})}
@@ -1777,6 +1954,13 @@ export default function Cobra(){
               )}
             </div>
             {timerOn&&isMyTurn&&<TurnTimer seconds={turnTime} total={TURN_SEC}/>}
+            {mode==="online"&&(
+              <div style={{position:"relative"}}>
+                <button onClick={function(){setChatOpen(true);setUnreadChat(0);}} style={{width:36,height:36,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.1)",background:"rgba(0,0,0,0.4)",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>💬</button>
+                {unreadChat>0&&<div style={{position:"absolute",top:-4,right:-4,background:"#ef4444",borderRadius:"50%",width:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Cinzel,serif",fontSize:9,fontWeight:700,color:"#fff"}}>{unreadChat}</div>}
+              </div>
+            )}
+            {isSpectator&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1,padding:"2px 8px",background:"rgba(212,168,67,0.1)",borderRadius:8}}>👁 SPECTATING</div>}
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1,padding:"2px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8}}>R{roundNum}</div>
               <div style={{display:"flex",alignItems:"center",gap:4}}>
@@ -1802,7 +1986,7 @@ export default function Cobra(){
                 <div style={{display:"flex",justifyContent:"center",flexWrap:"nowrap",overflow:"hidden"}}>
                   {ch.slice(0,Math.min(ch.length,5)).map(function(_,j){return(
                     <div key={j} style={{marginLeft:j===0?0:-16,zIndex:j,transition:"margin 0.2s"}}>
-                      <Card card={{suit:"♠",value:"A"}} faceDown size="sm"/>
+                      <Card card={{suit:"♠",value:"A"}} faceDown size="sm" theme={cardTheme}/>
                     </div>
                   );})}
                 </div>
@@ -1827,7 +2011,7 @@ export default function Cobra(){
             onTouchEnd={function(e){if(isMyTurn&&phase==="pickup"&&e.currentTarget._ty-e.changedTouches[0].clientY>30)pickFromDeck();}}>
             {deck.length>0?[2,1,0].map(function(o){return(
               <div key={o} style={{position:o===0?"relative":"absolute",top:o===0?0:-o*3,left:o===0?0:o,zIndex:3-o}}>
-                <Card card={{suit:"♠",value:"A"}} faceDown glow={o===0&&isMyTurn&&phase==="pickup"} size="md"/>
+                <Card card={{suit:"♠",value:"A"}} faceDown glow={o===0&&isMyTurn&&phase==="pickup"} size="md" theme={cardTheme}/>
               </div>
             );}):(
               <div style={{width:60,height:86,borderRadius:9,border:"1.5px dashed rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.15)"}}>
@@ -1880,7 +2064,13 @@ export default function Cobra(){
         <div style={{position:"fixed",top:"36%",left:"50%",transform:"translate(-50%,-50%)",background:toast.type==="error"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":toast.type==="success"?"linear-gradient(135deg,rgba(3,16,6,0.97),rgba(2,10,4,0.97))":"linear-gradient(135deg,rgba(12,9,2,0.97),rgba(9,7,2,0.97))",color:toast.type==="error"?"#fca5a5":toast.type==="success"?"#86efac":"#d4a843",padding:"13px 28px",borderRadius:14,fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:2.5,border:"1px solid rgba(212,168,67,0.44)",boxShadow:"0 18px 55px rgba(0,0,0,0.88)",zIndex:500,textAlign:"center",maxWidth:"82vw",backdropFilter:"blur(20px)",animation:"slideUp 0.26s cubic-bezier(.22,1,.36,1)"}}>{toast.msg}</div>
       )}
 
-      {/* MY HAND */}
+      {/* MY HAND or SPECTATOR */}
+      {isSpectator?(
+        <div style={{flexShrink:0,padding:"16px 12px calc(12px + env(safe-area-inset-bottom))",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:18,color:"#d4a843",letterSpacing:4}}>👁 SPECTATING</div>
+          <button className="btn_btn_ghost" style={{padding:"12px 28px",fontSize:12,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("home");}}>LEAVE</button>
+        </div>
+      ):(
       <div style={{flexShrink:0,padding:"7px 12px calc(8px + env(safe-area-inset-bottom))",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5,gap:6}}>
           <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
@@ -1946,6 +2136,7 @@ export default function Cobra(){
           })}
         </div>
       </div>
+      )}
       {/* Elimination overlay */}
       {elimAnim&&(
         <div style={{position:"fixed",inset:0,zIndex:600,background:"radial-gradient(ellipse at center,rgba(60,0,0,0.97) 0%,rgba(0,0,0,0.99) 70%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",animation:"elimFadeIn 0.3s ease"}}>
@@ -1954,7 +2145,35 @@ export default function Cobra(){
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"rgba(248,113,113,0.7)",fontSize:18,marginTop:14}}>Reached 100 points</p>
         </div>
       )}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
+      {/* CHAT DRAWER */}
+      {mode==="online"&&(
+        <>
+          {chatOpen&&<div onClick={function(){setChatOpen(false);}} style={{position:"fixed",inset:0,zIndex:178,background:"rgba(0,0,0,0.45)"}}/>}
+          <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:180,height:"55%",background:"linear-gradient(180deg,rgba(2,10,4,0.98),rgba(1,6,2,0.99))",borderTop:"1px solid rgba(212,168,67,0.2)",borderRadius:"20px 20px 0 0",transform:chatOpen?"translateY(0)":"translateY(100%)",transition:"transform 0.35s cubic-bezier(.22,1.4,.36,1)",display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}}>
+            <div style={{padding:"14px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(212,168,67,0.1)",flexShrink:0}}>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#d4a843",letterSpacing:4}}>CHAT</span>
+              <button onClick={function(){setChatOpen(false);}} style={{width:28,height:28,borderRadius:7,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
+            </div>
+            <div ref={chatScrollRef} style={{flex:1,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:8}}>
+              {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
+              {chatMessages.map(function(m){return(
+                <div key={m.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                  <span style={{fontSize:18,flexShrink:0}}>{m.avatar}</span>
+                  <div>
+                    <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1,marginRight:6}}>{m.player}</span>
+                    <span style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"#86efac",lineHeight:1.4}}>{m.text}</span>
+                  </div>
+                </div>
+              );})}
+            </div>
+            <div style={{display:"flex",gap:8,padding:"8px 14px 10px",flexShrink:0,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+              <input value={chatInput} onChange={function(e){setChatInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&chatInput.trim()&&chatChannelRef.current){var msg={id:Date.now(),player:myName,avatar:myAvatar||"😎",text:chatInput.trim(),ts:Date.now()};try{chatChannelRef.current.send({type:"broadcast",event:"chat",payload:msg});}catch(err){}setChatMessages(function(p){return[...p.slice(-49),msg];});setChatInput("");}}} placeholder="Type a message..." style={{flex:1,minHeight:40,padding:"8px 12px",fontSize:14}}/>
+              <button className="btn_btn_gold" style={{padding:"8px 16px",fontSize:10,letterSpacing:2,minHeight:40,flexShrink:0}} onClick={function(){if(!chatInput.trim()||!chatChannelRef.current)return;var msg={id:Date.now(),player:myName,avatar:myAvatar||"😎",text:chatInput.trim(),ts:Date.now()};try{chatChannelRef.current.send({type:"broadcast",event:"chat",payload:msg});}catch(err){}setChatMessages(function(p){return[...p.slice(-49),msg];});setChatInput("");}}>SEND</button>
+            </div>
+          </div>
+        </>
+      )}
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
     </div>
   );
 }
