@@ -862,8 +862,8 @@ function DailyRewardScreen({onClaim,onClose}){
     {coins:400,gems:0,label:"Day 6"},
     {coins:500,gems:5,label:"Day 7 ⭐"},
   ];
-  var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
-  var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
+  var last=parseInt((function(){try{return localStorage.getItem("cobra_daily_last")||"0";}catch(e){return"0";}})());
+  var streak=parseInt((function(){try{return localStorage.getItem("cobra_daily_streak")||"0";}catch(e){return"0";}})());
   var msSince=Date.now()-last;
   var canClaim=msSince>=86400000;
   var msUntil=Math.max(0,86400000-msSince);
@@ -947,7 +947,7 @@ function SpinScreen({onClose,onSpin}){
   ];
   var rarityColors={common:"#22c55e",uncommon:"#60a5fa",rare:"#fbbf24",epic:"#c084fc",legendary:"#f87171"};
   var rarityLabels={common:"COMMON",uncommon:"UNCOMMON",rare:"RARE",epic:"EPIC",legendary:"LEGENDARY ✦"};
-  var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
+  var last=parseInt((function(){try{return localStorage.getItem("cobra_spin_last")||"0";}catch(e){return"0";}})());
   var msSince=Date.now()-last;
   var canSp=msSince>=86400000;
   var msUntil=Math.max(0,86400000-msSince);
@@ -971,7 +971,7 @@ function SpinScreen({onClose,onSpin}){
       var seg=SEGS[idx];
       setResult(seg);setPhase("reveal");
       onSpin(seg.reward);
-      localStorage.setItem("cobra_spin_last",String(Date.now()));
+      try{localStorage.setItem("cobra_spin_last",String(Date.now()));}catch(e){}
       // confetti for rare+
       if(seg.rarity==="rare"||seg.rarity==="epic"||seg.rarity==="legendary"){
         var pieces=Array.from({length:seg.rarity==="legendary"?60:30},function(_,k){return{
@@ -1321,6 +1321,14 @@ export default function Cobra(){
   const [playerLevel,setPlayerLevel]=useState(function(){try{return parseInt(localStorage.getItem("cobra_level")||"1");}catch(e){return 1;}});
   const [activeScreen,setActiveScreen]=useState(null);
   const [rewardPopup,setRewardPopup]=useState(null);
+  // battle-pass state (safe reads)
+  const lsGet=function(k,fb){try{var v=localStorage.getItem(k);return v!==null?v:fb;}catch(e){return fb;}};
+  const [bpLevel,setBpLevel]=useState(function(){return parseInt(lsGet("cobra_bp_level","1"));});
+  const [bpPremium,setBpPremium]=useState(function(){return lsGet("cobra_bp_premium","false")==="true";});
+  const [bpClaimed,setBpClaimed]=useState(function(){try{return JSON.parse(lsGet("cobra_bp_claimed","[]"));}catch(e){return[];}});
+  const [dailyLast,setDailyLast]=useState(function(){return parseInt(lsGet("cobra_daily_last","0"));});
+  const [dailyStreak,setDailyStreak]=useState(function(){return parseInt(lsGet("cobra_daily_streak","0"));});
+  const [spinLast,setSpinLast]=useState(function(){return parseInt(lsGet("cobra_spin_last","0"));});
   const [joiningRoom,setJoiningRoom]=useState(false);
   const [creatingRoom,setCreatingRoom]=useState(false);
   const [startingGame,setStartingGame]=useState(false);
@@ -1990,9 +1998,9 @@ export default function Cobra(){
                 </div>
                 <div>
                   <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.05)",overflow:"hidden",marginBottom:3}}>
-                    <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((parseInt(localStorage.getItem("cobra_bp_level")||"1")/50)*100))+"%",borderRadius:2}}/>
+                    <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((bpLevel/50)*100))+"%",borderRadius:2}}/>
                   </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.3)",letterSpacing:1}}>LV {parseInt(localStorage.getItem("cobra_bp_level")||"1")} / 50</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.3)",letterSpacing:1}}>LV {bpLevel} / 50</div>
                 </div>
               </button>
               {/* Profile */}
@@ -2008,10 +2016,8 @@ export default function Cobra(){
               </button>
               {/* Daily Rewards */}
               {(function(){
-                var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
-                var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
-                var canClaim=Date.now()-last>=86400000;
-                var msUntil=Math.max(0,86400000-(Date.now()-last));
+                var canClaim=Date.now()-dailyLast>=86400000;
+                var msUntil=Math.max(0,86400000-(Date.now()-dailyLast));
                 var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
                 return(
                   <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}} style={{background:"linear-gradient(145deg,#1c1000,#120a00)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canClaim?"availablePulse 2s ease-in-out infinite":"none"}}>
@@ -2020,7 +2026,7 @@ export default function Cobra(){
                       <span style={{fontSize:24,filter:canClaim?"drop-shadow(0 0 4px rgba(251,191,36,0.6))":"none"}}>📅</span>
                       <div>
                         <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:canClaim?"#fbbf24":"#a07830",letterSpacing:1,fontWeight:700}}>Daily Reward</div>
-                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.35)"}}>{canClaim?"Ready now!":"Day "+(Math.min(streak%7+1,7))+" / 7"}</div>
+                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.35)"}}>{canClaim?"Ready now!":"Day "+(Math.min(dailyStreak%7+1,7))+" / 7"}</div>
                       </div>
                     </div>
                     <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.25)",letterSpacing:1}}>{canClaim?"CLAIM NOW ✦":hrs+"h "+mins+"m"}</div>
@@ -2029,9 +2035,8 @@ export default function Cobra(){
               })()}
               {/* Lucky Spin */}
               {(function(){
-                var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
-                var canSp=Date.now()-last>=86400000;
-                var msUntil=Math.max(0,86400000-(Date.now()-last));
+                var canSp=Date.now()-spinLast>=86400000;
+                var msUntil=Math.max(0,86400000-(Date.now()-spinLast));
                 var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
                 return(
                   <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}} style={{background:"linear-gradient(145deg,#160616,#0e040e)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canSp?"availablePulse 2.2s ease-in-out infinite":"none"}}>
@@ -2091,30 +2096,30 @@ export default function Cobra(){
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       {activeScreen==="profile"&&<ProfileScreen name={myName} avatar={myAvatar} level={playerLevel} xp={playerXP} xpForLevel={xpForLevel} coins={coins} gems={gems} stats={gameStats} onClose={function(){setActiveScreen(null);}}/>}
       {activeScreen==="battlepass"&&<BattlePassScreen
-        bpLevel={parseInt(localStorage.getItem("cobra_bp_level")||"1")}
-        bpPremium={localStorage.getItem("cobra_bp_premium")==="true"}
-        bpClaimed={JSON.parse(localStorage.getItem("cobra_bp_claimed")||"[]")}
+        bpLevel={bpLevel}
+        bpPremium={bpPremium}
+        bpClaimed={bpClaimed}
         onClaim={function(i,r){
-          var claimed=JSON.parse(localStorage.getItem("cobra_bp_claimed")||"[]");
-          if(claimed.indexOf(i)<0){
-            claimed.push(i);
-            try{localStorage.setItem("cobra_bp_claimed",JSON.stringify(claimed));}catch(e){}
+          if(bpClaimed.indexOf(i)<0){
+            var newClaimed=[...bpClaimed,i];
+            setBpClaimed(newClaimed);
+            try{localStorage.setItem("cobra_bp_claimed",JSON.stringify(newClaimed));}catch(e){}
             if(r.type==="coins")addCoins(r.amount);
             if(r.type==="gems")addGems(r.amount);
             setRewardPopup({coins:r.type==="coins"?r.amount:0,gems:r.type==="gems"?r.amount:0,label:"Battle Pass Reward!"});
           }
         }}
         onUpgrade={function(){
-          var g=parseInt(localStorage.getItem("cobra_gems")||"0");
-          if(g>=800){addGems(-800);try{localStorage.setItem("cobra_bp_premium","true");}catch(e){}setRewardPopup({coins:0,gems:0,label:"Premium Unlocked! 🎭"});}
+          if(gems>=800){addGems(-800);setBpPremium(true);try{localStorage.setItem("cobra_bp_premium","true");}catch(e){}setRewardPopup({coins:0,gems:0,label:"Premium Unlocked! 🎭"});}
           else{pop("Not enough gems! Need 800 💎","error");}
         }}
         onClose={function(){setActiveScreen(null);}}
       />}
       {activeScreen==="daily"&&<DailyRewardScreen
         onClaim={function(r){
-          var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
-          try{localStorage.setItem("cobra_daily_last",String(Date.now()));localStorage.setItem("cobra_daily_streak",String(streak+1));}catch(e){}
+          var now=Date.now(),newStreak=dailyStreak+1;
+          setDailyLast(now);setDailyStreak(newStreak);
+          try{localStorage.setItem("cobra_daily_last",String(now));localStorage.setItem("cobra_daily_streak",String(newStreak));}catch(e){}
           addCoins(r.coins);
           if(r.gems)addGems(r.gems);
           setRewardPopup({coins:r.coins,gems:r.gems||0,label:"Daily Reward! 📅"});
@@ -2124,11 +2129,12 @@ export default function Cobra(){
       />}
       {activeScreen==="spin"&&<SpinScreen
         onSpin={function(r){
+          var now=Date.now();setSpinLast(now);
           if(r.coins)addCoins(r.coins);
           if(r.gems)addGems(r.gems);
           setRewardPopup({coins:r.coins||0,gems:r.gems||0,label:"Lucky Spin! 🎡"});
         }}
-        onClose={function(){setActiveScreen(null);}}
+        onClose={function(){setActiveScreen(null);setSpinLast(parseInt(lsGet("cobra_spin_last","0")));}}
       />}
       {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/>}
     </div>
