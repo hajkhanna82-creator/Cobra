@@ -261,6 +261,30 @@ input::placeholder{color:#2a3d28;}
 .btn_btn_ghost:active{transform:scale(0.93);}
 .btn_btn_outline_gold{background:rgba(212,168,67,0.08);color:#d4a843;border:1.5px solid rgba(212,168,67,0.38);display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;font-family:Cinzel,serif;font-weight:700;letter-spacing:2px;cursor:pointer;transition:transform 0.15s;user-select:none;text-transform:uppercase;position:relative;overflow:hidden;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:48px;min-width:48px;}
 .btn_btn_outline_gold:active{transform:scale(0.93);}
+/* Premium button shine sweep */
+@keyframes btnShine{0%{left:-100%}100%{left:200%}}
+/* Coin/gem bounce on earn */
+@keyframes coinBounce{0%,100%{transform:scale(1)}30%{transform:scale(1.4)}60%{transform:scale(0.9)}}
+/* Reward card pop */
+@keyframes cardReveal{0%{transform:scale(0.85) translateY(10px);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1) translateY(0);opacity:1}}
+/* XP bar fill */
+@keyframes xpFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+/* Legendary shimmer */
+@keyframes legendaryShimmer{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.3),0 0 40px rgba(212,168,67,0.1)}50%{box-shadow:0 0 30px rgba(212,168,67,0.7),0 0 60px rgba(212,168,67,0.3)}}
+/* Particle drift */
+@keyframes sparkle{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-60px) scale(0);opacity:0}}
+/* Spin pointer bounce */
+@keyframes pointerBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
+/* Tile pulse for available rewards */
+@keyframes availablePulse{0%,100%{box-shadow:inset 0 0 0 1.5px rgba(251,191,36,0.3)}50%{box-shadow:inset 0 0 0 1.5px rgba(251,191,36,0.8),0 0 12px rgba(251,191,36,0.2)}}
+/* Section divider */
+.section-label{font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;color:rgba(212,168,67,0.45);text-transform:uppercase;text-align:center;padding:8px 0;display:flex;align-items:center;gap:10px;}
+.section-label::before,.section-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(212,168,67,0.2),transparent);}
+/* Premium card base */
+.reward-card{border-radius:14px;overflow:hidden;position:relative;transition:transform 0.18s cubic-bezier(.22,1,.36,1);}
+.reward-card:active{transform:scale(0.95);}
+/* Gold text gradient */
+.gold-text{background:linear-gradient(135deg,#f4cc52,#d4a843,#a87020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 `;
 
 const CARD_THEMES={
@@ -659,73 +683,167 @@ function SplashScreen({onDone}){
 
 function ProfileScreen({name,avatar,level,xp,xpForLevel,coins,gems,stats,onClose}){
   var pct=Math.min(100,xpForLevel(level)>0?Math.round(xp/xpForLevel(level)*100):100);
+  var winRate=stats&&stats.rounds>0?Math.round(stats.wins/stats.rounds*100):0;
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"linear-gradient(160deg,#0d1a0d,#010603)",border:"2px solid #d4a843",borderRadius:20,padding:28,width:"min(340px,90vw)",color:"#f0e6c8",fontFamily:"Cinzel,serif",animation:"rewardPop 0.35s ease-out"}}>
-        <div style={{textAlign:"center",marginBottom:16}}>
-          <div style={{fontSize:56}}>{avatar||"🐍"}</div>
-          <div style={{fontSize:18,color:"#d4a843",marginTop:4}}>{name||"Player"}</div>
-          <div style={{color:"#aaa",fontSize:12}}>Level {level}</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:250,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#0d1f0e 0%,#060e06 60%,#010603 100%)",border:"1.5px solid rgba(212,168,67,0.35)",borderBottom:"none",borderRadius:"24px 24px 0 0",padding:"0 0 calc(28px + env(safe-area-inset-bottom))",width:"100%",maxWidth:480,animation:"slideUp 0.38s cubic-bezier(.22,1,.36,1) both",maxHeight:"90vh",overflowY:"auto"}}>
+        {/* Handle bar */}
+        <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}>
+          <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/>
         </div>
-        <div style={{marginBottom:16}}>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#aaa",marginBottom:4}}>
-            <span>XP Progress</span><span>{xp} / {xpForLevel(level)}</span>
+        {/* Hero section */}
+        <div style={{position:"relative",padding:"20px 24px 0",textAlign:"center"}}>
+          {/* Ambient glow behind avatar */}
+          <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:180,height:180,borderRadius:"50%",background:"radial-gradient(circle,rgba(212,168,67,0.12),transparent 70%)",pointerEvents:"none"}}/>
+          {/* Avatar ring */}
+          <div style={{display:"inline-block",position:"relative",marginBottom:12}}>
+            <div style={{width:90,height:90,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",padding:3,display:"inline-block",boxShadow:"0 0 0 4px rgba(212,168,67,0.1),0 8px 32px rgba(0,0,0,0.4)"}}>
+              <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"linear-gradient(135deg,#0d1f0e,#060e06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:44}}>
+                {avatar||"🐍"}
+              </div>
+            </div>
+            {/* Level badge */}
+            <div style={{position:"absolute",bottom:-4,right:-4,width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#f0c060)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,color:"#010603",boxShadow:"0 2px 8px rgba(0,0,0,0.5),0 0 0 2px #010603"}}>
+              {level}
+            </div>
           </div>
-          <div style={{background:"#1a2f1a",borderRadius:6,height:10,overflow:"hidden"}}>
-            <div style={{width:pct+"%",height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",borderRadius:6,transition:"width 0.5s"}}/>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:700,letterSpacing:2,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{name||"Player"}</div>
+          <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.5)",fontSize:13,marginTop:2,letterSpacing:3}}>LEVEL {level} COBRA CHAMPION</div>
+        </div>
+        {/* XP bar */}
+        <div style={{margin:"20px 24px 0"}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(212,168,67,0.5)",letterSpacing:1,marginBottom:6}}>
+            <span>XP PROGRESS</span><span>{xp.toLocaleString()} / {xpForLevel(level).toLocaleString()}</span>
           </div>
+          <div style={{height:8,borderRadius:4,background:"rgba(255,255,255,0.05)",overflow:"hidden",position:"relative"}}>
+            <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.02)"}}/>
+            <div style={{height:"100%",width:pct+"%",borderRadius:4,background:"linear-gradient(90deg,#c49030,#f0c060,#d4a843)",boxShadow:"0 0 8px rgba(212,168,67,0.5)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
+          </div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:4,textAlign:"right"}}>{pct}% to Level {level+1}</div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",gap:20,marginBottom:16,fontSize:15}}>
-          <span>🪙 {coins.toLocaleString()}</span><span>💎 {gems}</span>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20,textAlign:"center"}}>
-          {[["Games",stats&&stats.rounds||0],["Wins",stats&&stats.wins||0],["Streak",stats&&stats.bestStreak||0]].map(function(row){return(
-            <div key={row[0]} style={{background:"#0d1a0d",borderRadius:8,padding:"8px 4px"}}>
-              <div style={{fontSize:18,color:"#d4a843"}}>{row[1]}</div>
-              <div style={{fontSize:10,color:"#aaa"}}>{row[0]}</div>
+        {/* Balance row */}
+        <div style={{display:"flex",gap:10,margin:"16px 24px 0"}}>
+          {[{icon:"🪙",val:coins.toLocaleString(),label:"COINS",color:"#f0c060",bg:"rgba(212,168,67,0.08)",border:"rgba(212,168,67,0.2)"},{icon:"💎",val:gems,label:"GEMS",color:"#c084fc",bg:"rgba(168,85,247,0.08)",border:"rgba(168,85,247,0.2)"}].map(function(b){return(
+            <div key={b.label} style={{flex:1,background:b.bg,border:"1px solid "+b.border,borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
+              <div style={{fontSize:22,marginBottom:2}}>{b.icon}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:700,color:b.color}}>{b.val}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:2,marginTop:2}}>{b.label}</div>
             </div>
           );})}
         </div>
-        <button onClick={onClose} style={{width:"100%",padding:10,background:"#d4a843",color:"#010603",border:"none",borderRadius:8,fontFamily:"Cinzel,serif",fontSize:14,cursor:"pointer",fontWeight:"bold"}}>Close</button>
+        {/* Stats grid */}
+        <div style={{margin:"12px 24px 0"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:3,color:"rgba(212,168,67,0.35)",marginBottom:10,textAlign:"center"}}>STATISTICS</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+            {[
+              {icon:"🃏",val:stats&&stats.rounds||0,label:"GAMES"},
+              {icon:"🏆",val:stats&&stats.wins||0,label:"WINS"},
+              {icon:"🎯",val:winRate+"%",label:"WIN RATE"},
+              {icon:"🔥",val:stats&&stats.streak||0,label:"STREAK"},
+              {icon:"⭐",val:stats&&stats.bestStreak||0,label:"BEST"},
+              {icon:"🐍",val:stats&&stats.cobras||0,label:"COBRAS"},
+            ].map(function(s){return(
+              <div key={s.label} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 6px",textAlign:"center"}}>
+                <div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:15,fontWeight:700,color:"#d4a843"}}>{s.val}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:2,marginTop:2}}>{s.label}</div>
+              </div>
+            );})}
+          </div>
+        </div>
+        {/* Close */}
+        <div style={{padding:"20px 24px 0"}}>
+          <button onClick={onClose} style={{width:"100%",padding:"14px",background:"rgba(212,168,67,0.1)",border:"1.5px solid rgba(212,168,67,0.3)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:3,color:"#d4a843",cursor:"pointer",touchAction:"manipulation",transition:"all 0.15s"}}>CLOSE</button>
+        </div>
       </div>
     </div>
   );
 }
 
 function BattlePassScreen({bpLevel,bpPremium,bpClaimed,onClaim,onClose,onUpgrade}){
-  var rewards=Array.from({length:50},function(_,i){return{
-    free:i%3===0?{type:"coins",amount:(i+1)*20}:i%3===1?{type:"label",label:"🐍 Skin "+(i+1)}:{type:"gems",amount:1},
-    premium:i%2===0?{type:"coins",amount:(i+1)*50}:{type:"gems",amount:Math.ceil((i+1)/10)},
-  };});
+  var rewards=Array.from({length:50},function(_,i){
+    var isSpecial=i===49;
+    return{
+      free:i%3===0?{type:"coins",amount:(i+1)*20}:i%3===1?{type:"label",label:"🐍 Skin "+(Math.floor(i/3)+1)}:{type:"gems",amount:Math.ceil((i+1)/15)},
+      premium:i%2===0?{type:"coins",amount:(i+1)*50}:{type:"gems",amount:Math.ceil((i+1)/8)},
+      special:isSpecial,
+      milestone:i%9===8,
+    };
+  });
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:250,display:"flex",flexDirection:"column"}}>
-      <style>{`@keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
-      <div style={{padding:"16px 20px",borderBottom:"1px solid #d4a843",display:"flex",justifyContent:"space-between",alignItems:"center",color:"#d4a843",fontFamily:"Cinzel,serif",flexShrink:0,paddingTop:"calc(16px + env(safe-area-inset-top))"}}>
-        <span style={{fontSize:16}}>🎭 Battle Pass</span>
-        <span style={{fontSize:11,color:"#aaa"}}>Season 1 — Lv {bpLevel}/50</span>
-        <button onClick={onClose} style={{background:"none",border:"none",color:"#d4a843",fontSize:22,cursor:"pointer",touchAction:"manipulation"}}>✕</button>
+    <div style={{position:"fixed",inset:0,background:"#010603",zIndex:250,display:"flex",flexDirection:"column"}}>
+      <style>{`@keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}@keyframes legendaryShimmer{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.4)}50%{box-shadow:0 0 40px rgba(212,168,67,0.8),0 0 80px rgba(212,168,67,0.3)}}`}</style>
+      {/* Header */}
+      <div style={{background:"linear-gradient(180deg,#0d1f0e,#060e06)",borderBottom:"1px solid rgba(212,168,67,0.15)",paddingTop:"calc(16px + env(safe-area-inset-top))",paddingBottom:16,paddingLeft:20,paddingRight:20,flexShrink:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:700,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:3}}>BATTLE PASS</div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.4)",fontSize:13,letterSpacing:2,marginTop:2}}>SEASON 1 · LEVEL {bpLevel}/50</div>
+          </div>
+          <button onClick={onClose} style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.6)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
+        </div>
+        {/* Season progress bar */}
+        <div style={{marginTop:14}}>
+          <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.05)",overflow:"hidden"}}>
+            <div style={{height:"100%",width:Math.round(bpLevel/50*100)+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 6px rgba(212,168,67,0.5)",transition:"width 0.6s cubic-bezier(.22,1,.36,1)"}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.3)",letterSpacing:1}}>
+            <span>START</span><span style={{color:"rgba(212,168,67,0.6)"}}>{Math.round(bpLevel/50*100)}% COMPLETE</span><span>LV 50</span>
+          </div>
+        </div>
+        {/* Premium upgrade CTA */}
+        {!bpPremium&&(
+          <button onClick={onUpgrade} style={{width:"100%",marginTop:12,padding:"11px",background:"linear-gradient(135deg,#4c1d95,#7c3aed,#a855f7)",border:"1px solid rgba(168,85,247,0.4)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.06)",borderRadius:"12px 12px 0 0",pointerEvents:"none"}}/>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"white",letterSpacing:2,fontWeight:700}}>💎 UPGRADE TO PREMIUM</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.55)",marginTop:1}}>Unlock the premium reward lane</div>
+            </div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#e9d5ff",background:"rgba(255,255,255,0.12)",padding:"6px 12px",borderRadius:8,letterSpacing:1,flexShrink:0}}>800 💎</div>
+          </button>
+        )}
       </div>
-      {!bpPremium&&<div style={{margin:"8px 16px",padding:"10px",background:"linear-gradient(90deg,#1a1a3a,#2a1a3a)",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-        <span style={{color:"#c084fc",fontFamily:"Cinzel,serif",fontSize:12}}>💎 Upgrade to Premium</span>
-        <button onClick={onUpgrade} style={{background:"linear-gradient(90deg,#7c3aed,#a855f7)",border:"none",color:"white",padding:"6px 14px",borderRadius:6,fontFamily:"Cinzel,serif",fontSize:11,cursor:"pointer",touchAction:"manipulation"}}>800 💎</button>
-      </div>}
-      <div style={{flex:1,overflowY:"auto",padding:"8px 12px",paddingBottom:"calc(8px + env(safe-area-inset-bottom))"}}>
+      {/* Column headers */}
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 20px 6px",background:"rgba(0,0,0,0.3)",flexShrink:0,borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{width:32,flexShrink:0}}/>
+        <div style={{flex:1,fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:2,color:"rgba(212,168,67,0.35)",textAlign:"center"}}>FREE</div>
+        {bpPremium&&<div style={{minWidth:96,fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:2,color:"rgba(168,85,247,0.5)",textAlign:"center"}}>PREMIUM</div>}
+      </div>
+      {/* Reward rows */}
+      <div style={{flex:1,overflowY:"auto",padding:"6px 16px",paddingBottom:"calc(12px + env(safe-area-inset-bottom))"}}>
         {rewards.map(function(r,i){
           var lvl=i+1,earned=lvl<=bpLevel,claimed=bpClaimed.indexOf(i)>=0;
+          var isCurrent=lvl===bpLevel;
           return(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,opacity:earned?1:0.45}}>
-              <div style={{width:30,height:30,borderRadius:"50%",background:earned?"#d4a843":"#1a2f1a",display:"flex",alignItems:"center",justifyContent:"center",color:earned?"#010603":"#555",fontSize:11,fontFamily:"Cinzel,serif",fontWeight:"bold",flexShrink:0}}>{lvl}</div>
-              <div style={{flex:1,background:"#0d1a0d",border:"1px solid #1a3a1a",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{color:"#d4a843",fontSize:11}}>{r.free.type==="coins"?"🪙 "+r.free.amount:r.free.type==="gems"?"💎 "+r.free.amount:r.free.label}</span>
-                {earned&&!claimed?<button onClick={function(){onClaim(i,r.free);}} style={{background:"#22c55e",border:"none",color:"white",padding:"3px 10px",borderRadius:5,fontSize:11,cursor:"pointer",fontFamily:"Cinzel,serif",touchAction:"manipulation"}}>Claim</button>
-                :claimed?<span style={{color:"#22c55e",fontSize:14}}>✓</span>
-                :<span style={{color:"#555",fontSize:12}}>🔒</span>}
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,opacity:earned?1:0.4,transition:"opacity 0.2s",animation:isCurrent?"legendaryShimmer 2s ease-in-out infinite":"none"}}>
+              {/* Level node */}
+              <div style={{width:32,height:32,borderRadius:"50%",background:earned?"linear-gradient(135deg,#d4a843,#f0c060)":r.milestone?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)",border:isCurrent?"2px solid #f0c060":r.milestone?"1px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Cinzel,serif",fontSize:10,fontWeight:700,color:earned?"#010603":"rgba(255,255,255,0.2)",flexShrink:0,position:"relative",boxShadow:earned?"0 0 10px rgba(212,168,67,0.3)":"none"}}>
+                {earned?<span style={{fontSize:14}}>✓</span>:lvl}
               </div>
-              {bpPremium&&<div style={{background:"#1a1a3a",border:"1px solid #7c3aed",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",minWidth:80}}>
-                <span style={{color:"#c084fc",fontSize:11}}>{r.premium.type==="coins"?"🪙 "+r.premium.amount:"💎 "+r.premium.amount}</span>
-                {earned&&!claimed?<button onClick={function(){onClaim(i,r.premium,"premium");}} style={{background:"#7c3aed",border:"none",color:"white",padding:"3px 8px",borderRadius:5,fontSize:11,cursor:"pointer",touchAction:"manipulation"}}>+</button>
-                :claimed?<span style={{color:"#7c3aed",fontSize:12}}>✓</span>:<span style={{color:"#555",fontSize:12}}>🔒</span>}
-              </div>}
+              {/* Free reward */}
+              <div style={{flex:1,background:claimed?"rgba(34,197,94,0.06)":earned?"rgba(212,168,67,0.05)":"rgba(255,255,255,0.02)",border:"1px solid "+(claimed?"rgba(34,197,94,0.2)":earned?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)"),borderRadius:10,padding:"8px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",minHeight:42}}>
+                <div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:claimed?"rgba(34,197,94,0.6)":earned?"#d4a843":"rgba(255,255,255,0.2)",letterSpacing:0.5}}>
+                    {r.free.type==="coins"?"🪙 "+r.free.amount.toLocaleString():r.free.type==="gems"?"💎 "+r.free.amount:r.free.label}
+                  </div>
+                  {r.free.type==="coins"&&<div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:1}}>Cobra Coins</div>}
+                </div>
+                {earned&&!claimed
+                  ?<button onClick={function(){onClaim(i,r.free);}} style={{background:"linear-gradient(135deg,#15803d,#22c55e)",border:"none",color:"white",padding:"5px 12px",borderRadius:7,fontSize:10,cursor:"pointer",fontFamily:"Cinzel,serif",letterSpacing:1,touchAction:"manipulation",boxShadow:"0 2px 8px rgba(34,197,94,0.3)",flexShrink:0}}>CLAIM</button>
+                  :claimed?<div style={{width:22,height:22,borderRadius:"50%",background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#22c55e",flexShrink:0}}>✓</div>
+                  :<div style={{fontSize:14,color:"rgba(255,255,255,0.1)",flexShrink:0}}>🔒</div>}
+              </div>
+              {/* Premium reward */}
+              {bpPremium&&(
+                <div style={{minWidth:96,background:claimed?"rgba(168,85,247,0.06)":earned?"rgba(168,85,247,0.08)":"rgba(255,255,255,0.02)",border:"1px solid "+(claimed?"rgba(168,85,247,0.25)":earned?"rgba(168,85,247,0.2)":"rgba(255,255,255,0.04)"),borderRadius:10,padding:"8px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",minHeight:42}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:claimed?"rgba(168,85,247,0.5)":earned?"#c084fc":"rgba(255,255,255,0.15)"}}>
+                    {r.premium.type==="coins"?"🪙 "+r.premium.amount:("💎 "+r.premium.amount)}
+                  </div>
+                  {earned&&!claimed
+                    ?<button onClick={function(){onClaim(i,r.premium,"premium");}} style={{background:"linear-gradient(135deg,#7c3aed,#a855f7)",border:"none",color:"white",padding:"4px 8px",borderRadius:6,fontSize:10,cursor:"pointer",touchAction:"manipulation",flexShrink:0}}>+</button>
+                    :claimed?<span style={{fontSize:12,color:"rgba(168,85,247,0.5)"}}>✓</span>:<span style={{fontSize:12,color:"rgba(255,255,255,0.08)"}}>🔒</span>}
+                </div>
+              )}
             </div>
           );
         })}
@@ -735,7 +853,15 @@ function BattlePassScreen({bpLevel,bpPremium,bpClaimed,onClaim,onClose,onUpgrade
 }
 
 function DailyRewardScreen({onClaim,onClose}){
-  var dayRewards=[{coins:100,gems:0},{coins:150,gems:0},{coins:200,gems:1},{coins:250,gems:0},{coins:300,gems:2},{coins:400,gems:0},{coins:500,gems:5}];
+  var dayRewards=[
+    {coins:100,gems:0,label:"Day 1"},
+    {coins:150,gems:0,label:"Day 2"},
+    {coins:200,gems:1,label:"Day 3"},
+    {coins:250,gems:0,label:"Day 4"},
+    {coins:300,gems:2,label:"Day 5"},
+    {coins:400,gems:0,label:"Day 6"},
+    {coins:500,gems:5,label:"Day 7 ⭐"},
+  ];
   var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
   var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
   var msSince=Date.now()-last;
@@ -744,47 +870,83 @@ function DailyRewardScreen({onClaim,onClose}){
   var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
   var currentDay=Math.min(streak%7,6);
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:250,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{background:"linear-gradient(160deg,#0d1a0d,#010603)",border:"2px solid #d4a843",borderRadius:20,padding:24,width:"min(360px,92vw)",color:"#f0e6c8",fontFamily:"Cinzel,serif",animation:"rewardPop 0.35s ease-out"}}>
-        <div style={{textAlign:"center",marginBottom:16}}>
-          <div style={{fontSize:22,color:"#d4a843"}}>📅 Daily Rewards</div>
-          <div style={{fontSize:12,color:"#aaa",marginTop:4}}>Day {currentDay+1} of 7</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:250,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#1a1100,#0e0a00,#010603)",border:"1.5px solid rgba(212,168,67,0.3)",borderBottom:"none",borderRadius:"24px 24px 0 0",padding:"0 0 calc(28px + env(safe-area-inset-bottom))",width:"100%",maxWidth:480,animation:"slideUp 0.38s cubic-bezier(.22,1,.36,1) both"}}>
+        <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}>
+          <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:16}}>
+        {/* Header */}
+        <div style={{padding:"12px 24px 20px",textAlign:"center"}}>
+          <div style={{fontSize:40,marginBottom:8}}>📅</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:700,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:3}}>DAILY REWARDS</div>
+          <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.4)",fontSize:13,letterSpacing:2,marginTop:4}}>DAY {currentDay+1} OF 7</div>
+        </div>
+        {/* Day cards */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:5,padding:"0 16px 20px"}}>
           {dayRewards.map(function(r,i){
-            var past=i<currentDay,active=i===currentDay&&canClaim,locked=i>currentDay;
+            var past=i<currentDay,active=i===currentDay&&canClaim,today=i===currentDay&&!canClaim,locked=i>currentDay;
             return(
-              <div key={i} style={{background:active?"linear-gradient(135deg,#d4a843,#f0c060)":past?"#1a2f1a":"#0d1a0d",border:"1px solid "+(active?"#f0c060":past?"#2a4a2a":"#1a3a1a"),borderRadius:7,padding:"5px 2px",textAlign:"center",opacity:locked?0.35:1}}>
-                <div style={{fontSize:8,color:active?"#010603":past?"#aaa":"#555",marginBottom:2}}>D{i+1}</div>
-                <div style={{fontSize:13}}>{past?"✅":r.gems>0?"💎":"🪙"}</div>
-                <div style={{fontSize:7,color:active?"#010603":"#aaa"}}>{r.gems>0?r.gems+"💎":r.coins}</div>
+              <div key={i} style={{
+                background:active?"linear-gradient(145deg,#92400e,#b45309,#d97706)":past?"rgba(34,197,94,0.08)":today?"rgba(212,168,67,0.08)":"rgba(255,255,255,0.03)",
+                border:"1.5px solid "+(active?"#f59e0b":past?"rgba(34,197,94,0.25)":today?"rgba(212,168,67,0.25)":"rgba(255,255,255,0.06)"),
+                borderRadius:10,padding:"8px 4px",textAlign:"center",
+                opacity:locked?0.3:1,
+                boxShadow:active?"0 0 16px rgba(245,158,11,0.4)":past?"0 0 6px rgba(34,197,94,0.1)":"none",
+                transition:"all 0.2s",
+                animation:active?"availablePulse 1.8s ease-in-out infinite":"none",
+              }}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:active?"rgba(0,0,0,0.6)":past?"rgba(34,197,94,0.5)":"rgba(255,255,255,0.2)",letterSpacing:1,marginBottom:4}}>D{i+1}</div>
+                <div style={{fontSize:past?16:14,marginBottom:3}}>{past?"✅":r.gems>0?"💎":"🪙"}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:active?"rgba(0,0,0,0.7)":r.gems>0?"#c084fc":"rgba(212,168,67,0.6)",letterSpacing:0.5}}>
+                  {past?"":r.gems>0?"+"+r.gems:"+"+r.coins}
+                </div>
               </div>
             );
           })}
         </div>
-        {canClaim
-          ?<button onClick={function(){onClaim(dayRewards[currentDay]);}} style={{width:"100%",padding:12,background:"linear-gradient(90deg,#d4a843,#f0c060)",color:"#010603",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:14,cursor:"pointer",fontWeight:"bold",touchAction:"manipulation"}}>
-            🎁 Claim Day {currentDay+1}!
-          </button>
-          :<div style={{textAlign:"center",color:"#aaa",fontSize:13}}>Next reward in {hrs}h {mins}m</div>
-        }
-        <button onClick={onClose} style={{width:"100%",marginTop:10,padding:8,background:"transparent",border:"1px solid #555",color:"#aaa",borderRadius:8,fontFamily:"Cinzel,serif",fontSize:11,cursor:"pointer",touchAction:"manipulation"}}>Close</button>
+        {/* Active reward preview */}
+        <div style={{margin:"0 24px 20px",padding:"16px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:14,display:"flex",alignItems:"center",gap:14}}>
+          <div style={{fontSize:32,flexShrink:0}}>{dayRewards[currentDay].gems>0?"💎":"🪙"}</div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#d4a843",letterSpacing:1,marginBottom:2}}>Today's Reward</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"rgba(255,255,255,0.6)"}}>
+              {dayRewards[currentDay].coins>0&&"+"+dayRewards[currentDay].coins.toLocaleString()+" 🪙 Cobra Coins"}
+              {dayRewards[currentDay].gems>0&&" · +"+dayRewards[currentDay].gems+" 💎 Gems"}
+            </div>
+          </div>
+        </div>
+        {/* CTA */}
+        <div style={{padding:"0 24px"}}>
+          {canClaim
+            ?<button onClick={function(){onClaim(dayRewards[currentDay]);}} style={{width:"100%",padding:"16px",background:"linear-gradient(135deg,#92400e,#d97706,#f59e0b)",border:"none",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:15,letterSpacing:3,color:"#010603",fontWeight:700,cursor:"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:"0 4px 20px rgba(245,158,11,0.4)"}}>
+              <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.12)",borderRadius:"14px 14px 0 0",pointerEvents:"none"}}/>
+              🎁 CLAIM DAY {currentDay+1}
+            </button>
+            :<div style={{padding:"14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,textAlign:"center"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"rgba(255,255,255,0.3)",letterSpacing:2}}>NEXT REWARD IN</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:22,color:"rgba(212,168,67,0.7)",marginTop:4,letterSpacing:3}}>{hrs}h {mins}m</div>
+            </div>
+          }
+          <button onClick={onClose} style={{width:"100%",marginTop:10,padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.3)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,cursor:"pointer",touchAction:"manipulation"}}>CLOSE</button>
+        </div>
       </div>
     </div>
   );
 }
 
 function SpinScreen({onClose,onSpin}){
-  var segments=[
-    {label:"50 🪙",color:"#22c55e",reward:{coins:50}},
-    {label:"100 🪙",color:"#3b82f6",reward:{coins:100}},
-    {label:"50 🪙",color:"#15803d",reward:{coins:50}},
-    {label:"200 🪙",color:"#f59e0b",reward:{coins:200}},
-    {label:"50 🪙",color:"#22c55e",reward:{coins:50}},
-    {label:"100 🪙",color:"#2563eb",reward:{coins:100}},
-    {label:"10 💎",color:"#a855f7",reward:{gems:10}},
-    {label:"500+5💎",color:"#ef4444",reward:{coins:500,gems:5}},
+  var SEGS=[
+    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
+    {label:"100",sub:"COINS",icon:"🪙",color:"#1d4ed8",glow:"rgba(29,78,216,0.5)",reward:{coins:100},rarity:"uncommon"},
+    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
+    {label:"200",sub:"COINS",icon:"🪙",color:"#b45309",glow:"rgba(180,83,9,0.5)",reward:{coins:200},rarity:"rare"},
+    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
+    {label:"100",sub:"COINS",icon:"🪙",color:"#1d4ed8",glow:"rgba(29,78,216,0.5)",reward:{coins:100},rarity:"uncommon"},
+    {label:"10",sub:"GEMS",icon:"💎",color:"#7c3aed",glow:"rgba(124,58,237,0.6)",reward:{gems:10},rarity:"epic"},
+    {label:"500+",sub:"JACKPOT",icon:"🎰",color:"#9f1239",glow:"rgba(159,18,57,0.7)",reward:{coins:500,gems:5},rarity:"legendary"},
   ];
+  var rarityLabels={common:"COMMON",uncommon:"UNCOMMON",rare:"RARE",epic:"EPIC",legendary:"LEGENDARY"};
+  var rarityColors={common:"#22c55e",uncommon:"#3b82f6",rare:"#f59e0b",epic:"#a855f7",legendary:"#ef4444"};
   var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
   var msSince=Date.now()-last;
   var canSp=msSince>=86400000;
@@ -793,64 +955,139 @@ function SpinScreen({onClose,onSpin}){
   var [spinning,setSpinning]=useState(false);
   var [rotation,setRotation]=useState(0);
   var [result,setResult]=useState(null);
+  var [phase,setPhase]=useState("idle"); // idle|spinning|reveal
   var sliceAngle=360/8;
   function handleSpin(){
     if(!canSp||spinning)return;
-    setSpinning(true);setResult(null);
+    setSpinning(true);setResult(null);setPhase("spinning");
     var idx=Math.floor(Math.random()*8);
-    var extra=360*5+(sliceAngle*idx)+(sliceAngle/2);
-    setRotation(function(prev){return prev+extra;});
+    var base=rotation-(rotation%360);
+    var targetRotation=base+360*7+(idx*sliceAngle)+(sliceAngle/2);
+    setRotation(targetRotation);
     setTimeout(function(){
       setSpinning(false);
-      var seg=segments[idx];
+      var seg=SEGS[idx];
       setResult(seg);
+      setPhase("reveal");
       onSpin(seg.reward);
       localStorage.setItem("cobra_spin_last",String(Date.now()));
-    },3200);
+    },3800);
   }
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:250,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-      <style>{`@keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
-      <div style={{color:"#d4a843",fontFamily:"Cinzel,serif",fontSize:20,marginBottom:20,letterSpacing:4}}>🎡 LUCKY SPIN</div>
-      <div style={{position:"relative",marginBottom:20}}>
-        <div style={{position:"absolute",top:-16,left:"50%",transform:"translateX(-50%)",fontSize:28,zIndex:2,filter:"drop-shadow(0 2px 4px rgba(0,0,0,0.8))"}}>▼</div>
-        <svg width="260" height="260" style={{transform:"rotate("+rotation+"deg)",transition:spinning?"transform 3.2s cubic-bezier(0.17,0.67,0.12,0.99)":"none",borderRadius:"50%",overflow:"hidden",display:"block"}}>
-          {segments.map(function(s,i){
+    <div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#0a0010,#010603)",zIndex:250,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",overflowY:"auto"}}>
+      <style>{`@keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}@keyframes pointerBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}@keyframes resultReveal{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}`}</style>
+      {/* Header */}
+      <div style={{textAlign:"center",marginBottom:24,position:"relative",zIndex:1,width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{width:36}}/>
+        <div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:700,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:3}}>LUCKY SPIN</div>
+          <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.35)",fontSize:12,letterSpacing:3}}>FREE DAILY REWARD</div>
+        </div>
+        <button onClick={onClose} style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
+      </div>
+      {/* Wheel container */}
+      <div style={{position:"relative",marginBottom:28}}>
+        {/* Outer glow ring */}
+        <div style={{position:"absolute",inset:-8,borderRadius:"50%",background:"conic-gradient(from 0deg,rgba(212,168,67,0.1),rgba(212,168,67,0.3),rgba(212,168,67,0.1),rgba(168,85,247,0.2),rgba(212,168,67,0.1))",filter:"blur(4px)",pointerEvents:"none"}}/>
+        {/* Pointer */}
+        <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",zIndex:3,animation:canSp&&!spinning?"pointerBounce 1.5s ease-in-out infinite":"none"}}>
+          <div style={{width:0,height:0,borderLeft:"10px solid transparent",borderRight:"10px solid transparent",borderTop:"20px solid #f0c060",filter:"drop-shadow(0 0 6px rgba(240,192,96,0.8))"}}/>
+        </div>
+        {/* The wheel */}
+        <svg width="280" height="280" style={{transform:"rotate("+rotation+"deg)",transition:spinning?"transform 3.8s cubic-bezier(0.17,0.67,0.12,0.99)":"none",display:"block",borderRadius:"50%",boxShadow:"0 0 0 4px rgba(212,168,67,0.15),0 0 0 8px rgba(212,168,67,0.05),0 8px 40px rgba(0,0,0,0.6)"}}>
+          {/* Center circle overlay */}
+          <circle cx="140" cy="140" r="28" fill="#010603" stroke="rgba(212,168,67,0.4)" strokeWidth="2"/>
+          <text x="140" y="145" textAnchor="middle" dominantBaseline="middle" fontSize="18">🐍</text>
+          {SEGS.map(function(s,i){
             var a1=(sliceAngle*i-90)*Math.PI/180,a2=(sliceAngle*(i+1)-90)*Math.PI/180;
-            var r=130,cx=130,cy=130;
+            var r=140,cx=140,cy=140;
             var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
             var x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
-            var mx=cx+(r*0.65)*Math.cos((a1+a2)/2),my=cy+(r*0.65)*Math.sin((a1+a2)/2);
+            var mx=cx+(r*0.66)*Math.cos((a1+a2)/2),my=cy+(r*0.66)*Math.sin((a1+a2)/2);
+            var angle=sliceAngle*i+sliceAngle/2-90;
             return(
               <g key={i}>
-                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 0,1 "+x2+","+y2+" Z"} fill={s.color} stroke="#010603" strokeWidth="2"/>
-                <text x={mx} y={my} textAnchor="middle" dominantBaseline="middle" fontSize="8" fill="white" fontWeight="bold">{s.label}</text>
+                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 0,1 "+x2+","+y2+" Z"} fill={s.color} stroke="rgba(0,0,0,0.3)" strokeWidth="1.5"/>
+                {/* Lighter inner highlight on top half of slice */}
+                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 0,1 "+x2+","+y2+" Z"} fill="rgba(255,255,255,0.06)" stroke="none"/>
+                <g transform={"rotate("+angle+","+mx+","+my+")"}>
+                  <text x={mx} y={my-6} textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="white" fontWeight="700">{s.label}</text>
+                  <text x={mx} y={my+8} textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="rgba(255,255,255,0.7)" letterSpacing="1">{s.sub}</text>
+                </g>
               </g>
             );
           })}
+          {/* Outer ring */}
+          <circle cx="140" cy="140" r="139" fill="none" stroke="rgba(212,168,67,0.25)" strokeWidth="2"/>
+          {/* Divider dots */}
+          {SEGS.map(function(_,i){
+            var a=(sliceAngle*i-90)*Math.PI/180;
+            return <circle key={i} cx={140+137*Math.cos(a)} cy={140+137*Math.sin(a)} r="4" fill="rgba(212,168,67,0.5)"/>;
+          })}
         </svg>
       </div>
-      {result&&!spinning&&<div style={{color:"#d4a843",fontFamily:"Cinzel,serif",fontSize:14,marginBottom:12,background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:10,padding:"8px 20px"}}>Won: {result.label}!</div>}
+      {/* Result reveal */}
+      {phase==="reveal"&&result&&(
+        <div style={{marginBottom:20,padding:"14px 20px",background:"rgba(212,168,67,0.08)",border:"1.5px solid rgba(212,168,67,0.25)",borderRadius:16,textAlign:"center",animation:"resultReveal 0.45s cubic-bezier(.22,1,.36,1) both",boxShadow:"0 0 20px rgba(212,168,67,0.15)"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:rarityColors[result.rarity],marginBottom:6}}>{rarityLabels[result.rarity]}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#d4a843",letterSpacing:1}}>{result.icon} {result.label} {result.sub}</div>
+          {result.reward.gems&&<div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#c084fc",marginTop:4}}>+{result.reward.gems} Gems</div>}
+        </div>
+      )}
+      {/* Rarity legend */}
+      <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap",justifyContent:"center"}}>
+        {Object.entries(rarityColors).map(function(entry){return(
+          <div key={entry[0]} style={{display:"flex",alignItems:"center",gap:4}}>
+            <div style={{width:6,height:6,borderRadius:"50%",background:entry[1]}}/>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{rarityLabels[entry[0]]}</span>
+          </div>
+        );})}
+      </div>
+      {/* CTA */}
       {canSp
-        ?<button onClick={handleSpin} disabled={spinning} style={{padding:"14px 36px",background:spinning?"#333":"linear-gradient(90deg,#d4a843,#f0c060)",color:spinning?"#888":"#010603",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:16,cursor:spinning?"not-allowed":"pointer",fontWeight:"bold",touchAction:"manipulation",letterSpacing:3}}>
+        ?<button onClick={handleSpin} disabled={spinning} style={{padding:"15px 48px",background:spinning?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#d4a843,#f0c060,#d4a843)",border:spinning?"1px solid rgba(255,255,255,0.1)":"none",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:4,color:spinning?"rgba(255,255,255,0.2)":"#010603",fontWeight:700,cursor:spinning?"not-allowed":"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:spinning?"none":"0 4px 24px rgba(212,168,67,0.4),inset 0 1px 0 rgba(255,255,255,0.3)"}}>
+          {!spinning&&<div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.12)",borderRadius:"16px 16px 0 0",pointerEvents:"none"}}/>}
           {spinning?"SPINNING…":"SPIN!"}
         </button>
-        :<div style={{color:"#aaa",fontFamily:"Cinzel,serif",fontSize:13,textAlign:"center"}}>Next spin in<br/>{hrs}h {mins}m</div>
+        :<div style={{textAlign:"center"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:"rgba(255,255,255,0.2)",marginBottom:6}}>NEXT SPIN IN</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:28,color:"rgba(212,168,67,0.6)",letterSpacing:4}}>{hrs}h {mins}m</div>
+        </div>
       }
-      <button onClick={onClose} style={{marginTop:16,padding:"8px 28px",background:"transparent",border:"1px solid #444",color:"#888",borderRadius:8,fontFamily:"Cinzel,serif",fontSize:11,cursor:"pointer",touchAction:"manipulation"}}>Close</button>
     </div>
   );
 }
 
 function RewardPopup({reward,onClose}){
+  var isLegendary=reward.coins>=500||reward.gems>=5;
+  var isEpic=reward.gems>=10||(reward.coins>=200&&!isLegendary);
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.78)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
-      <div style={{background:"linear-gradient(135deg,#1a2f1a,#010603)",border:"2px solid #d4a843",boxShadow:"0 0 40px rgba(212,168,67,0.5)",borderRadius:20,padding:32,textAlign:"center",fontFamily:"Cinzel,serif",animation:"rewardPop 0.4s ease-out",pointerEvents:"none"}}>
-        <div style={{fontSize:52,marginBottom:8}}>{reward.gems&&reward.gems>0?"💎":"🪙"}</div>
-        <div style={{color:"#d4a843",fontSize:20,marginBottom:8}}>{reward.label||"Reward!"}</div>
-        {reward.coins&&reward.coins>0&&<div style={{color:"#f0c060",fontSize:17,marginBottom:4}}>+{reward.coins} 🪙</div>}
-        {reward.gems&&reward.gems>0&&<div style={{color:"#c084fc",fontSize:17,marginBottom:4}}>+{reward.gems} 💎</div>}
-        <div style={{marginTop:14,fontSize:12,color:"#888"}}>Tap anywhere to close</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={onClose}>
+      <div style={{animation:"rewardPop 0.45s cubic-bezier(.22,1,.36,1) both",maxWidth:280,width:"100%"}} onClick={function(e){e.stopPropagation();}}>
+        {/* Glow behind card */}
+        <div style={{position:"absolute",width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,"+(isLegendary?"rgba(212,168,67,0.25)":isEpic?"rgba(168,85,247,0.2)":"rgba(34,197,94,0.15)")+",transparent 70%)",transform:"translate(-50%,-50%)",left:"50%",top:"50%",pointerEvents:"none"}}/>
+        <div style={{background:"linear-gradient(160deg,#0d1f0e,#060e06)",border:"2px solid "+(isLegendary?"rgba(212,168,67,0.7)":isEpic?"rgba(168,85,247,0.5)":"rgba(34,197,94,0.4)"),borderRadius:24,padding:"32px 24px",textAlign:"center",position:"relative",overflow:"hidden",boxShadow:"0 0 40px "+(isLegendary?"rgba(212,168,67,0.3)":isEpic?"rgba(168,85,247,0.2)":"rgba(0,0,0,0.8)")}}>
+          {/* Top shimmer */}
+          <div style={{position:"absolute",top:0,left:0,right:0,height:"40%",background:"rgba(255,255,255,0.025)",pointerEvents:"none"}}/>
+          {/* Rarity label */}
+          {isLegendary&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:4,color:"#f0c060",marginBottom:12,animation:"shimmer 2s ease-in-out infinite"}}>✦ LEGENDARY REWARD ✦</div>}
+          {isEpic&&!isLegendary&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:4,color:"#c084fc",marginBottom:12}}>EPIC REWARD</div>}
+          {/* Icon */}
+          <div style={{fontSize:64,marginBottom:12,filter:isLegendary?"drop-shadow(0 0 16px rgba(212,168,67,0.8))":isEpic?"drop-shadow(0 0 12px rgba(168,85,247,0.6))":"none"}}>
+            {reward.gems&&reward.gems>0?"💎":"🪙"}
+          </div>
+          {/* Label */}
+          <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:700,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:2,marginBottom:8}}>{reward.label||"Reward!"}</div>
+          {/* Amounts */}
+          <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:24}}>
+            {reward.coins&&reward.coins>0?<div style={{fontFamily:"Cinzel,serif",fontSize:22,color:"#f0c060",letterSpacing:1}}>+{reward.coins.toLocaleString()} 🪙</div>:null}
+            {reward.gems&&reward.gems>0?<div style={{fontFamily:"Cinzel,serif",fontSize:22,color:"#c084fc",letterSpacing:1}}>+{reward.gems} 💎</div>:null}
+          </div>
+          <button onClick={onClose} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#d4a843,#f0c060)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:3,color:"#010603",fontWeight:700,cursor:"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(212,168,67,0.35)"}}>
+            <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.15)",pointerEvents:"none",borderRadius:"12px 12px 0 0"}}/>
+            COLLECT!
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1603,93 +1840,107 @@ export default function Cobra(){
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){setTutorialDone(false);goScreen("setupCPU");}}>🎓 TUTORIAL</button>
         </div>
 
-        {/* ── REWARDS & PROGRESSION SECTION ── */}
-        <div style={{marginTop:20,borderRadius:18,overflow:"hidden",border:"1px solid rgba(212,168,67,0.25)",background:"linear-gradient(160deg,#0c1e0c,#060e06)"}}>
-          {/* Header: player level + balance */}
-          <div style={{padding:"14px 16px 10px",borderBottom:"1px solid rgba(212,168,67,0.12)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontFamily:"Cinzel,serif",fontWeight:"bold",color:"#010603",flexShrink:0}}>{playerLevel}</div>
-              <div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1}}>Level {playerLevel}</div>
-                <div style={{background:"#1a2f1a",borderRadius:4,height:5,width:100,overflow:"hidden",marginTop:3}}>
-                  <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",borderRadius:4,width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",transition:"width 0.5s"}}/>
+        {/* ── REWARDS & PROGRESSION ── */}
+        <div style={{marginTop:20}}>
+          <div className="section-label">REWARDS & PROGRESSION</div>
+          <div style={{borderRadius:20,overflow:"hidden",border:"1px solid rgba(212,168,67,0.18)",background:"linear-gradient(170deg,#0c1e0c,#060e06,#010603)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+            {/* Player header */}
+            <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",padding:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)"}}>
+                <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"#0a140a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{myAvatar||"🐍"}</div>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1,fontWeight:700}}>LEVEL {playerLevel}</span>
+                  <span style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(255,255,255,0.2)"}}>·</span>
+                  <span style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>{myName||"Player"}</span>
+                </div>
+                <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 4px rgba(212,168,67,0.4)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:10,flexShrink:0}}>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",fontWeight:700}}>{coins.toLocaleString()}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>🪙</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#c084fc",fontWeight:700}}>{gems}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>💎</div>
                 </div>
               </div>
             </div>
-            <div style={{display:"flex",gap:12,fontFamily:"Cinzel,serif",fontSize:13}}>
-              <span style={{color:"#f0c060"}}>🪙 {coins.toLocaleString()}</span>
-              <span style={{color:"#c084fc"}}>💎 {gems}</span>
+            {/* Tiles grid */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(255,255,255,0.03)"}}>
+              {/* Battle Pass */}
+              <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("battlepass");}} style={{background:"linear-gradient(145deg,#0f2010,#0a1408)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,transition:"background 0.15s"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:24,filter:"drop-shadow(0 0 4px rgba(212,168,67,0.4))"}}>🎭</span>
+                  <div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:1,fontWeight:700}}>Battle Pass</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(212,168,67,0.35)"}}>Season 1</div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.05)",overflow:"hidden",marginBottom:3}}>
+                    <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((parseInt(localStorage.getItem("cobra_bp_level")||"1")/50)*100))+"%",borderRadius:2}}/>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.3)",letterSpacing:1}}>LV {parseInt(localStorage.getItem("cobra_bp_level")||"1")} / 50</div>
+                </div>
+              </button>
+              {/* Profile */}
+              <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("profile");}} style={{background:"linear-gradient(145deg,#0e0e1e,#090912)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:24}}>{myAvatar||"😎"}</span>
+                  <div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#a0c0ff",letterSpacing:1,fontWeight:700}}>{myName||"Player"}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(160,192,255,0.3)"}}>{gameStats.wins} wins</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(160,192,255,0.25)",letterSpacing:1}}>VIEW PROFILE →</div>
+              </button>
+              {/* Daily Rewards */}
+              {(function(){
+                var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
+                var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
+                var canClaim=Date.now()-last>=86400000;
+                var msUntil=Math.max(0,86400000-(Date.now()-last));
+                var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+                return(
+                  <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}} style={{background:"linear-gradient(145deg,#1c1000,#120a00)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canClaim?"availablePulse 2s ease-in-out infinite":"none"}}>
+                    {canClaim&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 6px rgba(239,68,68,0.8)"}}/>}
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:24,filter:canClaim?"drop-shadow(0 0 4px rgba(251,191,36,0.6))":"none"}}>📅</span>
+                      <div>
+                        <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:canClaim?"#fbbf24":"#a07830",letterSpacing:1,fontWeight:700}}>Daily Reward</div>
+                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.35)"}}>{canClaim?"Ready now!":"Day "+(Math.min(streak%7+1,7))+" / 7"}</div>
+                      </div>
+                    </div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.25)",letterSpacing:1}}>{canClaim?"CLAIM NOW ✦":hrs+"h "+mins+"m"}</div>
+                  </button>
+                );
+              })()}
+              {/* Lucky Spin */}
+              {(function(){
+                var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
+                var canSp=Date.now()-last>=86400000;
+                var msUntil=Math.max(0,86400000-(Date.now()-last));
+                var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+                return(
+                  <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}} style={{background:"linear-gradient(145deg,#160616,#0e040e)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canSp?"availablePulse 2.2s ease-in-out infinite":"none"}}>
+                    {canSp&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#a855f7",boxShadow:"0 0 6px rgba(168,85,247,0.8)"}}/>}
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:24,display:"inline-block",filter:canSp?"drop-shadow(0 0 4px rgba(168,85,247,0.6))":"none"}}>🎡</span>
+                      <div>
+                        <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:canSp?"#c084fc":"#7a4a7a",letterSpacing:1,fontWeight:700}}>Lucky Spin</div>
+                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canSp?"rgba(192,132,252,0.5)":"rgba(122,74,122,0.35)"}}>{canSp?"Win prizes!":"Cooldown"}</div>
+                      </div>
+                    </div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canSp?"rgba(192,132,252,0.5)":"rgba(122,74,122,0.25)",letterSpacing:1}}>{canSp?"SPIN NOW 🎰":hrs+"h "+mins+"m"}</div>
+                  </button>
+                );
+              })()}
             </div>
-          </div>
-          {/* 4 reward tiles */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(212,168,67,0.08)"}}>
-            {/* Battle Pass */}
-            <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("battlepass");}} style={{background:"linear-gradient(145deg,#0f1f0f,#0a150a)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:28}}>🎭</span>
-                <div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1}}>Battle Pass</div>
-                  <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#5a7a5a"}}>Season 1</div>
-                </div>
-              </div>
-              <div style={{background:"#0d1a0d",borderRadius:4,height:4,overflow:"hidden",width:"100%"}}>
-                <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((parseInt(localStorage.getItem("cobra_bp_level")||"1")/50)*100))+"%"}}/>
-              </div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6b5a20",letterSpacing:1}}>LV {localStorage.getItem("cobra_bp_level")||1} / 50</div>
-            </button>
-            {/* Profile */}
-            <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("profile");}} style={{background:"linear-gradient(145deg,#0f0f1f,#0a0a14)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:28}}>{myAvatar||"😎"}</span>
-                <div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#a0c0ff",letterSpacing:1}}>{myName||"Player"}</div>
-                  <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#3a4a6a"}}>{gameStats.wins} wins · {gameStats.rounds} games</div>
-                </div>
-              </div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a5a7a",letterSpacing:1}}>TAP TO VIEW PROFILE</div>
-            </button>
-            {/* Daily Rewards */}
-            {(function(){
-              var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
-              var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
-              var canClaim=Date.now()-last>=86400000;
-              var msUntil=Math.max(0,86400000-(Date.now()-last));
-              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
-              return(
-                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}} style={{background:"linear-gradient(145deg,#1a0f00,#120a00)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:28,position:"relative"}}>
-                      📅
-                      {canClaim&&<span style={{position:"absolute",top:-4,right:-4,width:10,height:10,borderRadius:"50%",background:"#ef4444",border:"2px solid #010603",display:"block"}}/>}
-                    </span>
-                    <div>
-                      <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:canClaim?"#fbbf24":"#a07a30",letterSpacing:1}}>Daily Reward</div>
-                      <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:canClaim?"#f59e0b":"#5a4a2a"}}>{canClaim?"Ready to claim!":"Day "+Math.min(streak%7+1,7)+" of 7"}</div>
-                    </div>
-                  </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canClaim?"#fbbf24":"#5a4a2a",letterSpacing:1}}>{canClaim?"CLAIM NOW ✨":"Next: "+hrs+"h "+mins+"m"}</div>
-                </button>
-              );
-            })()}
-            {/* Lucky Spin */}
-            {(function(){
-              var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
-              var canSp=Date.now()-last>=86400000;
-              var msUntil=Math.max(0,86400000-(Date.now()-last));
-              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
-              return(
-                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}} style={{background:"linear-gradient(145deg,#1a0a1a,#100610)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:28,display:"inline-block",animation:canSp?"tileSpinWheel 3s linear infinite":"none"}}>🎡</span>
-                    <div>
-                      <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:canSp?"#c084fc":"#7a4a7a",letterSpacing:1}}>Lucky Spin</div>
-                      <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:canSp?"#a855f7":"#4a2a4a"}}>{canSp?"Win coins & gems!":"On cooldown"}</div>
-                    </div>
-                  </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canSp?"#c084fc":"#4a2a4a",letterSpacing:1}}>{canSp?"SPIN NOW 🎰":"Next: "+hrs+"h "+mins+"m"}</div>
-                </button>
-              );
-            })()}
           </div>
         </div>
 
