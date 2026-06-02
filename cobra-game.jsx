@@ -1353,6 +1353,7 @@ export default function Cobra(){
   const xpForLevel=function(lvl){return lvl*100;};
   const addCoins=function(n){setCoins(function(c){var v=c+n;try{localStorage.setItem("cobra_coins",String(v));}catch(e){}return v;});};
   const addGems=function(n){setGems(function(g){var v=g+n;try{localStorage.setItem("cobra_gems",String(v));}catch(e){}return v;});};
+
   const gainXP=function(amount){
     var curXP=parseInt(localStorage.getItem("cobra_xp")||"0")+amount;
     var curLvl=parseInt(localStorage.getItem("cobra_level")||"1");
@@ -1364,8 +1365,11 @@ export default function Cobra(){
   };
 
   // ── Supabase Realtime ────────────────────────────────
+  const roomRef=useRef(null);
+
   const onRoomUpdate=useCallback(function(room){
     if(!room)return;
+    roomRef.current=room; // always keep latest room snapshot
     var newPlayers=room.players.map(function(p){return p.name;});
     // Detect join: player count increased
     if(prevPlayersCount.current>0&&newPlayers.length>prevPlayersCount.current){
@@ -1384,6 +1388,13 @@ export default function Cobra(){
       setNames(room.players.map(function(p){return p.name;}));
       setNPlayers(room.players.length);
       setScreen("game");
+      // Another player declared — join the reveal screen
+      if(gs.declared){
+        var dd=gs.declared;
+        setRevealData({ns:dd.ns,res:dd.res,declarerIdx:dd.declarerIdx,hands:dd.hands});
+        setScores(dd.ns);
+        setScreen("reveal");
+      }
     }
   },[]);
 
@@ -1393,6 +1404,17 @@ export default function Cobra(){
     else if(status==="disconnected"){setConnStatus("disconnected");}
   },[]);
   const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate,onConnectionChange});
+
+  // Broadcast current game state to all online players after a move
+  const broadcastMove=function(nh,nd,np,nextPlayer,nextPhase,ns,declared){
+    if(mode==="cpu"||!roomRef.current)return;
+    var gs={hands:nh,deck:nd,openPile:np,myPlayed:[],currentPlayer:nextPlayer,phase:nextPhase,scores:ns||scores};
+    if(declared)gs.declared=declared;
+    var updatedRoom=Object.assign({},roomRef.current,{gameState:gs});
+    roomRef.current=updatedRoom;
+    rtBroadcast(updatedRoom);
+    saveRoom(updatedRoom.code,updatedRoom);
+  };
 
   // PWA install prompt listener
   useEffect(function(){
@@ -1686,6 +1708,8 @@ export default function Cobra(){
       setPlayingCardIds([]);
       pop(""+seqLabel(played),"success",1200);
       if(played.length>=5)unlockAch("big_run");
+      // Broadcast so others see what was played on the pile
+      broadcastMove(nh,deck,openPile,currentPlayer,"pickup",scores);
     },280);
   }
 
@@ -1715,8 +1739,12 @@ export default function Cobra(){
 
   function afterPickup(nh,nd,np){
     if(mode==="cpu"){runCPURound(1,nh,nd,np);}
-    else{var next=(currentPlayer+1)%nPlayers;setCurrentPlayer(next);setPhase("declare");
-      if(next===H){audio.turnChange();setShowYourTurn(true);clearTimeout(yourTurnTimer.current);yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);}}
+    else{
+      var next=(currentPlayer+1)%nPlayers;
+      setCurrentPlayer(next);setPhase("declare");
+      broadcastMove(nh,nd,np,next,"declare",scores);
+      if(next===H){audio.turnChange();setShowYourTurn(true);clearTimeout(yourTurnTimer.current);yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);}
+    }
   }
 
   function runCPURound(startIdx,initHands,initDeck,initPile){
@@ -1814,15 +1842,18 @@ export default function Cobra(){
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
     }
-    setRevealData({ns:ns,res:res,declarerIdx:H,hands:hands.map(function(h){return h.slice();})});
+    var revealHands=hands.map(function(h){return h.slice();});
+    setRevealData({ns:ns,res:res,declarerIdx:H,hands:revealHands});
     setScreen("reveal");
+    // Tell all other online players to go to reveal too
+    broadcastMove(hands,deck,openPile,H,"reveal",ns,{declarerIdx:H,ns:ns,res:res,hands:revealHands});
   }
 
   function finishRound(ns,res){
     // XP rewards for local player
     gainXP(25); // participation XP
-    var winner=ns.indexOf(Math.min.apply(null,ns));
-    if(winner===myIdx)gainXP(50); // win bonus
+    var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
+    if(winnerIdx===myIdx)gainXP(50); // win bonus
     var loser=ns.findIndex(function(s){return s>=LOSE;});
     var resWithScores=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
     var ned={results:resWithScores,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
@@ -1831,8 +1862,7 @@ export default function Cobra(){
     setRoundEndData(ned);setScores(ns);setRoundRes(resWithScores);
     setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});setPrevHand(null);
     if(loser>=0){
-      var winner=ns.indexOf(Math.min.apply(null,ns));
-      setGameOverData({scores:ns,winner:winner,loser:loser});
+      setGameOverData({scores:ns,winner:winnerIdx,loser:loser});
       // Show elimination animation then go to gameOver
       setElimAnim({name:names[loser],idx:loser});
       setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
