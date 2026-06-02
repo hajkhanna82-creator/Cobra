@@ -15,9 +15,12 @@ import { supabase } from './supabase.js'
  *   ts
  * }
  */
-export function useRoom({ onRoomUpdate }) {
+export function useRoom({ onRoomUpdate, onConnectionChange }) {
   const channelRef = useRef(null)
   const codeRef = useRef(null)
+  const retryCountRef = useRef(0)
+  const retryTimerRef = useRef(null)
+  const MAX_RETRIES = 3
 
   const subscribe = useCallback((code) => {
     if (!supabase) return
@@ -25,16 +28,42 @@ export function useRoom({ onRoomUpdate }) {
       supabase.removeChannel(channelRef.current)
     }
     codeRef.current = code
-    const channel = supabase.channel('cobra:' + code, {
-      config: { broadcast: { self: true } },
-    })
-    channel
-      .on('broadcast', { event: 'room' }, ({ payload }) => {
-        onRoomUpdate(payload)
+    retryCountRef.current = 0
+
+    function doSubscribe() {
+      const channel = supabase.channel('cobra:' + codeRef.current, {
+        config: { broadcast: { self: true } },
       })
-      .subscribe()
-    channelRef.current = channel
-  }, [onRoomUpdate])
+      channel
+        .on('broadcast', { event: 'room' }, ({ payload }) => {
+          onRoomUpdate(payload)
+        })
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            retryCountRef.current = 0
+            if (onConnectionChange) onConnectionChange('connected')
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+            if (onConnectionChange) onConnectionChange('disconnected')
+            if (retryCountRef.current < MAX_RETRIES) {
+              retryCountRef.current++
+              retryTimerRef.current = setTimeout(() => {
+                if (codeRef.current) {
+                  if (onConnectionChange) onConnectionChange('reconnecting')
+                  try { supabase.removeChannel(channelRef.current) } catch (e) {}
+                  channelRef.current = null
+                  doSubscribe()
+                }
+              }, 3000)
+            }
+          } else if (status === 'CLOSED') {
+            if (onConnectionChange) onConnectionChange('disconnected')
+          }
+        })
+      channelRef.current = channel
+    }
+
+    doSubscribe()
+  }, [onRoomUpdate, onConnectionChange])
 
   const broadcast = useCallback((room) => {
     if (!channelRef.current) return Promise.resolve()
@@ -46,6 +75,7 @@ export function useRoom({ onRoomUpdate }) {
   }, [])
 
   const unsubscribe = useCallback(() => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
     if (!supabase || !channelRef.current) return
     supabase.removeChannel(channelRef.current)
     channelRef.current = null

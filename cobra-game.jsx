@@ -227,6 +227,7 @@ input::placeholder{color:#2a3d28;}
 @keyframes fadeOut{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
 @keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(0.7);opacity:0}}
 @keyframes cardPickup{0%{transform:translateY(-80px) scale(0.7);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes yourTurnGlow{0%{box-shadow:0 0 30px rgba(212,168,67,0.7),0 0 60px rgba(212,168,67,0.35)}100%{box-shadow:0 0 60px rgba(212,168,67,0.95),0 0 100px rgba(212,168,67,0.6)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
 @keyframes particleFloat{0%{opacity:0;transform:translateY(0) translateX(0)}20%{opacity:0.12}80%{opacity:0.08}100%{opacity:0;transform:translateY(-120px) translateX(15px)}}
 @keyframes scoreFlash{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
@@ -510,6 +511,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
             <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
               <span>📊</span> STATISTICS
             </div>
+            {gameStats.rounds===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:13,textAlign:"center",marginBottom:12}}>No games played yet</div>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
               {[
                 {icon:"🏆",val:gameStats.wins,label:"Wins"},
@@ -676,8 +678,8 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
         </div>
         {loading&&<div style={{textAlign:"center",padding:40}}><ThinkingDots/></div>}
-        {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>Requires online connection</div>}
-        {leaders&&leaders.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet. Be the first!</div>}
+        {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
+        {leaders&&leaders.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
         {leaders&&leaders.map(function(row,i){
           var medal=i===0?"👑":i===1?"🥈":i===2?"🥉":""+(i+1);
           return(
@@ -726,7 +728,7 @@ export default function Cobra(){
   const [toast,setToast]=useState({msg:"",type:"info"});
   const [roomCode,setRoomCode]=useState("");
   const [roomInput,setRoomInput]=useState("");
-  const [myName,setMyName]=useState("Player");
+  const [myName,setMyName]=useState(function(){try{return localStorage.getItem("cobra_player_name")||"";}catch(e){return"";}});
   const [onlinePlayers,setOnlinePlayers]=useState([]);
   const [isHost,setIsHost]=useState(false);
   const [onlineStatus,setOnlineStatus]=useState("");
@@ -756,7 +758,7 @@ export default function Cobra(){
   const [playingCardIds,setPlayingCardIds]=useState([]);
   const [pickingUp,setPickingUp]=useState(false);
   const [flashScores,setFlashScores]=useState([]);
-  const [myAvatar,setMyAvatar]=useState("😎");
+  const [myAvatar,setMyAvatar]=useState(function(){try{return localStorage.getItem("cobra_player_avatar")||"😎";}catch(e){return"😎";}});
   const [installPrompt,setInstallPrompt]=useState(null);
   const [installDismissed,setInstallDismissed]=useState(function(){try{return localStorage.getItem("cobra_install_dismissed")==="1";}catch(e){return false;}});
   const [showQR,setShowQR]=useState(false);
@@ -768,6 +770,10 @@ export default function Cobra(){
   const [chatInput,setChatInput]=useState("");
   const [unreadChat,setUnreadChat]=useState(0);
   const [isSpectator,setIsSpectator]=useState(false);
+  const [joiningRoom,setJoiningRoom]=useState(false);
+  const [creatingRoom,setCreatingRoom]=useState(false);
+  const [startingGame,setStartingGame]=useState(false);
+  const [connStatus,setConnStatus]=useState(""); // "reconnecting"|"connected"|""
   const chatChannelRef=useRef(null);
   const chatScrollRef=useRef(null);
   const prevPlayersCount=useRef(0);
@@ -809,13 +815,31 @@ export default function Cobra(){
     }
   },[]);
 
-  const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate});
+  const onConnectionChange=useCallback(function(status){
+    if(status==="reconnecting"){setConnStatus("reconnecting");pop("Reconnecting...","warning",4000);}
+    else if(status==="connected"){setConnStatus("connected");pop("Connected","success",1800);setTimeout(function(){setConnStatus("");},2000);}
+    else if(status==="disconnected"){setConnStatus("disconnected");}
+  },[]);
+  const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate,onConnectionChange});
 
   // PWA install prompt listener
   useEffect(function(){
     function handleInstall(e){e.preventDefault();setInstallPrompt(e);}
     window.addEventListener("beforeinstallprompt",handleInstall);
     return function(){window.removeEventListener("beforeinstallprompt",handleInstall);};
+  },[]);
+
+  // URL room code auto-join
+  useEffect(function(){
+    try{
+      var params=new URLSearchParams(window.location.search);
+      var roomParam=params.get("room");
+      if(roomParam){
+        setRoomInput(roomParam.toUpperCase());
+        setScreen("setupGlobal");
+        window.history.replaceState({},"","/");
+      }
+    }catch(e){}
   },[]);
 
   useEffect(function(){
@@ -933,8 +957,9 @@ export default function Cobra(){
     setRoundNum(function(r){return r+1;});
     setShowYourTurn(true);
     clearTimeout(yourTurnTimer.current);
-    yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2200);
+    yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);
     audio.init();audio.resume();
+    audio.turnChange();
     setTimeout(function(){audio.shuffle_sfx();},100);
   }
 
@@ -946,42 +971,56 @@ export default function Cobra(){
   }
 
   function createRoom(){
+    if(!myName.trim()){pop("Enter your name first","warning");return;}
+    try{localStorage.setItem("cobra_player_name",myName.trim());}catch(e){}
+    try{localStorage.setItem("cobra_player_avatar",myAvatar);}catch(e){}
+    setCreatingRoom(true);
     var code=Math.random().toString(36).slice(2,6).toUpperCase();
     setRoomCode(code);setIsHost(true);setMyIdx(0);
     var room={code:code,host:myName,players:[{name:myName,idx:0}],maxPlayers:4,status:"lobby",gameState:null,ts:Date.now()};
     saveRoom(code,room).then(function(){
+      setCreatingRoom(false);
       setMode("online");
       startLobbyPoll(code); // subscribe first so we hear our own broadcast
       rtBroadcast(room);
       setOnlinePlayers([myName]);goScreen("lobby");
       pop("Room "+code+" created!","success");
       audio.init();audio.resume();audio.win();
+    }).catch(function(){
+      setCreatingRoom(false);
+      pop("Connection error — try again","error");
     });
   }
 
   function joinRoom(){
     var code=roomInput.trim().toUpperCase();
     if(!code){pop("Enter a room code","error");return;}
+    if(!myName.trim()){pop("Enter your name first","warning");return;}
+    try{localStorage.setItem("cobra_player_name",myName.trim());}catch(e){}
+    try{localStorage.setItem("cobra_player_avatar",myAvatar);}catch(e){}
+    setJoiningRoom(true);
     loadRoom(code).then(function(room){
-      if(!room){pop("Room not found","error");return;}
+      if(!room){setJoiningRoom(false);pop("Room not found","error");return;}
       if(room.status==="started"){
+        setJoiningRoom(false);
         // Offer spectator mode
         setRoomCode(code);
         goScreen("spectatePrompt");
         return;
       }
-      if(room.players.length>=room.maxPlayers){pop("Room is full","error");return;}
+      if(room.players.length>=room.maxPlayers){setJoiningRoom(false);pop("Room is full","error");return;}
       var idx=room.players.length;
       room.players.push({name:myName,idx:idx});
       saveRoom(code,room).then(function(){
+        setJoiningRoom(false);
         setMode("online");
         setRoomCode(code);setIsHost(false);setMyIdx(idx);
         setOnlinePlayers(room.players.map(function(p){return p.name;}));
         startLobbyPoll(code);
         rtBroadcast(room); // tell host + others a new player joined
         goScreen("lobby");pop("Joined!","success");
-      });
-    });
+      }).catch(function(){setJoiningRoom(false);pop("Connection error — try again","error");});
+    }).catch(function(){setJoiningRoom(false);pop("Connection error — try again","error");});
   }
 
   function startLobbyPoll(code){
@@ -1005,25 +1044,29 @@ export default function Cobra(){
   }
 
   function startOnlineGame(){
+    setStartingGame(true);
     loadRoom(roomCode).then(function(room){
-      if(!room)return;
+      if(!room){setStartingGame(false);return;}
       var n=room.players.length,d=shuffle(mkDeck()),h=[];
       for(var i=0;i<n;i++)h.push(d.splice(0,7));
       var gs={hands:h,deck:d,openPile:{cards:[],owner:-1},myPlayed:[],currentPlayer:0,phase:"declare",scores:Array(n).fill(0)};
       room.status="started";room.gameState=gs;
       saveRoom(roomCode,room).then(function(){
+        setStartingGame(false);
         rtBroadcast(room); // push to all players simultaneously
         setNames(room.players.map(function(p){return p.name;}));setNPlayers(n);
         setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
         setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(Array(n).fill(0));
         goScreen("game");
-      });
-    });
+      }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
+    }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
   }
 
   function joinGlobal(){
     audio.init();audio.resume();haptic.light();
     if(!myName.trim()){pop("Enter your name first","warning");return;}
+    try{localStorage.setItem("cobra_player_name",myName.trim());}catch(e){}
+    try{localStorage.setItem("cobra_player_avatar",myAvatar);}catch(e){}
     var globalCode="COBRA_GLOBAL";
     loadRoom(globalCode).then(function(room){
       if(!room||room.status==="started"||room.players.length>=5){
@@ -1099,10 +1142,9 @@ export default function Cobra(){
   }
 
   function afterPickup(nh,nd,np){
-    audio.turnChange();
     if(mode==="cpu"){runCPURound(1,nh,nd,np);}
     else{var next=(currentPlayer+1)%nPlayers;setCurrentPlayer(next);setPhase("declare");
-      if(next===H){setShowYourTurn(true);clearTimeout(yourTurnTimer.current);yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2200);}}
+      if(next===H){audio.turnChange();setShowYourTurn(true);clearTimeout(yourTurnTimer.current);yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);}}
   }
 
   function runCPURound(startIdx,initHands,initDeck,initPile){
@@ -1110,8 +1152,8 @@ export default function Cobra(){
     function step(){
       if(idx>=nPlayers){
         setCpuThinking(false);setCurrentPlayer(0);setPhase("declare");
-        setShowYourTurn(true);clearTimeout(yourTurnTimer.current);
-        yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2200);
+        audio.turnChange();setShowYourTurn(true);clearTimeout(yourTurnTimer.current);
+        yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);
         return;
       }
       setCurrentPlayer(idx);setCpuThinking(true);
@@ -1251,6 +1293,7 @@ export default function Cobra(){
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>ACHIEVEMENTS</h2>
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,marginTop:4}}>{unlockedAchs.length} of {ACHIEVEMENTS.length} unlocked</p>
         </div>
+        {unlockedAchs.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#5a7a60",fontSize:15,textAlign:"center",padding:"20px 0"}}>Play games to unlock achievements 🎴</div>}
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {ACHIEVEMENTS.map(function(a){
             var unlocked=unlockedAchs.includes(a.id);
@@ -1298,7 +1341,8 @@ export default function Cobra(){
           <span style={{fontSize:88,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
-        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:10}}>the card game</p>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
+        {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>v2.0 PREMIUM</span>
         </div>
@@ -1467,11 +1511,11 @@ export default function Cobra(){
             <SLabel>YOUR AVATAR</SLabel>
             <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
               {AVATAR_EMOJIS.map(function(em){return(
-                <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+                <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);try{localStorage.setItem("cobra_player_avatar",em);}catch(er){};}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
               );})}
             </div>
             <SLabel>YOUR NAME</SLabel>
-            <input defaultValue={names[0]} onChange={function(e){ln[0]=e.target.value;}} style={{marginBottom:16}} placeholder="Your name"/>
+            <input defaultValue={myName||names[0]} onChange={function(e){ln[0]=e.target.value;}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:16}} placeholder="Your name"/>
             <SLabel>CPU NAMES</SLabel>
             {Array(cpuCount).fill(0).map(function(_,i){return(
               <input key={i} defaultValue={"CPU "+(i+1)} onChange={function(e){ln[i+1]=e.target.value;}} style={{marginBottom:8}} placeholder={"CPU "+(i+1)}/>
@@ -1500,19 +1544,19 @@ export default function Cobra(){
           <SLabel>YOUR AVATAR</SLabel>
           <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
             {AVATAR_EMOJIS.map(function(em){return(
-              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #60a5fa":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(96,165,250,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);try{localStorage.setItem("cobra_player_avatar",em);}catch(er){};}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #60a5fa":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(96,165,250,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
             );})}
           </div>
           <SLabel>YOUR NAME</SLabel>
-          <input value={myName} onChange={function(e){setMyName(e.target.value);}} style={{marginBottom:20}} placeholder="Your name"/>
-          <button className="btn_btn_blue" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5,marginBottom:14}} onClick={function(){audio.buttonClick();haptic.medium();createRoom();}}>CREATE ROOM</button>
+          <input value={myName} onChange={function(e){setMyName(e.target.value);}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:20}} placeholder="Your name"/>
+          <button className="btn_btn_blue" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5,marginBottom:14}} disabled={creatingRoom} onClick={function(){audio.buttonClick();haptic.medium();createRoom();}}>{creatingRoom?"CREATING...":"CREATE ROOM"}</button>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
             <div style={{flex:1,height:1,background:"rgba(255,255,255,0.07)"}}/>
             <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#1a3020",letterSpacing:3}}>OR JOIN</span>
             <div style={{flex:1,height:1,background:"rgba(255,255,255,0.07)"}}/>
           </div>
           <input value={roomInput} onChange={function(e){setRoomInput(e.target.value.toUpperCase());}} style={{marginBottom:12,letterSpacing:6,textAlign:"center",fontSize:24,fontFamily:"Cinzel,serif"}} placeholder="ROOM CODE" maxLength={4}/>
-          <button className="btn_btn_outline_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5}} onClick={function(){audio.buttonClick();joinRoom();}}>JOIN ROOM</button>
+          <button className="btn_btn_outline_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5}} disabled={joiningRoom} onClick={function(){audio.buttonClick();joinRoom();}}>{joiningRoom?"JOINING...":"JOIN ROOM"}</button>
         </div>
       </div>
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
@@ -1535,11 +1579,11 @@ export default function Cobra(){
           <SLabel>YOUR AVATAR</SLabel>
           <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
             {AVATAR_EMOJIS.map(function(em){return(
-              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #4ade80":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(74,222,128,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
+              <button key={em} onClick={function(){audio.buttonClick();setMyAvatar(em);try{localStorage.setItem("cobra_player_avatar",em);}catch(er){};}} style={{fontSize:24,width:44,height:44,borderRadius:10,border:myAvatar===em?"2px solid #4ade80":"1.5px solid rgba(255,255,255,0.1)",background:myAvatar===em?"rgba(74,222,128,0.18)":"rgba(255,255,255,0.05)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",transition:"all 0.2s"}}>{em}</button>
             );})}
           </div>
           <SLabel>YOUR NAME</SLabel>
-          <input value={myName} onChange={function(e){setMyName(e.target.value);}} style={{marginBottom:20}} placeholder="Enter your name"/>
+          <input value={myName} onChange={function(e){setMyName(e.target.value);}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:20}} placeholder="Enter your name"/>
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"rgba(74,222,128,0.06)",border:"1px solid rgba(74,222,128,0.15)",borderRadius:12,marginBottom:20}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",boxShadow:"0 0 8px #4ade80",flexShrink:0}} className="pulse"/>
             <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#2a5a3a",letterSpacing:2}}>GLOBAL MATCHMAKING ACTIVE</span>
@@ -1602,8 +1646,8 @@ export default function Cobra(){
           </div>
         )}
         {isHost
-          ?<button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3}} disabled={onlinePlayers.length<2} onClick={function(){audio.buttonClick();startOnlineGame();}}>
-            {onlinePlayers.length<2?"WAITING...":"START GAME"}
+          ?<button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3}} disabled={onlinePlayers.length<2||startingGame} onClick={function(){audio.buttonClick();startOnlineGame();}}>
+            {startingGame?"STARTING...":onlinePlayers.length<2?"WAITING...":"START GAME"}
           </button>
           :<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
             <ThinkingDots/>
@@ -1759,14 +1803,21 @@ export default function Cobra(){
   // ─── GAME OVER ──────────────────────────────────────
   if(screen==="gameOver"){
     if(!gameOverData)return(<div className="feltbg"><style>{GS}</style></div>);
+    var iWonGame=gameOverData.winner===H;
+    // Trigger confetti if local player won (once)
+    if(iWonGame&&confetti.length===0){
+      var wConf=[];for(var wci=0;wci<30;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24"][Math.floor(Math.random()*6)],size:Math.random()*7+4,delay:Math.random()*0.8,dur:Math.random()*1.5+1.2});}
+      setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},3500);},100);
+    }
     return(
-      <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
+      <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px",position:"relative"}}>
         <style>{GS}</style>
+        {confetti.map(function(c){return(<div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>);})}
         <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
         <div style={{maxWidth:420,width:"100%",textAlign:"center",position:"relative",zIndex:1}} className="anim_up">
-          <div style={{fontSize:70,marginBottom:8,animation:"cobraBounce 1.2s ease-in-out 3"}}>👑</div>
-          <h1 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:32,letterSpacing:7,margin:"0 0 4px",textShadow:"0 0 30px rgba(212,168,67,0.5)"}}>WINNER</h1>
-          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a7a4a",fontSize:22,marginBottom:6}}>{names[gameOverData.winner]}</p>
+          <div style={{fontSize:70,marginBottom:8,animation:"cobraBounce 1.2s ease-in-out 3"}}>{iWonGame?myAvatar:"👑"}</div>
+          <h1 style={{fontFamily:"Cinzel,serif",color:iWonGame?"#4ade80":"#d4a843",fontSize:32,letterSpacing:7,margin:"0 0 4px",textShadow:iWonGame?"0 0 30px rgba(74,222,128,0.6)":"0 0 30px rgba(212,168,67,0.5)"}}>{iWonGame?"YOU WIN! 🏆":"GAME OVER"}</h1>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a7a4a",fontSize:22,marginBottom:6}}>{iWonGame?"Congratulations!":names[gameOverData.winner]+" wins"}</p>
           <div style={{height:1,background:"linear-gradient(90deg,transparent,#d4a843,transparent)",margin:"14px auto 22px",width:110}}/>
           <div className="panel" style={{overflow:"hidden",marginBottom:16}}>
             {names.slice(0,nPlayers).map(function(n,i){return(
@@ -1874,9 +1925,9 @@ export default function Cobra(){
       );})}
       {/* YOUR TURN splash */}
       {showYourTurn&&(
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:150,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeOut 2.2s ease forwards"}}>
-          <div style={{background:"rgba(212,168,67,0.92)",borderRadius:30,padding:"14px 32px",boxShadow:"0 4px 24px rgba(0,0,0,0.35)",whiteSpace:"nowrap",animation:"fadeOut 2.2s ease forwards"}}>
-            <span style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:"#120c00",letterSpacing:3}}>YOUR TURN</span>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:150,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeOut 2s ease forwards"}}>
+          <div style={{background:"rgba(212,168,67,0.95)",borderRadius:32,padding:"20px 48px",boxShadow:"0 0 40px rgba(212,168,67,0.8),0 0 80px rgba(212,168,67,0.4),0 8px 32px rgba(0,0,0,0.5)",whiteSpace:"nowrap",animation:"yourTurnGlow 0.5s ease-in-out infinite alternate,fadeOut 2s ease forwards"}}>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:28,fontWeight:900,color:"#120c00",letterSpacing:5}}>YOUR TURN</span>
           </div>
         </div>
       )}
