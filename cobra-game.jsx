@@ -2322,7 +2322,9 @@ export default function Cobra(){
       <style>{GS}</style>
       <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:420,width:"100%",textAlign:"center",position:"relative",zIndex:1}} className="anim_up">
-        <button className="btn_btn_ghost" style={{marginBottom:14,padding:"10px 16px",fontSize:11,letterSpacing:2,display:"flex",alignItems:"center",gap:6}} onClick={function(){audio.buttonClick();goScreen("home");}}>← HOME</button>
+        <div style={{textAlign:"left",marginBottom:14}}>
+          <button className="btn_btn_ghost" style={{padding:"10px 16px",fontSize:11,letterSpacing:2,display:"inline-flex",alignItems:"center",gap:6}} onClick={function(){audio.buttonClick();goScreen("home");}}>← HOME</button>
+        </div>
         <p style={{fontFamily:"Cinzel,serif",color:"#4ade80",fontSize:12,letterSpacing:4,marginBottom:6}}>{roomCode==="COBRA_GLOBAL"?"GLOBAL ROOM":"ROOM CODE"}</p>
         <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:54,fontWeight:900,letterSpacing:14,marginBottom:6,textShadow:"0 0 32px rgba(212,168,67,0.45)"}}>{roomCode}</div>
         <div className="panel" style={{padding:22,marginBottom:18}}>
