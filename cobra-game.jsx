@@ -237,7 +237,7 @@ input::placeholder{color:#2a3d28;}
 @keyframes elimBounce{0%,100%{transform:scale(1) translateY(0)}30%{transform:scale(1.3) translateY(-20px)}60%{transform:scale(0.9) translateY(-8px)}}
 @keyframes elimFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes spinWheel{from{transform:rotate(0deg)}to{transform:rotate(1800deg)}}
+@keyframes tileSpinWheel{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .elim_shake{animation:shake 0.5s ease-in-out infinite;}
 .anim_up{animation:fadeUp 0.34s cubic-bezier(.22,1,.36,1) both;}
 .anim_up_screen_in{animation:fadeUp 0.34s cubic-bezier(.22,1,.36,1) both,screenIn 0.28s cubic-bezier(.22,1,.36,1) both;}
@@ -1602,6 +1602,97 @@ export default function Cobra(){
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){setTutorialDone(false);goScreen("setupCPU");}}>🎓 TUTORIAL</button>
         </div>
+
+        {/* ── REWARDS & PROGRESSION SECTION ── */}
+        <div style={{marginTop:20,borderRadius:18,overflow:"hidden",border:"1px solid rgba(212,168,67,0.25)",background:"linear-gradient(160deg,#0c1e0c,#060e06)"}}>
+          {/* Header: player level + balance */}
+          <div style={{padding:"14px 16px 10px",borderBottom:"1px solid rgba(212,168,67,0.12)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontFamily:"Cinzel,serif",fontWeight:"bold",color:"#010603",flexShrink:0}}>{playerLevel}</div>
+              <div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1}}>Level {playerLevel}</div>
+                <div style={{background:"#1a2f1a",borderRadius:4,height:5,width:100,overflow:"hidden",marginTop:3}}>
+                  <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",borderRadius:4,width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",transition:"width 0.5s"}}/>
+                </div>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:12,fontFamily:"Cinzel,serif",fontSize:13}}>
+              <span style={{color:"#f0c060"}}>🪙 {coins.toLocaleString()}</span>
+              <span style={{color:"#c084fc"}}>💎 {gems}</span>
+            </div>
+          </div>
+          {/* 4 reward tiles */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(212,168,67,0.08)"}}>
+            {/* Battle Pass */}
+            <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("battlepass");}} style={{background:"linear-gradient(145deg,#0f1f0f,#0a150a)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:28}}>🎭</span>
+                <div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1}}>Battle Pass</div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#5a7a5a"}}>Season 1</div>
+                </div>
+              </div>
+              <div style={{background:"#0d1a0d",borderRadius:4,height:4,overflow:"hidden",width:"100%"}}>
+                <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((parseInt(localStorage.getItem("cobra_bp_level")||"1")/50)*100))+"%"}}/>
+              </div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6b5a20",letterSpacing:1}}>LV {localStorage.getItem("cobra_bp_level")||1} / 50</div>
+            </button>
+            {/* Profile */}
+            <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("profile");}} style={{background:"linear-gradient(145deg,#0f0f1f,#0a0a14)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:28}}>{myAvatar||"😎"}</span>
+                <div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#a0c0ff",letterSpacing:1}}>{myName||"Player"}</div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#3a4a6a"}}>{gameStats.wins} wins · {gameStats.rounds} games</div>
+                </div>
+              </div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a5a7a",letterSpacing:1}}>TAP TO VIEW PROFILE</div>
+            </button>
+            {/* Daily Rewards */}
+            {(function(){
+              var last=parseInt(localStorage.getItem("cobra_daily_last")||"0");
+              var streak=parseInt(localStorage.getItem("cobra_daily_streak")||"0");
+              var canClaim=Date.now()-last>=86400000;
+              var msUntil=Math.max(0,86400000-(Date.now()-last));
+              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+              return(
+                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}} style={{background:"linear-gradient(145deg,#1a0f00,#120a00)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:28,position:"relative"}}>
+                      📅
+                      {canClaim&&<span style={{position:"absolute",top:-4,right:-4,width:10,height:10,borderRadius:"50%",background:"#ef4444",border:"2px solid #010603",display:"block"}}/>}
+                    </span>
+                    <div>
+                      <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:canClaim?"#fbbf24":"#a07a30",letterSpacing:1}}>Daily Reward</div>
+                      <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:canClaim?"#f59e0b":"#5a4a2a"}}>{canClaim?"Ready to claim!":"Day "+Math.min(streak%7+1,7)+" of 7"}</div>
+                    </div>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canClaim?"#fbbf24":"#5a4a2a",letterSpacing:1}}>{canClaim?"CLAIM NOW ✨":"Next: "+hrs+"h "+mins+"m"}</div>
+                </button>
+              );
+            })()}
+            {/* Lucky Spin */}
+            {(function(){
+              var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
+              var canSp=Date.now()-last>=86400000;
+              var msUntil=Math.max(0,86400000-(Date.now()-last));
+              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+              return(
+                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}} style={{background:"linear-gradient(145deg,#1a0a1a,#100610)",border:"none",padding:"16px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:28,display:"inline-block",animation:canSp?"tileSpinWheel 3s linear infinite":"none"}}>🎡</span>
+                    <div>
+                      <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:canSp?"#c084fc":"#7a4a7a",letterSpacing:1}}>Lucky Spin</div>
+                      <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:canSp?"#a855f7":"#4a2a4a"}}>{canSp?"Win coins & gems!":"On cooldown"}</div>
+                    </div>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canSp?"#c084fc":"#4a2a4a",letterSpacing:1}}>{canSp?"SPIN NOW 🎰":"Next: "+hrs+"h "+mins+"m"}</div>
+                </button>
+              );
+            })()}
+          </div>
+        </div>
+
         <div style={{marginTop:14,padding:"12px 16px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.1)",borderRadius:12,cursor:"pointer"}}
           onClick={function(){audio.buttonClick();haptic.light();goScreen("achievements");}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
@@ -1611,18 +1702,6 @@ export default function Cobra(){
           <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
             {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
           </div>
-        </div>
-        <div style={{marginTop:14,padding:"8px 12px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:12,display:"flex",justifyContent:"center",gap:20,fontFamily:"Cinzel,serif",fontSize:13,color:"#d4a843"}}>
-          <span>🪙 {coins.toLocaleString()}</span>
-          <span>💎 {gems}</span>
-          <span style={{color:"#7a9d78"}}>Lv.{playerLevel}</span>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}>
-          {[{icon:"🎭",label:"Battle Pass",sc:"battlepass"},{icon:"📅",label:"Daily Rewards",sc:"daily"},{icon:"🎡",label:"Lucky Spin",sc:"spin"},{icon:"👤",label:"Profile",sc:"profile"}].map(function(b){return(
-            <button key={b.sc} onClick={function(){audio.buttonClick();haptic.light();setActiveScreen(b.sc);}} style={{background:"linear-gradient(135deg,#1a2f1a,#0d1a0d)",border:"1px solid rgba(212,168,67,0.3)",color:"#d4a843",borderRadius:12,padding:"12px 4px",fontFamily:"Cinzel,serif",fontSize:11,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,touchAction:"manipulation",letterSpacing:1}}>
-              <span style={{fontSize:24}}>{b.icon}</span>{b.label}
-            </button>
-          );})}
         </div>
         <button className="btn_btn_outline_gold" style={{fontSize:12,padding:"13px",letterSpacing:2,marginTop:10,width:"100%"}}
           onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
