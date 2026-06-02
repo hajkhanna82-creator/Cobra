@@ -936,17 +936,17 @@ function DailyRewardScreen({onClaim,onClose}){
 
 function SpinScreen({onClose,onSpin}){
   var SEGS=[
-    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
-    {label:"100",sub:"COINS",icon:"🪙",color:"#1d4ed8",glow:"rgba(29,78,216,0.5)",reward:{coins:100},rarity:"uncommon"},
-    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
-    {label:"200",sub:"COINS",icon:"🪙",color:"#b45309",glow:"rgba(180,83,9,0.5)",reward:{coins:200},rarity:"rare"},
-    {label:"50",sub:"COINS",icon:"🪙",color:"#15803d",glow:"rgba(21,128,61,0.5)",reward:{coins:50},rarity:"common"},
-    {label:"100",sub:"COINS",icon:"🪙",color:"#1d4ed8",glow:"rgba(29,78,216,0.5)",reward:{coins:100},rarity:"uncommon"},
-    {label:"10",sub:"GEMS",icon:"💎",color:"#7c3aed",glow:"rgba(124,58,237,0.6)",reward:{gems:10},rarity:"epic"},
-    {label:"500+",sub:"JACKPOT",icon:"🎰",color:"#9f1239",glow:"rgba(159,18,57,0.7)",reward:{coins:500,gems:5},rarity:"legendary"},
+    {label:"50",sub:"COINS",icon:"🪙",color1:"#14532d",color2:"#16a34a",glow:"#22c55e",reward:{coins:50},rarity:"common"},
+    {label:"100",sub:"COINS",icon:"🪙",color1:"#1e3a8a",color2:"#2563eb",glow:"#60a5fa",reward:{coins:100},rarity:"uncommon"},
+    {label:"50",sub:"COINS",icon:"🪙",color1:"#14532d",color2:"#16a34a",glow:"#22c55e",reward:{coins:50},rarity:"common"},
+    {label:"200",sub:"COINS",icon:"🪙",color1:"#78350f",color2:"#d97706",glow:"#fbbf24",reward:{coins:200},rarity:"rare"},
+    {label:"50",sub:"COINS",icon:"🪙",color1:"#14532d",color2:"#16a34a",glow:"#22c55e",reward:{coins:50},rarity:"common"},
+    {label:"100",sub:"COINS",icon:"🪙",color1:"#1e3a8a",color2:"#2563eb",glow:"#60a5fa",reward:{coins:100},rarity:"uncommon"},
+    {label:"10",sub:"GEMS",icon:"💎",color1:"#4c1d95",color2:"#7c3aed",glow:"#c084fc",reward:{gems:10},rarity:"epic"},
+    {label:"JACKPOT",sub:"500🪙+5💎",icon:"👑",color1:"#7f1d1d",color2:"#dc2626",glow:"#f87171",reward:{coins:500,gems:5},rarity:"legendary"},
   ];
-  var rarityLabels={common:"COMMON",uncommon:"UNCOMMON",rare:"RARE",epic:"EPIC",legendary:"LEGENDARY"};
-  var rarityColors={common:"#22c55e",uncommon:"#3b82f6",rare:"#f59e0b",epic:"#a855f7",legendary:"#ef4444"};
+  var rarityColors={common:"#22c55e",uncommon:"#60a5fa",rare:"#fbbf24",epic:"#c084fc",legendary:"#f87171"};
+  var rarityLabels={common:"COMMON",uncommon:"UNCOMMON",rare:"RARE",epic:"EPIC",legendary:"LEGENDARY ✦"};
   var last=parseInt(localStorage.getItem("cobra_spin_last")||"0");
   var msSince=Date.now()-last;
   var canSp=msSince>=86400000;
@@ -955,105 +955,212 @@ function SpinScreen({onClose,onSpin}){
   var [spinning,setSpinning]=useState(false);
   var [rotation,setRotation]=useState(0);
   var [result,setResult]=useState(null);
-  var [phase,setPhase]=useState("idle"); // idle|spinning|reveal
+  var [phase,setPhase]=useState("idle");
+  var [confettiPieces,setConfettiPieces]=useState([]);
   var sliceAngle=360/8;
+
   function handleSpin(){
     if(!canSp||spinning)return;
     setSpinning(true);setResult(null);setPhase("spinning");
     var idx=Math.floor(Math.random()*8);
     var base=rotation-(rotation%360);
-    var targetRotation=base+360*7+(idx*sliceAngle)+(sliceAngle/2);
+    var targetRotation=base+360*8+(idx*sliceAngle)+(sliceAngle/2);
     setRotation(targetRotation);
     setTimeout(function(){
       setSpinning(false);
       var seg=SEGS[idx];
-      setResult(seg);
-      setPhase("reveal");
+      setResult(seg);setPhase("reveal");
       onSpin(seg.reward);
       localStorage.setItem("cobra_spin_last",String(Date.now()));
+      // confetti for rare+
+      if(seg.rarity==="rare"||seg.rarity==="epic"||seg.rarity==="legendary"){
+        var pieces=Array.from({length:seg.rarity==="legendary"?60:30},function(_,k){return{
+          id:k,x:Math.random()*100,delay:Math.random()*0.8,dur:1.2+Math.random()*1,
+          color:["#d4a843","#f0c060","#c084fc","#22c55e","#f87171","#60a5fa"][Math.floor(Math.random()*6)],
+          size:4+Math.random()*8,rotate:Math.random()*360,
+        };});
+        setConfettiPieces(pieces);
+        setTimeout(function(){setConfettiPieces([]);},3000);
+      }
     },3800);
   }
+
   return(
-    <div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#0a0010,#010603)",zIndex:250,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 20px calc(20px + env(safe-area-inset-bottom))",overflowY:"auto"}}>
-      <style>{`@keyframes rewardPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}@keyframes pointerBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}@keyframes resultReveal{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}`}</style>
-      {/* Header */}
-      <div style={{textAlign:"center",marginBottom:24,position:"relative",zIndex:1,width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{width:36}}/>
-        <div>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:700,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:3}}>LUCKY SPIN</div>
-          <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.35)",fontSize:12,letterSpacing:3}}>FREE DAILY REWARD</div>
-        </div>
-        <button onClick={onClose} style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
+    <div style={{position:"fixed",inset:0,zIndex:250,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",overflowY:"auto",background:"radial-gradient(ellipse 120% 100% at 50% 0%,#1a0030 0%,#0a0010 40%,#010603 100%)"}}>
+      <style>{`
+        @keyframes spinPointerBounce{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-6px) scale(1.1)}}
+        @keyframes spinResultReveal{0%{opacity:0;transform:scale(0.8) translateY(30px)}60%{transform:scale(1.04) translateY(-4px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes spinRimRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes spinGlowPulse{0%,100%{opacity:0.6}50%{opacity:1}}
+        @keyframes spinConfetti{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(220px) rotate(720deg)}}
+        @keyframes spinLegendaryBg{0%,100%{opacity:0.4}50%{opacity:0.8}}
+        @keyframes spinBtnPulse{0%,100%{box-shadow:0 4px 24px rgba(212,168,67,0.4),inset 0 1px 0 rgba(255,255,255,0.3)}50%{box-shadow:0 4px 40px rgba(212,168,67,0.8),0 0 60px rgba(212,168,67,0.3),inset 0 1px 0 rgba(255,255,255,0.3)}}
+      `}</style>
+
+      {/* Ambient background orbs */}
+      <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+        <div style={{position:"absolute",top:"-20%",left:"50%",transform:"translateX(-50%)",width:400,height:400,borderRadius:"50%",background:"radial-gradient(circle,rgba(168,85,247,0.12),transparent 70%)",animation:"spinGlowPulse 3s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",bottom:"-10%",left:"20%",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(212,168,67,0.08),transparent 70%)",animation:"spinGlowPulse 4s ease-in-out infinite 1s"}}/>
       </div>
-      {/* Wheel container */}
-      <div style={{position:"relative",marginBottom:28}}>
-        {/* Outer glow ring */}
-        <div style={{position:"absolute",inset:-8,borderRadius:"50%",background:"conic-gradient(from 0deg,rgba(212,168,67,0.1),rgba(212,168,67,0.3),rgba(212,168,67,0.1),rgba(168,85,247,0.2),rgba(212,168,67,0.1))",filter:"blur(4px)",pointerEvents:"none"}}/>
-        {/* Pointer */}
-        <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",zIndex:3,animation:canSp&&!spinning?"pointerBounce 1.5s ease-in-out infinite":"none"}}>
-          <div style={{width:0,height:0,borderLeft:"10px solid transparent",borderRight:"10px solid transparent",borderTop:"20px solid #f0c060",filter:"drop-shadow(0 0 6px rgba(240,192,96,0.8))"}}/>
+
+      {/* Confetti */}
+      {confettiPieces.map(function(p){return(
+        <div key={p.id} style={{position:"absolute",top:"35%",left:p.x+"%",width:p.size,height:p.size,borderRadius:p.size>7?2:"50%",background:p.color,animation:"spinConfetti "+p.dur+"s ease-in "+p.delay+"s both",pointerEvents:"none",zIndex:10,transform:"rotate("+p.rotate+"deg)"}}/>
+      );})}
+
+      {/* Header */}
+      <div style={{position:"relative",zIndex:2,width:"100%",maxWidth:400,padding:"calc(env(safe-area-inset-top) + 16px) 20px 0",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{width:36}}/>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:24,fontWeight:700,letterSpacing:4,background:"linear-gradient(135deg,#f4cc52 0%,#d4a843 50%,#f4cc52 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>LUCKY SPIN</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:4,color:"rgba(212,168,67,0.35)",marginTop:2}}>FREE DAILY REWARD</div>
         </div>
-        {/* The wheel */}
-        <svg width="280" height="280" style={{transform:"rotate("+rotation+"deg)",transition:spinning?"transform 3.8s cubic-bezier(0.17,0.67,0.12,0.99)":"none",display:"block",borderRadius:"50%",boxShadow:"0 0 0 4px rgba(212,168,67,0.15),0 0 0 8px rgba(212,168,67,0.05),0 8px 40px rgba(0,0,0,0.6)"}}>
-          {/* Center circle overlay */}
-          <circle cx="140" cy="140" r="28" fill="#010603" stroke="rgba(212,168,67,0.4)" strokeWidth="2"/>
-          <text x="140" y="145" textAnchor="middle" dominantBaseline="middle" fontSize="18">🐍</text>
+        <button onClick={onClose} style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",flexShrink:0}}>✕</button>
+      </div>
+
+      {/* Wheel assembly */}
+      <div style={{position:"relative",zIndex:2,marginBottom:24}}>
+
+        {/* Outer decorative spinning rim (CSS-only, very slow) */}
+        <div style={{position:"absolute",inset:-20,borderRadius:"50%",border:"2px dashed rgba(212,168,67,0.12)",animation:"spinRimRotate 20s linear infinite",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",inset:-12,borderRadius:"50%",border:"1px solid rgba(212,168,67,0.08)",animation:"spinRimRotate 30s linear infinite reverse",pointerEvents:"none"}}/>
+
+        {/* Glow bloom behind wheel */}
+        <div style={{position:"absolute",inset:-30,borderRadius:"50%",background:"radial-gradient(circle,rgba(212,168,67,0.1),rgba(168,85,247,0.06),transparent 70%)",filter:"blur(8px)",pointerEvents:"none",animation:"spinGlowPulse 2.5s ease-in-out infinite"}}/>
+
+        {/* Pointer */}
+        <div style={{position:"absolute",top:-22,left:"50%",zIndex:5,animation:canSp&&!spinning?"spinPointerBounce 1.4s ease-in-out infinite":"none",transformOrigin:"bottom center"}}>
+          <svg width="22" height="28" viewBox="0 0 22 28">
+            <defs>
+              <linearGradient id="ptrGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f4cc52"/>
+                <stop offset="100%" stopColor="#a87020"/>
+              </linearGradient>
+              <filter id="ptrGlow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <polygon points="11,0 22,28 11,22 0,28" fill="url(#ptrGrad)" filter="url(#ptrGlow)"/>
+            <polygon points="11,4 19,26 11,20 3,26" fill="rgba(255,255,255,0.2)"/>
+          </svg>
+        </div>
+
+        {/* The wheel SVG */}
+        <svg width="300" height="300" viewBox="0 0 300 300" style={{display:"block",transform:"rotate("+rotation+"deg)",transition:spinning?"transform 3.8s cubic-bezier(0.08,0.82,0.17,1)":"none",filter:"drop-shadow(0 0 24px rgba(0,0,0,0.8))"}}>
+          <defs>
+            {SEGS.map(function(s,i){return(
+              <radialGradient key={"rg"+i} id={"rg"+i} cx="30%" cy="30%" r="80%">
+                <stop offset="0%" stopColor={s.color2} stopOpacity="1"/>
+                <stop offset="100%" stopColor={s.color1} stopOpacity="1"/>
+              </radialGradient>
+            );})}
+            <radialGradient id="centerGrad" cx="50%" cy="30%" r="80%">
+              <stop offset="0%" stopColor="#1a2f1a"/>
+              <stop offset="100%" stopColor="#010603"/>
+            </radialGradient>
+            <filter id="segGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          {/* Outer metallic bezel */}
+          <circle cx="150" cy="150" r="149" fill="none" stroke="url(#ptrGrad)" strokeWidth="3" opacity="0.6"/>
+          <circle cx="150" cy="150" r="145" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
+
           {SEGS.map(function(s,i){
             var a1=(sliceAngle*i-90)*Math.PI/180,a2=(sliceAngle*(i+1)-90)*Math.PI/180;
-            var r=140,cx=140,cy=140;
-            var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
-            var x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
-            var mx=cx+(r*0.66)*Math.cos((a1+a2)/2),my=cy+(r*0.66)*Math.sin((a1+a2)/2);
-            var angle=sliceAngle*i+sliceAngle/2-90;
+            var R=144,cx=150,cy=150;
+            var x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1);
+            var x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+            var midA=(a1+a2)/2;
+            var mx=cx+(R*0.64)*Math.cos(midA),my=cy+(R*0.64)*Math.sin(midA);
+            var lx=cx+(R*0.88)*Math.cos(midA),ly=cy+(R*0.88)*Math.sin(midA);
+            var textAngleDeg=sliceAngle*i+sliceAngle/2-90;
             return(
               <g key={i}>
-                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 0,1 "+x2+","+y2+" Z"} fill={s.color} stroke="rgba(0,0,0,0.3)" strokeWidth="1.5"/>
-                {/* Lighter inner highlight on top half of slice */}
-                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+r+","+r+" 0 0,1 "+x2+","+y2+" Z"} fill="rgba(255,255,255,0.06)" stroke="none"/>
-                <g transform={"rotate("+angle+","+mx+","+my+")"}>
-                  <text x={mx} y={my-6} textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="white" fontWeight="700">{s.label}</text>
-                  <text x={mx} y={my+8} textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="rgba(255,255,255,0.7)" letterSpacing="1">{s.sub}</text>
+                {/* Slice fill with radial gradient */}
+                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+R+","+R+" 0 0,1 "+x2+","+y2+" Z"} fill={"url(#rg"+i+")"} stroke="rgba(0,0,0,0.5)" strokeWidth="1.5"/>
+                {/* Inner highlight arc (top sheen) */}
+                <path d={"M"+cx+","+cy+" L"+x1+","+y1+" A"+R+","+R+" 0 0,1 "+x2+","+y2+" Z"} fill="rgba(255,255,255,0.07)" stroke="none" style={{mixBlendMode:"overlay"}}/>
+                {/* Rarity glow dot near rim */}
+                <circle cx={lx} cy={ly} r="5" fill={s.glow} opacity="0.7" filter="url(#segGlow)"/>
+                {/* Text label */}
+                <g transform={"rotate("+textAngleDeg+","+mx+","+my+")"}>
+                  <text x={mx} y={my-7} textAnchor="middle" dominantBaseline="middle" fontSize={s.label==="JACKPOT"?"9":"15"} fontWeight="800" fill="white" style={{fontFamily:"sans-serif",letterSpacing:s.label==="JACKPOT"?1:0}}>{s.label}</text>
+                  <text x={mx} y={my+8} textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="rgba(255,255,255,0.65)" style={{fontFamily:"sans-serif",letterSpacing:1}}>{s.sub}</text>
                 </g>
+                {/* Spoke divider */}
+                <line x1={cx} y1={cy} x2={x1} y2={y1} stroke="rgba(0,0,0,0.4)" strokeWidth="1.5"/>
               </g>
             );
           })}
-          {/* Outer ring */}
-          <circle cx="140" cy="140" r="139" fill="none" stroke="rgba(212,168,67,0.25)" strokeWidth="2"/>
-          {/* Divider dots */}
+
+          {/* Center hub */}
+          <circle cx="150" cy="150" r="34" fill="url(#centerGrad)" stroke="rgba(212,168,67,0.5)" strokeWidth="2.5"/>
+          <circle cx="150" cy="150" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
+          <text x="150" y="156" textAnchor="middle" dominantBaseline="middle" fontSize="22">🐍</text>
+
+          {/* Rim dots at each spoke */}
           {SEGS.map(function(_,i){
             var a=(sliceAngle*i-90)*Math.PI/180;
-            return <circle key={i} cx={140+137*Math.cos(a)} cy={140+137*Math.sin(a)} r="4" fill="rgba(212,168,67,0.5)"/>;
+            return(
+              <g key={"dot"+i}>
+                <circle cx={150+142*Math.cos(a)} cy={150+142*Math.sin(a)} r="5" fill="rgba(212,168,67,0.4)" stroke="rgba(212,168,67,0.8)" strokeWidth="1"/>
+                <circle cx={150+142*Math.cos(a)} cy={150+142*Math.sin(a)} r="2" fill="#f0c060"/>
+              </g>
+            );
           })}
         </svg>
       </div>
+
       {/* Result reveal */}
       {phase==="reveal"&&result&&(
-        <div style={{marginBottom:20,padding:"14px 20px",background:"rgba(212,168,67,0.08)",border:"1.5px solid rgba(212,168,67,0.25)",borderRadius:16,textAlign:"center",animation:"resultReveal 0.45s cubic-bezier(.22,1,.36,1) both",boxShadow:"0 0 20px rgba(212,168,67,0.15)"}}>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:rarityColors[result.rarity],marginBottom:6}}>{rarityLabels[result.rarity]}</div>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#d4a843",letterSpacing:1}}>{result.icon} {result.label} {result.sub}</div>
-          {result.reward.gems&&<div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#c084fc",marginTop:4}}>+{result.reward.gems} Gems</div>}
+        <div style={{position:"relative",zIndex:2,width:"100%",maxWidth:360,marginBottom:20,padding:"0 20px",animation:"spinResultReveal 0.5s cubic-bezier(.22,1,.36,1) both"}}>
+          <div style={{background:"linear-gradient(135deg,rgba("+
+            (result.rarity==="legendary"?"212,168,67":result.rarity==="epic"?"168,85,247":result.rarity==="rare"?"245,158,11":"34,197,94")+
+            ",0.1),rgba(0,0,0,0))",border:"1.5px solid "+rarityColors[result.rarity]+"44",borderRadius:20,padding:"18px 20px",textAlign:"center",boxShadow:"0 0 30px "+rarityColors[result.rarity]+"22"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:4,color:rarityColors[result.rarity],marginBottom:8}}>{rarityLabels[result.rarity]}</div>
+            <div style={{fontSize:36,marginBottom:6}}>{result.icon}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:700,color:"#f0e6c8",letterSpacing:1,marginBottom:4}}>{result.label} {result.sub==="COINS"?"Coins":result.sub==="GEMS"?"Gems":""}</div>
+            {result.reward.gems&&result.reward.coins?<div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:rarityColors[result.rarity],opacity:0.8}}>+{result.reward.coins} 🪙 · +{result.reward.gems} 💎</div>
+            :result.reward.gems?<div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#c084fc"}}>+{result.reward.gems} Gems</div>
+            :<div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#f0c060"}}>+{result.reward.coins} Coins</div>}
+          </div>
         </div>
       )}
+
       {/* Rarity legend */}
-      <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap",justifyContent:"center"}}>
-        {Object.entries(rarityColors).map(function(entry){return(
-          <div key={entry[0]} style={{display:"flex",alignItems:"center",gap:4}}>
-            <div style={{width:6,height:6,borderRadius:"50%",background:entry[1]}}/>
-            <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{rarityLabels[entry[0]]}</span>
-          </div>
-        );})}
-      </div>
-      {/* CTA */}
-      {canSp
-        ?<button onClick={handleSpin} disabled={spinning} style={{padding:"15px 48px",background:spinning?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#d4a843,#f0c060,#d4a843)",border:spinning?"1px solid rgba(255,255,255,0.1)":"none",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:4,color:spinning?"rgba(255,255,255,0.2)":"#010603",fontWeight:700,cursor:spinning?"not-allowed":"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:spinning?"none":"0 4px 24px rgba(212,168,67,0.4),inset 0 1px 0 rgba(255,255,255,0.3)"}}>
-          {!spinning&&<div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.12)",borderRadius:"16px 16px 0 0",pointerEvents:"none"}}/>}
-          {spinning?"SPINNING…":"SPIN!"}
-        </button>
-        :<div style={{textAlign:"center"}}>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:"rgba(255,255,255,0.2)",marginBottom:6}}>NEXT SPIN IN</div>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:28,color:"rgba(212,168,67,0.6)",letterSpacing:4}}>{hrs}h {mins}m</div>
+      {phase!=="reveal"&&(
+        <div style={{position:"relative",zIndex:2,display:"flex",gap:10,marginBottom:20,flexWrap:"wrap",justifyContent:"center",padding:"0 20px"}}>
+          {Object.entries(rarityColors).map(function(entry){return(
+            <div key={entry[0]} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,0.03)",borderRadius:20,padding:"4px 10px",border:"1px solid rgba(255,255,255,0.05)"}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:entry[1],boxShadow:"0 0 4px "+entry[1]}}/>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{rarityLabels[entry[0]].replace(" ✦","")}</span>
+            </div>
+          );})}
         </div>
-      }
+      )}
+
+      {/* CTA button */}
+      <div style={{position:"relative",zIndex:2,padding:"0 20px",width:"100%",maxWidth:360}}>
+        {canSp
+          ?<button onClick={handleSpin} disabled={spinning} style={{width:"100%",padding:"16px",background:spinning?"rgba(255,255,255,0.04)":"linear-gradient(135deg,#c49030,#f0c060,#d4a843)",border:spinning?"1px solid rgba(255,255,255,0.08)":"none",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:4,color:spinning?"rgba(255,255,255,0.15)":"#010603",fontWeight:700,cursor:spinning?"not-allowed":"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",animation:!spinning?"spinBtnPulse 2s ease-in-out infinite":"none",transition:"all 0.3s"}}>
+            {!spinning&&<div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"rgba(255,255,255,0.15)",borderRadius:"16px 16px 0 0",pointerEvents:"none"}}/>}
+            {spinning
+              ?<span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><span>🎡</span> SPINNING…</span>
+              :<span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}><span>🎰</span> SPIN NOW</span>
+            }
+          </button>
+          :<div style={{textAlign:"center",padding:"16px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:16}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:4,color:"rgba(255,255,255,0.2)",marginBottom:8}}>NEXT SPIN IN</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:32,color:"rgba(212,168,67,0.7)",letterSpacing:6,fontWeight:700}}>{hrs}h {mins}m</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.15)",marginTop:4}}>Come back tomorrow for your free spin</div>
+          </div>
+        }
+        <button onClick={onClose} style={{width:"100%",marginTop:10,padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.25)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,cursor:"pointer",touchAction:"manipulation"}}>CLOSE</button>
+      </div>
     </div>
   );
 }
