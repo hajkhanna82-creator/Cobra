@@ -353,12 +353,12 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
   );
 }
 
-function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars}){
-  flashScores=flashScores||[];avatars=avatars||[];
+function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars,scoreLimit}){
+  flashScores=flashScores||[];avatars=avatars||[];var sl=scoreLimit||LOSE;
   return(
     <div style={{display:"flex",gap:5,justifyContent:"center",flexWrap:"wrap"}}>
       {names.slice(0,nPlayers).map(function(n,i){
-        const s=scores[i]||0,active=i===currentPlayer,danger=s>=80,warn=s>=50,out=s>=LOSE;
+        const s=scores[i]||0,active=i===currentPlayer,danger=s>=Math.round(sl*0.8),warn=s>=Math.round(sl*0.5),out=s>=sl;
         return(
           <div key={i} style={{padding:"5px 10px 7px",borderRadius:10,minWidth:54,textAlign:"center",
             background:out?"rgba(0,0,0,0.5)":active?"linear-gradient(160deg,rgba(212,168,67,0.22),rgba(212,168,67,0.1))":danger?"rgba(185,28,28,0.16)":"rgba(0,0,0,0.32)",
@@ -1352,6 +1352,7 @@ export default function Cobra(){
   const [joiningRoom,setJoiningRoom]=useState(false);
   const [creatingRoom,setCreatingRoom]=useState(false);
   const [startingGame,setStartingGame]=useState(false);
+  const [scoreLimit,setScoreLimit]=useState(function(){return parseInt(lsGet("cobra_score_limit","100"));});
   const [connStatus,setConnStatus]=useState(""); // "reconnecting"|"connected"|""
   const chatChannelRef=useRef(null);
   const chatScrollRef=useRef(null);
@@ -1420,6 +1421,8 @@ export default function Cobra(){
       setHands(gs.hands);setDeck(gs.deck);setOpenPile(gs.openPile);
       setCurrentPlayer(gs.currentPlayer);
       setPhase(gs.phase);setScores(gs.scores);
+      if(gs.scoreLimit)setScoreLimit(gs.scoreLimit);
+      if(gs.timerOn!==undefined)setTimerOn(gs.timerOn);
       setNames(room.players.map(function(p){return p.name;}));
       setNPlayers(room.players.length);
       // Another player declared — join the reveal screen
@@ -1702,7 +1705,7 @@ export default function Cobra(){
       if(!room){setStartingGame(false);return;}
       var n=room.players.length,d=shuffle(mkDeck()),h=[];
       for(var i=0;i<n;i++)h.push(d.splice(0,7));
-      var gs={hands:h,deck:d,openPile:{cards:[],owner:-1},myPlayed:[],currentPlayer:0,phase:"declare",scores:Array(n).fill(0)};
+      var gs={hands:h,deck:d,openPile:{cards:[],owner:-1},myPlayed:[],currentPlayer:0,phase:"declare",scores:Array(n).fill(0),scoreLimit:scoreLimit,timerOn:timerOn};
       room.status="started";room.gameState=gs;
       saveRoom(roomCode,room).then(function(){
         setStartingGame(false);
@@ -1930,7 +1933,7 @@ export default function Cobra(){
     gainXP(25); // participation XP
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
     if(winnerIdx===myIdx)gainXP(50); // win bonus
-    var loser=ns.findIndex(function(s){return s>=LOSE;});
+    var loser=ns.findIndex(function(s){return s>=scoreLimit;});
     var resWithScores=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
     var ned={results:resWithScores,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
     setFlashScores(ns.map(function(s,i){return s!==(scores[i]||0);}));
@@ -2475,6 +2478,61 @@ export default function Cobra(){
               }}>📱 QR Code</button>
           </div>
         )}
+        {/* Host room settings */}
+        {isHost&&(
+          <div className="panel" style={{padding:18,marginBottom:14,textAlign:"left"}}>
+            <p style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:3,marginBottom:14,textAlign:"center"}}>⚙ ROOM SETTINGS</p>
+            <SLabel>SCORE LIMIT</SLabel>
+            <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16}}>
+              {[50,75,100].map(function(v){return(
+                <button key={v} className="btn" onClick={function(){audio.buttonClick();setScoreLimit(v);try{localStorage.setItem("cobra_score_limit",String(v));}catch(e){}}}
+                  style={{flex:1,padding:"10px 4px",fontSize:12,fontFamily:"Cinzel,serif",fontWeight:700,borderRadius:11,letterSpacing:1,background:scoreLimit===v?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",border:scoreLimit===v?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.08)",color:scoreLimit===v?"#d4a843":"#2a3d28",cursor:"pointer",minHeight:44,touchAction:"manipulation"}}>{v}</button>
+              );})}
+            </div>
+            <SLabel>TURN TIMER</SLabel>
+            <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16}}>
+              {[{l:"30s",on:true},{l:"OFF",on:false}].map(function(item){var l=item.l,on=item.on;return(
+                <button key={l} className="btn" onClick={function(){audio.buttonClick();setTimerOn(on);}}
+                  style={{flex:1,padding:"10px 4px",fontSize:10,fontFamily:"Cinzel,serif",fontWeight:700,borderRadius:11,letterSpacing:1,background:timerOn===on?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",border:timerOn===on?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.08)",color:timerOn===on?"#d4a843":"#2a3d28",cursor:"pointer",minHeight:44,touchAction:"manipulation"}}>{l}</button>
+              );})}
+            </div>
+            <SLabel>MAX PLAYERS</SLabel>
+            <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+              {[2,3,4,5].map(function(v){
+                var curMax=roomRef.current?roomRef.current.maxPlayers:4;
+                return(
+                  <button key={v} className="btn" onClick={function(){
+                    audio.buttonClick();
+                    loadRoom(roomCode).then(function(room){
+                      if(!room)return;
+                      room.maxPlayers=v;
+                      saveRoom(roomCode,room).then(function(){roomRef.current=room;rtBroadcast(room);});
+                    });
+                  }}
+                    style={{flex:1,padding:"10px 4px",fontSize:12,fontFamily:"Cinzel,serif",fontWeight:700,borderRadius:11,letterSpacing:1,background:curMax===v?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.05)",border:curMax===v?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.08)",color:curMax===v?"#d4a843":"#2a3d28",cursor:"pointer",minHeight:44,touchAction:"manipulation"}}>{v}</button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {/* Chat button in lobby */}
+        <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"center",justifyContent:"center"}}>
+          <div style={{position:"relative"}}>
+            <button onClick={function(){audio.buttonClick();setChatOpen(function(o){if(!o)setUnreadChat(0);return!o;});}} style={{padding:"10px 18px",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:2,borderRadius:12,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8,minHeight:44}}>
+              💬 CHAT{unreadChat>0&&<span style={{background:"#ef4444",borderRadius:"50%",width:18,height:18,display:"inline-flex",alignItems:"center",justifyContent:"center",fontFamily:"Cinzel,serif",fontSize:9,fontWeight:700,color:"#fff"}}>{unreadChat}</span>}
+            </button>
+          </div>
+          <div style={{position:"relative"}}>
+            <button onClick={function(){audio.buttonClick();setShowEmojiPicker(function(p){return!p;});}} style={{width:44,height:44,borderRadius:12,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>😊</button>
+            {showEmojiPicker&&(
+              <div style={{position:"absolute",bottom:52,right:0,background:"rgba(3,10,5,0.97)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:10,display:"flex",gap:6,flexWrap:"wrap",width:180,zIndex:50,boxShadow:"0 10px 40px rgba(0,0,0,0.7)"}}>
+                {EMOJIS.map(function(e){return(
+                  <button key={e} onClick={function(){sendEmoji(e);}} style={{fontSize:24,background:"none",border:"none",cursor:"pointer",padding:4,borderRadius:8,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>{e}</button>
+                );})}
+              </div>
+            )}
+          </div>
+        </div>
         {isHost
           ?<button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3}} disabled={onlinePlayers.length<2||startingGame} onClick={function(){audio.buttonClick();startOnlineGame();}}>
             {startingGame?"STARTING...":onlinePlayers.length<2?"WAITING...":"START GAME"}
@@ -2496,6 +2554,32 @@ export default function Cobra(){
           </div>
         </div>
       )}
+      {/* Chat drawer in lobby */}
+      {chatOpen&&<div onClick={function(){setChatOpen(false);}} style={{position:"fixed",inset:0,zIndex:178,background:"rgba(0,0,0,0.45)"}}/>}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:180,height:"55%",background:"linear-gradient(180deg,rgba(2,10,4,0.98),rgba(1,6,2,0.99))",borderTop:"1px solid rgba(212,168,67,0.2)",borderRadius:"20px 20px 0 0",transform:chatOpen?"translateY(0)":"translateY(100%)",transition:"transform 0.35s cubic-bezier(.22,1.4,.36,1)",display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}}>
+        <div style={{padding:"14px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(212,168,67,0.1)",flexShrink:0}}>
+          <span style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#d4a843",letterSpacing:4}}>CHAT</span>
+          <button onClick={function(){setChatOpen(false);}} style={{width:28,height:28,borderRadius:7,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
+        </div>
+        <div ref={chatScrollRef} style={{flex:1,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:8}}>
+          {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
+          {chatMessages.map(function(m){return(
+            <div key={m.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
+              <span style={{fontSize:18,flexShrink:0}}>{m.avatar}</span>
+              <div>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1,marginRight:6}}>{m.player}</span>
+                <span style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"#86efac",lineHeight:1.4}}>{m.text}</span>
+              </div>
+            </div>
+          );})}
+        </div>
+        <div style={{display:"flex",gap:8,padding:"8px 14px 10px",flexShrink:0,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+          <input value={chatInput} onChange={function(e){setChatInput(e.target.value);}} onKeyDown={function(e){if(e.key==="Enter"&&chatInput.trim()&&chatChannelRef.current){var msg={id:Date.now(),player:myName,avatar:myAvatar||"😎",text:chatInput.trim(),ts:Date.now()};try{chatChannelRef.current.send({type:"broadcast",event:"chat",payload:msg});}catch(err){}setChatMessages(function(p){return[...p.slice(-49),msg];});setChatInput("");}}} placeholder="Type a message..." style={{flex:1,minHeight:40,padding:"8px 12px",fontSize:14}}/>
+          <button className="btn_btn_gold" style={{padding:"8px 16px",fontSize:10,letterSpacing:2,minHeight:40,flexShrink:0}} onClick={function(){if(!chatInput.trim()||!chatChannelRef.current)return;var msg={id:Date.now(),player:myName,avatar:myAvatar||"😎",text:chatInput.trim(),ts:Date.now()};try{chatChannelRef.current.send({type:"broadcast",event:"chat",payload:msg});}catch(err){}setChatMessages(function(p){return[...p.slice(-49),msg];});setChatInput("");}}>SEND</button>
+        </div>
+      </div>
+      {/* Floating emojis in lobby */}
+      {emojis.map(function(e){return(<EmojiFloat key={e.id} emoji={e.emoji} x={e.x} y={e.y}/>);})}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
@@ -2545,7 +2629,7 @@ export default function Cobra(){
               audio.buttonClick();haptic.medium();
               var rd2=revealData;if(!rd2)return;
               var ns=rd2.ns;var res=rd2.res;
-              var loser=ns.findIndex(function(s){return s>=LOSE;});
+              var loser=ns.findIndex(function(s){return s>=scoreLimit;});
               var resWS=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
               var ned={results:resWS,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
               setFlashScores(ns.map(function(s,i){return s!==(scores[i]||0);}));
@@ -2600,16 +2684,16 @@ export default function Cobra(){
             })}
           </div>
           <div style={{background:"rgba(0,0,0,0.25)",borderRadius:14,padding:"14px 16px",marginBottom:18,border:"1px solid rgba(255,255,255,0.05)"}}>
-            <p style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#4a6a4a",letterSpacing:2,marginBottom:12,textAlign:"center"}}>STANDINGS — FIRST TO 100 IS OUT</p>
+            <p style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#4a6a4a",letterSpacing:2,marginBottom:12,textAlign:"center"}}>STANDINGS — FIRST TO {scoreLimit} IS OUT</p>
             {redResults.map(function(r,i){
-              var ns=r.newScore||0;
+              var ns=r.newScore||0,slD=Math.round(scoreLimit*0.8),slW=Math.round(scoreLimit*0.5);
               return(
                 <div key={i} style={{marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#7a9d78",width:56,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.name}</span>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:ns>=slD?"#f87171":ns>=slW?"#fbbf24":r.winner?"#d4a843":"#7a9d78",width:56,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.name}</span>
                   <div style={{flex:1,height:10,background:"rgba(255,255,255,0.06)",borderRadius:5,overflow:"hidden"}}>
-                    <div style={{height:"100%",width:Math.min(ns,100)+"%",borderRadius:5,transition:"width 0.8s cubic-bezier(.22,1,.36,1)",background:ns>=80?"linear-gradient(90deg,#991b1b,#ef4444)":ns>=50?"linear-gradient(90deg,#92400e,#f59e0b)":r.winner?"linear-gradient(90deg,#a07820,#d4a843)":"linear-gradient(90deg,#14532d,#16a34a)"}}/>
+                    <div style={{height:"100%",width:Math.min(Math.round(ns/scoreLimit*100),100)+"%",borderRadius:5,transition:"width 0.8s cubic-bezier(.22,1,.36,1)",background:ns>=slD?"linear-gradient(90deg,#991b1b,#ef4444)":ns>=slW?"linear-gradient(90deg,#92400e,#f59e0b)":r.winner?"linear-gradient(90deg,#a07820,#d4a843)":"linear-gradient(90deg,#14532d,#16a34a)"}}/>
                   </div>
-                  <span style={{fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,width:38,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":"#7a9d78"}}>{ns}/100</span>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,width:48,textAlign:"right",color:ns>=slD?"#f87171":ns>=slW?"#fbbf24":"#7a9d78"}}>{ns}/{scoreLimit}</span>
                 </div>
               );
             })}
@@ -2868,7 +2952,7 @@ export default function Cobra(){
             </div>
           </div>
         </div>
-        <ScoreStrip names={names} scores={scores} currentPlayer={currentPlayer} nPlayers={nPlayers} flashScores={flashScores} avatars={Array.from({length:nPlayers},function(_,i){return i===H?myAvatar:null;})}/>
+        <ScoreStrip names={names} scores={scores} currentPlayer={currentPlayer} nPlayers={nPlayers} flashScores={flashScores} avatars={Array.from({length:nPlayers},function(_,i){return i===H?myAvatar:null;})} scoreLimit={scoreLimit}/>
       </div>
 
       {/* OPPONENTS */}
