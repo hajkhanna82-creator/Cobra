@@ -2134,7 +2134,7 @@ export default function Cobra(){
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:300,background:"linear-gradient(135deg,#a87020,#d4a843,#c49030)",padding:"14px 20px calc(14px + env(safe-area-inset-bottom))",display:"flex",alignItems:"center",gap:12,boxShadow:"0 -4px 24px rgba(0,0,0,0.5)"}}>
           <span style={{fontSize:22,flexShrink:0}}>📲</span>
           <span style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"#120c00",flex:1,lineHeight:1.4}}>
-            {installPrompt?"Add COBRA to your home screen":"/iphone|ipad|ipod/i".test(navigator.userAgent)?"Tap Share → Add to Home Screen":"Add COBRA to your home screen"}
+            {installPrompt?"Add COBRA to your home screen":/iphone|ipad|ipod/i.test(navigator.userAgent)?"Tap Share → Add to Home Screen":"Add COBRA to your home screen"}
           </span>
           {installPrompt&&(
             <button onClick={function(){
