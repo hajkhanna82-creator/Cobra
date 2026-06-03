@@ -229,6 +229,8 @@ input::placeholder{color:#2a3d28;}
 @keyframes cardPickup{0%{transform:translateY(-80px) scale(0.7);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes yourTurnGlow{0%{box-shadow:0 0 30px rgba(212,168,67,0.7),0 0 60px rgba(212,168,67,0.35)}100%{box-shadow:0 0 60px rgba(212,168,67,0.95),0 0 100px rgba(212,168,67,0.6)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
+@keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
 @keyframes particleFloat{0%{opacity:0;transform:translateY(0) translateX(0)}20%{opacity:0.12}80%{opacity:0.08}100%{opacity:0;transform:translateY(-120px) translateX(15px)}}
 @keyframes scoreFlash{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
 @keyframes borderGlow{0%,100%{box-shadow:0 0 8px rgba(185,28,28,0.3)}50%{box-shadow:0 0 28px rgba(185,28,28,0.8),0 0 50px rgba(185,28,28,0.4)}}
@@ -617,6 +619,90 @@ function Tutorial({onDone}){
           </div>
           {!isLast&&<button style={{width:"100%",marginTop:12,padding:"13px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:12,color:"#9ca3af",cursor:"pointer",letterSpacing:2,minHeight:48}} onClick={onDone}>SKIP TUTORIAL</button>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+const COACH_STEPS=[
+  {id:"welcome",target:null,title:"🐍 Welcome to COBRA!",body:"I'll guide you through your first real game step by step. Follow the arrows!",waitFor:null},
+  {id:"hand",target:"tut-hand",title:"🃏 Your Hand",body:"These 7 cards are your hand. Ace=1 pt, King=13 pts. The LOWER your total, the better!",arrow:true,waitFor:null},
+  {id:"total",target:"tut-total",title:"🔢 Your Total",body:"This number is your current hand total. Get it to 30 or under to be able to declare and win the round!",arrow:true,waitFor:null},
+  {id:"deck",target:"tut-deck",title:"🂠 The Deck",body:"The face-down deck on the left. After playing cards, you can draw a random card from here.",arrow:true,waitFor:null},
+  {id:"pile",target:"tut-pile",title:"🎴 Open Pile",body:"This shows what the previous player played. You can TAKE these cards into your hand instead of drawing!",arrow:true,waitFor:null},
+  {id:"select",target:"tut-hand",title:"👆 Now You Try — Select a Card",body:"Tap any card in your hand to select it. You can pick multiple cards to play a combo (pair, run, flush)!",arrow:true,waitFor:"selection"},
+  {id:"play",target:"tut-actions",title:"▶️ Play Your Cards!",body:"The PLAY button is now active. Tap it to place your selected cards on the pile.",arrow:true,waitFor:"played"},
+  {id:"pickup",target:"tut-deck",title:"📥 Pick Up a Card",body:"Good! Now you must take a card. Tap DRAW to pull from the deck, or tap the pile to take those cards.",arrow:true,waitFor:"pickedup"},
+  {id:"declare",target:"tut-actions",title:"📢 How to Declare",body:"When your total drops to 30 or under, the DECLARE button glows green. If you have the LOWEST total — you win the round! Wrong declare = +30 penalty (COBRA 🐍).",arrow:true,waitFor:null},
+  {id:"done",target:null,title:"🏆 You're Ready!",body:"You know the basics! Keep playing rounds — first player to reach 100 pts is eliminated. Last one standing wins. Good luck!",waitFor:null,isLast:true},
+];
+
+function TutorialCoach({stepIdx,sel,phase,currentPlayer,onNext,onSkip}){
+  var [rect,setRect]=useState(null);
+  var step=COACH_STEPS[stepIdx];
+  useEffect(function(){
+    if(!step||!step.target){setRect(null);return;}
+    function measure(){
+      var el=document.getElementById(step.target);
+      if(el){var r=el.getBoundingClientRect();setRect({top:r.top,left:r.left,width:r.width,height:r.height});}
+    }
+    measure();
+    var t=setTimeout(measure,80);
+    return function(){clearTimeout(t);};
+  },[stepIdx]);
+
+  if(!step)return null;
+  var pad=10;
+  var sTop=rect?rect.top-pad:null;
+  var sLeft=rect?rect.left-pad:null;
+  var sW=rect?rect.width+pad*2:null;
+  var sH=rect?rect.height+pad*2:null;
+  var spotMid=rect?(rect.top+rect.height/2):null;
+  var vh=typeof window!=="undefined"?window.innerHeight:700;
+  var below=spotMid!==null&&spotMid<vh*0.55;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none"}}>
+      {rect?(
+        <div style={{position:"fixed",top:sTop,left:sLeft,width:sW,height:sH,borderRadius:18,animation:"tutPulse 1.6s ease-in-out infinite",zIndex:501,pointerEvents:"none"}}/>
+      ):(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.82)",zIndex:500,pointerEvents:"none"}}/>
+      )}
+      {rect&&step.arrow&&(
+        <div style={{position:"fixed",left:sLeft+sW/2-12,top:below?sTop+sH+6:sTop-36,zIndex:503,pointerEvents:"none",fontSize:22,color:"#d4a843",animation:"tutBounce 0.7s ease-in-out infinite",lineHeight:1}}>
+          {below?"▲":"▼"}
+        </div>
+      )}
+      <div style={{position:"fixed",left:"50%",transform:"translateX(-50%)",zIndex:504,pointerEvents:"all",
+        top:rect&&below?Math.min(sTop+sH+52,vh-220):undefined,
+        bottom:rect&&!below?Math.max(vh-(sTop-52),16):(!rect?24:undefined),
+        width:"calc(100% - 28px)",maxWidth:380,
+        background:"linear-gradient(160deg,rgba(1,8,3,0.98),rgba(2,12,5,0.98))",
+        border:"1.5px solid rgba(212,168,67,0.45)",borderRadius:22,
+        padding:"18px 18px 14px",boxShadow:"0 24px 64px rgba(0,0,0,0.95)",
+      }}>
+        <div style={{display:"flex",gap:5,justifyContent:"center",marginBottom:14}}>
+          {COACH_STEPS.map(function(_,i){return(
+            <div key={i} style={{width:i===stepIdx?16:5,height:5,borderRadius:3,transition:"all 0.3s",
+              background:i===stepIdx?"#d4a843":i<stepIdx?"rgba(212,168,67,0.4)":"rgba(255,255,255,0.1)"}}/>
+          );})}
+        </div>
+        <div style={{textAlign:"center",marginBottom:14}}>
+          <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:14,letterSpacing:2,marginBottom:8,fontWeight:700}}>{step.title}</div>
+          <div style={{fontFamily:"Crimson Text,serif",color:"#9aad9a",fontSize:15,lineHeight:1.65}}>{step.body}</div>
+        </div>
+        {!step.waitFor&&(
+          <button onClick={onNext} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#92700e,#d4a843)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:12,color:"#010603",cursor:"pointer",letterSpacing:2,fontWeight:700,minHeight:48}}>
+            {step.isLast?"LET'S PLAY! 🐍":"GOT IT →"}
+          </button>
+        )}
+        {step.waitFor&&(
+          <div style={{textAlign:"center",padding:"10px 0 4px",fontFamily:"Cinzel,serif",fontSize:10,color:"#d4a843",letterSpacing:2,animation:"pulse 1.5s ease-in-out infinite"}}>
+            ↑ DO THIS TO CONTINUE ↑
+          </div>
+        )}
+        <button onClick={onSkip} style={{width:"100%",marginTop:8,padding:"9px",background:"transparent",border:"none",fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(255,255,255,0.18)",cursor:"pointer",letterSpacing:2}}>
+          SKIP TUTORIAL
+        </button>
       </div>
     </div>
   );
@@ -1303,6 +1389,7 @@ export default function Cobra(){
   const [showSettings,setShowSettings]=useState(false);
   const [showTutorial,setShowTutorial]=useState(false);
   const [tutorialDone,setTutorialDone]=useState(false);
+  const [tutorialStep,setTutorialStep]=useState(-1);
   const [earnedAch,setEarnedAch]=useState(null);
   const [unlockedAchs,setUnlockedAchs]=useState(function(){try{var a=localStorage.getItem("cobra_achs");return a?JSON.parse(a):[];}catch(e){return[];}});
   const [emojis,setEmojis]=useState([]);
@@ -1585,6 +1672,21 @@ export default function Cobra(){
     },1000);
     return function(){clearInterval(timerRef.current);};
   },[currentPlayer,screen,timerOn,H]);
+
+  // Tutorial auto-advance: watch for player actions
+  useEffect(function(){
+    if(tutorialStep<0)return;
+    var s=COACH_STEPS[tutorialStep];
+    if(!s)return;
+    if(s.waitFor==="selection"&&sel.length>0)setTutorialStep(function(p){return p+1;});
+  },[sel,tutorialStep]);
+  useEffect(function(){
+    if(tutorialStep<0)return;
+    var s=COACH_STEPS[tutorialStep];
+    if(!s)return;
+    if(s.waitFor==="played"&&phase==="pickup")setTutorialStep(function(p){return p+1;});
+    if(s.waitFor==="pickedup"&&phase==="declare"&&currentPlayer===0)setTutorialStep(function(p){return p+1;});
+  },[phase,currentPlayer,tutorialStep]);
 
   function unlockAch(id){
     if(unlockedAchs.includes(id))return;
@@ -2061,7 +2163,7 @@ export default function Cobra(){
         </div>
         <div style={{display:"flex",gap:10}}>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
-          <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){setTutorialDone(false);goScreen("setupCPU");}}>🎓 TUTORIAL</button>
+          <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
         </div>
 
         {/* ── REWARDS & PROGRESSION ── */}
@@ -2985,7 +3087,7 @@ export default function Cobra(){
       {/* TABLE */}
       <div style={{flex:1,display:"flex",gap:9,padding:"5px 12px",minHeight:0,position:"relative",zIndex:3}}>
         {/* Deck */}
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,flexShrink:0,width:70}}>
+        <div id="tut-deck" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,flexShrink:0,width:70}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#5a7a60",letterSpacing:2}}>DECK</span>
           <div style={{position:"relative",height:92,width:64,cursor:isMyTurn&&phase==="pickup"?"pointer":"default",filter:isMyTurn&&phase==="pickup"?"drop-shadow(0 0 14px rgba(74,222,128,0.45))":"none",transition:"filter 0.3s"}}
             onClick={isMyTurn&&phase==="pickup"?pickFromDeck:undefined}
@@ -3005,7 +3107,7 @@ export default function Cobra(){
           {isMyTurn&&phase==="pickup"&&deck.length>0&&<span className="pulse" style={{fontFamily:"Cinzel,serif",fontSize:7.5,color:"#4ade80",textAlign:"center",lineHeight:1.5}}>SWIPE UP OR TAP</span>}
         </div>
         {/* Pile */}
-        <div style={{flex:1,display:"flex",flexDirection:"column",gap:7,minWidth:0}}>
+        <div id="tut-pile" style={{flex:1,display:"flex",flexDirection:"column",gap:7,minWidth:0}}>
           <div className={canPickPile?"glow_pile":""} style={{flex:1,borderRadius:18,background:canPickPile?"linear-gradient(160deg,rgba(14,60,22,0.9),rgba(6,28,10,0.85))":pile.length>0?"linear-gradient(160deg,rgba(20,20,40,0.85),rgba(10,10,24,0.8))":"rgba(0,0,0,0.35)",border:canPickPile?"2px solid rgba(74,222,128,0.6)":pile.length>0?"1.5px solid rgba(212,168,67,0.3)":"1.5px solid rgba(255,255,255,0.1)",padding:"12px 14px",display:"flex",flexDirection:"column",boxShadow:canPickPile?"0 0 24px rgba(74,222,128,0.2)":pile.length>0?"0 0 18px rgba(212,168,67,0.08)":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -3078,7 +3180,7 @@ export default function Cobra(){
               </span>
             )}
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
+          <div id="tut-actions" style={{display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
             {isMyTurn&&sel.length>0&&(
               <button className="btn_btn_ghost" style={{padding:"10px 14px",fontSize:15,minHeight:48,minWidth:48,letterSpacing:0}} onClick={function(){audio.buttonClick();setSel([]);}}>✕</button>
             )}
@@ -3095,7 +3197,7 @@ export default function Cobra(){
             {isMyTurn&&phase==="pickup"&&!showYourTurn&&(
               <button className="btn_btn_ghost" style={{padding:"12px 18px",fontSize:12,letterSpacing:1,minHeight:48,border:"1.5px solid rgba(255,255,255,0.15)",color:"#9ca3af"}} onClick={pickFromDeck}>DRAW</button>
             )}
-            <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,lineHeight:1,color:myTotal<=15?"#4ade80":myTotal<=DECLARE_MAX?"#d4a843":myTotal>=60?"#f87171":"#fbbf24",padding:"5px 11px",borderRadius:9,transition:"all 0.3s",background:myTotal<=DECLARE_MAX?"rgba(74,222,128,0.08)":"rgba(185,28,28,0.12)",border:"1.5px solid "+(myTotal<=DECLARE_MAX?"rgba(74,222,128,0.25)":"rgba(185,28,28,0.3)"),display:"flex",alignItems:"center",gap:4}}>
+            <div id="tut-total" style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,lineHeight:1,color:myTotal<=15?"#4ade80":myTotal<=DECLARE_MAX?"#d4a843":myTotal>=60?"#f87171":"#fbbf24",padding:"5px 11px",borderRadius:9,transition:"all 0.3s",background:myTotal<=DECLARE_MAX?"rgba(74,222,128,0.08)":"rgba(185,28,28,0.12)",border:"1.5px solid "+(myTotal<=DECLARE_MAX?"rgba(74,222,128,0.25)":"rgba(185,28,28,0.3)"),display:"flex",alignItems:"center",gap:4}}>
               {myTotal}
               {prevTotal!==null&&prevTotal!==myTotal&&(
                 <span style={{fontSize:10,color:myTotal<prevTotal?"#4ade80":"#f87171",animation:"fadeIn 0.3s ease"}}>{myTotal<prevTotal?"↓":"↑"}</span>
@@ -3103,7 +3205,7 @@ export default function Cobra(){
             </div>
           </div>
         </div>
-        <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108}}>
+        <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108}}>
           {myHand.map(function(card,idx){
             var isPlaying=playingCardIds.includes(card.id);
             return(
@@ -3156,6 +3258,20 @@ export default function Cobra(){
         </>
       )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
+      {tutorialStep>=0&&(
+        <TutorialCoach
+          stepIdx={tutorialStep}
+          sel={sel}
+          phase={phase}
+          currentPlayer={currentPlayer}
+          onNext={function(){
+            var n=tutorialStep+1;
+            if(n>=COACH_STEPS.length){setTutorialStep(-1);setTutorialDone(true);}
+            else setTutorialStep(n);
+          }}
+          onSkip={function(){setTutorialStep(-1);setTutorialDone(true);}}
+        />
+      )}
     </div>
   );
 }
