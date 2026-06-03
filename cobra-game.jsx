@@ -2348,8 +2348,9 @@ export default function Cobra(){
           <div style={{borderRadius:20,overflow:"hidden",border:"1px solid rgba(212,168,67,0.18)",background:"linear-gradient(170deg,#0c1e0c,#060e06,#010603)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
             {/* Player header */}
             <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",padding:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)"}}>
+              <div onClick={function(){audio.buttonClick();setShowAvatarPicker(true);}} style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",padding:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)",cursor:"pointer",position:"relative"}}>
                 <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"#0a140a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{myAvatar||"🐍"}</div>
+                <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,borderRadius:"50%",background:"#d4a843",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8}}>✏️</div>
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
@@ -2453,8 +2454,12 @@ export default function Cobra(){
             {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
           </div>
         </div>
-        <button className="btn_btn_outline_gold" style={{fontSize:12,padding:"13px",letterSpacing:2,marginTop:10,width:"100%"}}
-          onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
+        <div style={{display:"flex",gap:10,marginTop:10}}>
+          <button className="btn_btn_outline_gold" style={{flex:1,fontSize:12,padding:"13px",letterSpacing:2}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
+          <button className="btn_btn_ghost" style={{flex:1,fontSize:12,padding:"13px",letterSpacing:2,border:"1.5px solid rgba(212,168,67,0.25)",color:"#d4a843"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("shop");}}>🛒 SHOP</button>
+        </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#4a5a4a"}}
             onClick={function(){
@@ -2493,6 +2498,23 @@ export default function Cobra(){
             try{localStorage.setItem("cobra_bp_claimed",JSON.stringify(newClaimed));}catch(e){}
             if(r.type==="coins")addCoins(r.amount);
             if(r.type==="gems")addGems(r.amount);
+            if(r.type==="label"){
+              // BP skin rewards unlock special card themes or avatars
+              var bpUnlocks=["midnight","crimson","emerald","galaxy","gold","🐉","🧙","🥷","👻","🤖","🦁"];
+              var unlockIdx=Math.floor(i/5);
+              var unlockId=bpUnlocks[unlockIdx%bpUnlocks.length];
+              if(unlockId){
+                var isAv=unlockId.length<=2||unlockId.codePointAt(0)>127;
+                var storeId=isAv?"av_"+unlockId:unlockId;
+                setOwnedItems(function(prev){
+                  if(prev.indexOf(storeId)>=0)return prev;
+                  var n=[...prev,storeId];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;
+                });
+                setRewardPopup({coins:0,gems:0,label:"Unlocked "+(isAv?unlockId+" avatar":unlockId+" theme")+"! 🎉"});
+                audio.achievement();
+                return;
+              }
+            }
             setRewardPopup({coins:r.type==="coins"?r.amount:0,gems:r.type==="gems"?r.amount:0,label:"Battle Pass Reward!"});
           }
         }}
@@ -2524,6 +2546,30 @@ export default function Cobra(){
         onClose={function(){setActiveScreen(null);setSpinLast(parseInt(lsGet("cobra_spin_last","0")));}}
       />}
       {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/>}
+      {showAvatarPicker&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:250,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={function(){setShowAvatarPicker(false);}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(212,168,67,0.35)",borderBottom:"none",borderRadius:"24px 24px 0 0",padding:"20px 20px calc(24px + env(safe-area-inset-bottom))",width:"100%",maxWidth:480,animation:"slideUp 0.35s cubic-bezier(.22,1,.36,1) both"}}>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:14}}><div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/></div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:14,color:"#d4a843",letterSpacing:3,textAlign:"center",marginBottom:16}}>CHOOSE AVATAR</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,maxHeight:"50vh",overflowY:"auto"}}>
+              {SHOP_AVATARS.map(function(item){
+                var owned=item.price===0||(ownedItems.indexOf("av_"+item.id)>=0);
+                var equipped=myAvatar===item.id;
+                return(
+                  <div key={item.id} onClick={function(){
+                    if(owned){audio.buttonClick();setMyAvatar(item.id);try{localStorage.setItem("cobra_player_avatar",item.id);}catch(e){}setShowAvatarPicker(false);}
+                    else{audio.buttonClick();setShowAvatarPicker(false);goScreen("shop");}
+                  }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"10px 4px",borderRadius:12,border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.07)",background:equipped?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation",opacity:owned?1:0.5}}>
+                    <div style={{fontSize:28}}>{item.id}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:equipped?"#d4a843":"#3a5a3a",letterSpacing:0.5}}>{owned?(equipped?"✓ ON":"tap"):"🔒"}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={function(){setShowAvatarPicker(false);goScreen("shop");}} style={{width:"100%",marginTop:14,padding:"12px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,background:"rgba(212,168,67,0.08)",border:"1.5px solid rgba(212,168,67,0.2)",borderRadius:12,color:"#d4a843",cursor:"pointer",touchAction:"manipulation"}}>🛒 GET MORE IN SHOP</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -3068,6 +3114,28 @@ export default function Cobra(){
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
       </div>
     );
+  }
+
+  // ─── SHOP ────────────────────────────────────────────
+  if(screen==="shop"){
+    return <ShopScreen
+      goScreen={goScreen}
+      coins={coins}
+      gems={gems}
+      ownedItems={ownedItems}
+      onBuy={buyItem}
+      cardTheme={cardTheme}
+      onEquipTheme={function(id){setCardTheme(id);try{localStorage.setItem("cobra_card_theme",id);}catch(e){}}}
+      myAvatar={myAvatar}
+      onEquipAvatar={function(id){setMyAvatar(id);try{localStorage.setItem("cobra_player_avatar",id);}catch(e){}}}
+      sfxMuted={sfxMuted}
+      musicMuted={musicMuted}
+      sfxToggle={sfxToggle}
+      musToggle={musToggle}
+      gameStats={gameStats}
+      showSettings={showSettings}
+      setShowSettings={setShowSettings}
+    />;
   }
 
   // ─── LEADERBOARD ────────────────────────────────────
