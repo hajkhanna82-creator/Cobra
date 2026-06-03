@@ -1429,14 +1429,8 @@ export default function Cobra(){
         setScores(dd.ns);
         setScreen("reveal");
       } else {
-        // If player is reading the scorecard, give them 4s before forcing to game
-        var cur=screenRef.current;
-        if(cur==="reveal"||cur==="roundEnd"){
-          pop("New round starting in 4s...","success",3800);
-          setTimeout(function(){setScreen("game");},4000);
-        } else {
-          setScreen("game");
-        }
+        // Always move to game — host controls when this fires
+        setScreen("game");
       }
     }
   },[]);
