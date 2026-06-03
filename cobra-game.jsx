@@ -1388,7 +1388,7 @@ export default function Cobra(){
   const [musicMuted,setMusicMuted]=useState(function(){try{return localStorage.getItem("cobra_mus_muted")==="1";}catch(e){return false;}});
   const [showSettings,setShowSettings]=useState(false);
   const [showTutorial,setShowTutorial]=useState(false);
-  const [tutorialDone,setTutorialDone]=useState(false);
+  const [tutorialDone,setTutorialDone]=useState(function(){try{return localStorage.getItem("cobra_tutorial_done")==="1";}catch(e){return false;}});
   const [tutorialStep,setTutorialStep]=useState(-1);
   const [earnedAch,setEarnedAch]=useState(null);
   const [unlockedAchs,setUnlockedAchs]=useState(function(){try{var a=localStorage.getItem("cobra_achs");return a?JSON.parse(a):[];}catch(e){return[];}});
@@ -2950,7 +2950,7 @@ export default function Cobra(){
     <div className="feltbg" style={{height:"100vh",maxHeight:"100vh",display:"flex",flexDirection:"column",overflow:"hidden",userSelect:"none"}}>
       <style>{GS}</style>
       <TableParticles/>
-      {showTutorial&&<Tutorial onDone={function(){setShowTutorial(false);setTutorialDone(true);}}/>}
+      {showTutorial&&<Tutorial onDone={function(){setShowTutorial(false);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}}/>}
       {earnedAch&&<AchievementBadge ach={earnedAch} onDone={function(){setEarnedAch(null);}}/>}
       {emojis.map(function(e){return(<EmojiFloat key={e.id} emoji={e.emoji} x={e.x} y={e.y}/>);})}
       {confetti.map(function(c){return(
@@ -3266,10 +3266,10 @@ export default function Cobra(){
           currentPlayer={currentPlayer}
           onNext={function(){
             var n=tutorialStep+1;
-            if(n>=COACH_STEPS.length){setTutorialStep(-1);setTutorialDone(true);}
+            if(n>=COACH_STEPS.length){setTutorialStep(-1);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}
             else setTutorialStep(n);
           }}
-          onSkip={function(){setTutorialStep(-1);setTutorialDone(true);}}
+          onSkip={function(){setTutorialStep(-1);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}}
         />
       )}
     </div>
