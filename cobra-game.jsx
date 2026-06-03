@@ -1372,6 +1372,7 @@ export default function Cobra(){
   const scoresRef=useRef(scores);
   const modeRef=useRef(mode);
   const roomCodeRef=useRef(roomCode);
+  const screenRef=useRef(screen);
   const broadcastMoveRef=useRef(null);
   useEffect(function(){phaseRef.current=phase;},[phase]);
   useEffect(function(){handsRef.current=hands;},[hands]);
@@ -1381,6 +1382,7 @@ export default function Cobra(){
   useEffect(function(){scoresRef.current=scores;},[scores]);
   useEffect(function(){modeRef.current=mode;},[mode]);
   useEffect(function(){roomCodeRef.current=roomCode;},[roomCode]);
+  useEffect(function(){screenRef.current=screen;},[screen]);
   const H=myIdx;
 
   const xpForLevel=function(lvl){return lvl*100;};
@@ -1420,13 +1422,21 @@ export default function Cobra(){
       setPhase(gs.phase);setScores(gs.scores);
       setNames(room.players.map(function(p){return p.name;}));
       setNPlayers(room.players.length);
-      setScreen("game");
       // Another player declared — join the reveal screen
       if(gs.declared){
         var dd=gs.declared;
         setRevealData({ns:dd.ns,res:dd.res,declarerIdx:dd.declarerIdx,hands:dd.hands});
         setScores(dd.ns);
         setScreen("reveal");
+      } else {
+        // If player is reading the scorecard, give them 4s before forcing to game
+        var cur=screenRef.current;
+        if(cur==="reveal"||cur==="roundEnd"){
+          pop("New round starting in 4s...","success",3800);
+          setTimeout(function(){setScreen("game");},4000);
+        } else {
+          setScreen("game");
+        }
       }
     }
   },[]);
