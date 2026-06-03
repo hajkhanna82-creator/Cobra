@@ -1703,6 +1703,7 @@ export default function Cobra(){
     var id=Date.now();
     setEmojis(function(p){return[...p,{id:id,emoji:emoji,x:x+"%",y:y+"%"}];});
     setTimeout(function(){setEmojis(function(p){return p.filter(function(e){return e.id!==id;});});},1500);
+    if(chatChannelRef.current){try{chatChannelRef.current.send({type:"broadcast",event:"emoji",payload:{emoji:emoji,x:x+"%",y:y+"%",id:id,player:myName}});}catch(e){}}
   };
 
   function deal(s,n){
@@ -1795,6 +1796,11 @@ export default function Cobra(){
           var payload=obj.payload;
           setChatMessages(function(p){return[...p.slice(-49),payload];});
           setChatOpen(function(open){if(!open)setUnreadChat(function(n){return n+1;});return open;});
+        }).on("broadcast",{event:"emoji"},function(obj){
+          var p=obj.payload;if(!p)return;
+          var id2=p.id+"-r";
+          setEmojis(function(prev){return[...prev,{id:id2,emoji:p.emoji,x:p.x,y:p.y}];});
+          setTimeout(function(){setEmojis(function(prev){return prev.filter(function(e){return e.id!==id2;});});},1500);
         }).subscribe();
         chatChannelRef.current=chatCh;
       }catch(e){}
@@ -2007,9 +2013,7 @@ export default function Cobra(){
       if(myTotal<=5)unlockAch("low_score");
       var elapsed=(Date.now()-roundStart)/1000;
       if(elapsed<10)unlockAch("speed_win");
-      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}
-        if(supabase&&myName){try{supabase.from("cobra_scores").upsert({id:myName,name:myName,avatar:myAvatar||"😎",wins:g.wins+1,updated_at:new Date().toISOString()},{onConflict:"id"}).then(function(){}).catch(function(){});}catch(e){}}
-        return n;});
+      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
       // Confetti
       var conf=[];
       for(var ci=0;ci<22;ci++){
@@ -2030,6 +2034,16 @@ export default function Cobra(){
     broadcastMove(hands,deck,openPile,H,"reveal",ns,{declarerIdx:H,ns:ns,res:res,hands:revealHands});
   }
 
+  function saveLeaderboardWin(){
+    if(!supabase||!myName)return;
+    try{supabase.from("cobra_scores").select("wins").eq("id",myName).single().then(function(res){
+      var prev=(res.data&&res.data.wins)||0;
+      supabase.from("cobra_scores").upsert({id:myName,name:myName,avatar:myAvatar||"😎",wins:prev+1,updated_at:new Date().toISOString()},{onConflict:"id"}).then(function(){}).catch(function(){});
+    }).catch(function(){
+      supabase.from("cobra_scores").upsert({id:myName,name:myName,avatar:myAvatar||"😎",wins:1,updated_at:new Date().toISOString()},{onConflict:"id"}).then(function(){}).catch(function(){});
+    });}catch(e){}
+  }
+
   function finishRound(ns,res){
     // XP rewards for local player
     gainXP(25); // participation XP
@@ -2044,6 +2058,7 @@ export default function Cobra(){
     setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});setPrevHand(null);
     if(loser>=0){
       setGameOverData({scores:ns,winner:winnerIdx,loser:loser});
+      if(winnerIdx===myIdx)saveLeaderboardWin();
       // Show elimination animation then go to gameOver
       setElimAnim({name:names[loser],idx:loser});
       setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
@@ -2739,7 +2754,7 @@ export default function Cobra(){
               setRoundEndData(ned);setScores(ns);setRoundRes(resWS);
               setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});
               setRevealData(null);
-              if(loser>=0){var winner=ns.indexOf(Math.min.apply(null,ns));setGameOverData({scores:ns,winner:winner,loser:loser});setScreen("gameOver");}
+              if(loser>=0){var winner=ns.indexOf(Math.min.apply(null,ns));setGameOverData({scores:ns,winner:winner,loser:loser});if(winner===H)saveLeaderboardWin();setScreen("gameOver");}
               else setScreen("roundEnd");
             }}>SEE SCORECARD</button>
         </div>
