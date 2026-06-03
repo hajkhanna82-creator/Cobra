@@ -290,11 +290,45 @@ input::placeholder{color:#2a3d28;}
 `;
 
 const CARD_THEMES={
-  classic:{bg:"linear-gradient(148deg,#091609,#040c04,#071007)",border:"rgba(20,60,20,0.9)",pat:"rgba(212,168,67,0.065)","pat2":"rgba(212,168,67,0.05)"},
-  midnight:{bg:"linear-gradient(148deg,#06061a,#030310,#04041a)",border:"rgba(20,20,80,0.9)",pat:"rgba(160,180,255,0.065)","pat2":"rgba(120,140,220,0.05)"},
-  crimson:{bg:"linear-gradient(148deg,#1a0505,#0d0303,#120404)",border:"rgba(80,10,10,0.9)",pat:"rgba(220,80,80,0.065)","pat2":"rgba(180,60,60,0.05)"},
-  emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.08)","pat2":"rgba(40,160,60,0.06)"},
+  classic:{bg:"linear-gradient(148deg,#091609,#040c04,#071007)",border:"rgba(20,60,20,0.9)",pat:"rgba(212,168,67,0.065)",pat2:"rgba(212,168,67,0.05)"},
+  midnight:{bg:"linear-gradient(148deg,#06061a,#030310,#04041a)",border:"rgba(20,20,80,0.9)",pat:"rgba(160,180,255,0.065)",pat2:"rgba(120,140,220,0.05)"},
+  crimson:{bg:"linear-gradient(148deg,#1a0505,#0d0303,#120404)",border:"rgba(80,10,10,0.9)",pat:"rgba(220,80,80,0.065)",pat2:"rgba(180,60,60,0.05)"},
+  emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.08)",pat2:"rgba(40,160,60,0.06)"},
+  galaxy:{bg:"linear-gradient(148deg,#0a0520,#050212,#08031a)",border:"rgba(80,40,160,0.9)",pat:"rgba(180,100,255,0.08)",pat2:"rgba(140,60,220,0.06)"},
+  gold:{bg:"linear-gradient(148deg,#1a1200,#0d0a00,#161000)",border:"rgba(160,120,0,0.9)",pat:"rgba(255,200,0,0.1)",pat2:"rgba(212,168,0,0.07)"},
 };
+
+const SHOP_THEMES=[
+  {id:"classic",name:"Classic",price:0,currency:"coins",color:"#091609",desc:"The original green felt"},
+  {id:"midnight",name:"Midnight",price:500,currency:"coins",color:"#06061a",desc:"Deep blue darkness"},
+  {id:"crimson",name:"Crimson",price:500,currency:"coins",color:"#1a0505",desc:"Blood red danger"},
+  {id:"emerald",name:"Emerald",price:500,currency:"coins",color:"#021a06",desc:"Lush green forest"},
+  {id:"galaxy",name:"Galaxy",price:1200,currency:"coins",color:"#0a0520",desc:"Cosmic purple depths"},
+  {id:"gold",name:"Gold Rush",price:1500,currency:"coins",color:"#1a1200",desc:"Pure luxury edition"},
+];
+
+const SHOP_AVATARS=[
+  {id:"😎",name:"Cool",price:0,currency:"coins"},
+  {id:"🤠",name:"Cowboy",price:0,currency:"coins"},
+  {id:"🐍",name:"Snake",price:0,currency:"coins"},
+  {id:"👑",name:"King",price:300,currency:"coins"},
+  {id:"🔥",name:"Fire",price:300,currency:"coins"},
+  {id:"💀",name:"Skull",price:300,currency:"coins"},
+  {id:"🎭",name:"Drama",price:500,currency:"coins"},
+  {id:"🃏",name:"Joker",price:500,currency:"coins"},
+  {id:"🦊",name:"Fox",price:500,currency:"coins"},
+  {id:"🐉",name:"Dragon",price:800,currency:"coins"},
+  {id:"🧙",name:"Wizard",price:800,currency:"coins"},
+  {id:"🥷",name:"Ninja",price:800,currency:"coins"},
+  {id:"👻",name:"Ghost",price:1000,currency:"coins"},
+  {id:"🤖",name:"Robot",price:1000,currency:"coins"},
+  {id:"🦁",name:"Lion",price:1200,currency:"coins"},
+  {id:"💎",name:"Diamond",price:20,currency:"gems"},
+  {id:"⚡",name:"Thunder",price:25,currency:"gems"},
+  {id:"🌙",name:"Moon",price:30,currency:"gems"},
+  {id:"🏆",name:"Trophy",price:40,currency:"gems"},
+  {id:"🎯",name:"Target",price:50,currency:"gems"},
+];
 
 function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx,theme}){
   const [hov,setHov]=useState(false);
@@ -1353,6 +1387,97 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
   );
 }
 
+function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme2,setCardTheme2,showSettings,setShowSettings}){
+  const [tab,setTab]=useState("themes");
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <style>{GS}</style>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
+      <div style={{flexShrink:0,padding:"calc(18px + env(safe-area-inset-top)) 20px 0",background:"linear-gradient(180deg,rgba(0,0,0,0.6),transparent)"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:36,marginBottom:4}}>🛒</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,margin:0}}>SHOP</h2>
+          <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:8}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",fontWeight:700}}>{coins.toLocaleString()} 🪙</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#c084fc",fontWeight:700}}>{gems} 💎</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:4,background:"rgba(0,0,0,0.3)",borderRadius:12,padding:4,marginBottom:12}}>
+          {[["themes","🎨 THEMES"],["avatars","😎 AVATARS"]].map(function(t){return(
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}}
+              style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:tab===t[0]?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"transparent",color:tab===t[0]?"#d4a843":"#3a5a3a",transition:"all 0.2s",touchAction:"manipulation"}}>
+              {t[1]}
+            </button>
+          );})}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"0 20px calc(20px + env(safe-area-inset-bottom))"}}>
+        {tab==="themes"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingTop:4}}>
+            {SHOP_THEMES.map(function(item){
+              var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+              var equipped=cardTheme===item.id;
+              var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+              return(
+                <div key={item.id} style={{borderRadius:16,overflow:"hidden",border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.08)",background:"rgba(0,0,0,0.35)",transition:"all 0.2s",boxShadow:equipped?"0 0 20px rgba(212,168,67,0.25)":"none"}}>
+                  <div style={{height:80,background:CARD_THEMES[item.id].bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                    <div style={{width:44,height:62,borderRadius:7,background:CARD_THEMES[item.id].bg,border:"2px solid "+CARD_THEMES[item.id].border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,boxShadow:"0 4px 14px rgba(0,0,0,0.5)"}}>🂡</div>
+                    {equipped&&<div style={{position:"absolute",top:6,right:6,background:"#d4a843",borderRadius:5,padding:"2px 6px",fontFamily:"Cinzel,serif",fontSize:7,color:"#010603",letterSpacing:1}}>ACTIVE</div>}
+                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>🔒</div>}
+                  </div>
+                  <div style={{padding:"10px 12px 12px"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:equipped?"#d4a843":"#c8d8c8",letterSpacing:1,marginBottom:3}}>{item.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#3a5a3a",marginBottom:8}}>{item.desc}</div>
+                    {owned?(
+                      <button onClick={function(){if(!equipped){audio.buttonClick();onEquipTheme(item.id);}}} style={{width:"100%",padding:"8px 0",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:"none",borderRadius:8,cursor:equipped?"default":"pointer",background:equipped?"rgba(212,168,67,0.1)":"rgba(212,168,67,0.18)",color:equipped?"#6b5a20":"#d4a843",touchAction:"manipulation"}}>
+                        {equipped?"✓ EQUIPPED":"EQUIP"}
+                      </button>
+                    ):(
+                      <button onClick={function(){if(canAfford)onBuy(item);else audio.buttonClick();}} style={{width:"100%",padding:"8px 0",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:"none",borderRadius:8,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.15))":"rgba(255,255,255,0.04)",color:canAfford?"#d4a843":"#3a5a3a",touchAction:"manipulation"}}>
+                        {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {tab==="avatars"&&(
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,paddingTop:4}}>
+            {SHOP_AVATARS.map(function(item){
+              var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
+              var equipped=myAvatar===item.id;
+              var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+              return(
+                <div key={item.id} onClick={function(){
+                  if(owned){audio.buttonClick();onEquipAvatar(item.id);}
+                  else if(canAfford){audio.buttonClick();onBuy({...item,id:"av_"+item.id,displayId:item.id,isAvatar:true});}
+                  else{audio.buttonClick();}
+                }} style={{borderRadius:14,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.07)",background:equipped?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation",transition:"all 0.2s",boxShadow:equipped?"0 0 14px rgba(212,168,67,0.2)":"none",position:"relative"}}>
+                  <div style={{fontSize:32,opacity:owned?1:0.4}}>{item.id}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:equipped?"#d4a843":"#3a5a3a",letterSpacing:1}}>{item.name.toUpperCase()}</div>
+                  {owned?(
+                    equipped?<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:1}}>✓ ON</div>
+                    :<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#2a5a2a",letterSpacing:1}}>TAP</div>
+                  ):(
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:canAfford?"#d4a843":"#3a3a3a",letterSpacing:0.5}}>
+                      {item.currency==="coins"?"🪙"+item.price:"💎"+item.price}
+                    </div>
+                  )}
+                  {!owned&&<div style={{position:"absolute",top:6,right:6,fontSize:10}}>🔒</div>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={onEquipTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+    </div>
+  );
+}
+
 export default function Cobra(){
   const [showSplash,setShowSplash]=useState(true);
   const [screen,setScreen]=useState("home");
@@ -1417,6 +1542,8 @@ export default function Cobra(){
   const [qrDataUrl,setQrDataUrl]=useState("");
   const [elimAnim,setElimAnim]=useState(null); // {name, idx}
   const [cardTheme,setCardTheme]=useState(function(){try{return localStorage.getItem("cobra_card_theme")||"classic";}catch(e){return"classic";}});
+  const [ownedItems,setOwnedItems]=useState(function(){try{var v=localStorage.getItem("cobra_owned_items");return v?JSON.parse(v):["classic"];}catch(e){return["classic"];}});
+  const [showAvatarPicker,setShowAvatarPicker]=useState(false);
   const [chatMessages,setChatMessages]=useState([]);
   const [chatOpen,setChatOpen]=useState(false);
   const [chatInput,setChatInput]=useState("");
@@ -1476,6 +1603,30 @@ export default function Cobra(){
   const xpForLevel=function(lvl){return lvl*100;};
   const addCoins=function(n){setCoins(function(c){var v=c+n;try{localStorage.setItem("cobra_coins",String(v));}catch(e){}return v;});};
   const addGems=function(n){setGems(function(g){var v=g+n;try{localStorage.setItem("cobra_gems",String(v));}catch(e){}return v;});};
+
+  const buyItem=function(item){
+    var cost=item.price;
+    if(item.currency==="coins"){
+      if(coins<cost){pop("Not enough coins! Need 🪙"+cost.toLocaleString(),"error");return;}
+      setCoins(function(v){var n=v-cost;try{localStorage.setItem("cobra_coins",String(n));}catch(e){}return n;});
+    } else {
+      if(gems<cost){pop("Not enough gems! Need 💎"+cost,"error");return;}
+      setGems(function(v){var n=v-cost;try{localStorage.setItem("cobra_gems",String(n));}catch(e){}return n;});
+    }
+    var itemId=item.id;
+    setOwnedItems(function(prev){var n=[...prev,itemId];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+    if(item.isAvatar){
+      var displayId=item.displayId||item.id.replace("av_","");
+      setMyAvatar(displayId);
+      try{localStorage.setItem("cobra_player_avatar",displayId);}catch(e){}
+      pop("Got "+displayId+" avatar!","success");
+    } else {
+      setCardTheme(itemId);
+      try{localStorage.setItem("cobra_card_theme",itemId);}catch(e){}
+      pop("Theme unlocked & equipped!","success");
+    }
+    audio.achievement();
+  };
 
   const gainXP=function(amount){
     var curXP=parseInt(lsGet("cobra_xp","0"))+amount;
@@ -1849,23 +2000,33 @@ export default function Cobra(){
     if(!myName.trim()){pop("Enter your name first","warning");return;}
     try{localStorage.setItem("cobra_player_name",myName.trim());}catch(e){}
     try{localStorage.setItem("cobra_player_avatar",myAvatar);}catch(e){}
-    var globalCode="COBRA_GLOBAL";
-    loadRoom(globalCode).then(function(room){
-      if(!room||room.status==="started"||room.players.length>=5){
-        room={code:globalCode,host:"Global",players:[],maxPlayers:5,status:"lobby",gameState:null,ts:Date.now()};
-      }
-      var idx=room.players.length;
-      room.players.push({name:myName.trim(),idx:idx});
-      saveRoom(globalCode,room).then(function(){
-        setMode("online");
-        setRoomCode(globalCode);setIsHost(idx===0);setMyIdx(idx);
-        setOnlinePlayers(room.players.map(function(p){return p.name;}));
-        startLobbyPoll(globalCode);
-        rtBroadcast(room); // announce new player to everyone in global lobby
-        goScreen("lobby");
-        pop("Finding players...","success");
-      });
-    });
+    if(!supabase){pop("Online requires internet connection","error");return;}
+    pop("Finding a game...","info",3000);
+    // Try to find an open global lobby room
+    supabase.from("cobra_rooms")
+      .select("id,data")
+      .like("id","GLOBAL_%")
+      .then(function(res){
+        var rooms=(res.data||[]).map(function(r){return r.data;}).filter(function(r){
+          return r&&r.status==="lobby"&&r.players&&r.players.length>0&&r.players.length<(r.maxPlayers||5);
+        });
+        var room=rooms.length>0?rooms[0]:null;
+        var globalCode=room?room.code:("GLOBAL_"+Math.random().toString(36).substr(2,5).toUpperCase());
+        if(!room){
+          room={code:globalCode,host:"Global",players:[],maxPlayers:5,status:"lobby",gameState:null,ts:Date.now()};
+        }
+        var idx=room.players.length;
+        room.players.push({name:myName.trim(),idx:idx,avatar:myAvatar||"😎"});
+        saveRoom(globalCode,room).then(function(){
+          setMode("online");
+          setRoomCode(globalCode);setIsHost(idx===0);setMyIdx(idx);
+          setOnlinePlayers(room.players.map(function(p){return p.name;}));
+          startLobbyPoll(globalCode);
+          rtBroadcast(room);
+          goScreen("lobby");
+          pop(idx===0?"Lobby created — waiting for players...":"Joined! Waiting to start...","success");
+        }).catch(function(){pop("Connection error","error");});
+      }).catch(function(){pop("Connection error — try again","error");});
   }
 
   const toggleSel=function(card){
