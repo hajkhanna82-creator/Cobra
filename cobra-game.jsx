@@ -1403,7 +1403,7 @@ export default function Cobra(){
     if(room.status==="started"&&room.gameState){
       var gs=room.gameState;
       setHands(gs.hands);setDeck(gs.deck);setOpenPile(gs.openPile);
-      setMyPlayed(gs.myPlayed||[]);setCurrentPlayer(gs.currentPlayer);
+      setCurrentPlayer(gs.currentPlayer);
       setPhase(gs.phase);setScores(gs.scores);
       setNames(room.players.map(function(p){return p.name;}));
       setNPlayers(room.players.length);
