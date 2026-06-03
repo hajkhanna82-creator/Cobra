@@ -1366,8 +1366,21 @@ export default function Cobra(){
   const yourTurnTimer=useRef(null);
   const phaseRef=useRef(phase);
   const handsRef=useRef(hands);
+  const deckRef=useRef(deck);
+  const currentPlayerRef=useRef(currentPlayer);
+  const nPlayersRef=useRef(nPlayers);
+  const scoresRef=useRef(scores);
+  const modeRef=useRef(mode);
+  const roomCodeRef=useRef(roomCode);
+  const broadcastMoveRef=useRef(null);
   useEffect(function(){phaseRef.current=phase;},[phase]);
   useEffect(function(){handsRef.current=hands;},[hands]);
+  useEffect(function(){deckRef.current=deck;},[deck]);
+  useEffect(function(){currentPlayerRef.current=currentPlayer;},[currentPlayer]);
+  useEffect(function(){nPlayersRef.current=nPlayers;},[nPlayers]);
+  useEffect(function(){scoresRef.current=scores;},[scores]);
+  useEffect(function(){modeRef.current=mode;},[mode]);
+  useEffect(function(){roomCodeRef.current=roomCode;},[roomCode]);
   const H=myIdx;
 
   const xpForLevel=function(lvl){return lvl*100;};
@@ -1420,7 +1433,14 @@ export default function Cobra(){
 
   const onConnectionChange=useCallback(function(status){
     if(status==="reconnecting"){setConnStatus("reconnecting");pop("Reconnecting...","warning",4000);}
-    else if(status==="connected"){setConnStatus("connected");pop("Connected","success",1800);setTimeout(function(){setConnStatus("");},2000);}
+    else if(status==="connected"){
+      setConnStatus("connected");pop("Connected","success",1800);
+      setTimeout(function(){setConnStatus("");},2000);
+      // Re-sync game state from DB on reconnect
+      if(roomCodeRef.current){
+        loadRoom(roomCodeRef.current).then(function(r){if(r)onRoomUpdate(r);}).catch(function(){});
+      }
+    }
     else if(status==="disconnected"){setConnStatus("disconnected");}
   },[]);
   const {subscribe:rtSubscribe,broadcast:rtBroadcast,unsubscribe:rtUnsubscribe}=useRoom({onRoomUpdate,onConnectionChange});
@@ -1436,6 +1456,7 @@ export default function Cobra(){
     rtBroadcast(updatedRoom);
     saveRoom(updatedRoom.code,updatedRoom);
   };
+  broadcastMoveRef.current=broadcastMove;
 
   // PWA install prompt listener
   useEffect(function(){
@@ -1529,16 +1550,29 @@ export default function Cobra(){
         setTurnTime(TURN_SEC);
         var curPhase=phaseRef.current;
         var curHands=handsRef.current;
-        if(curPhase==="play"){
+        if(curPhase==="play"||curPhase==="declare"){
           var hand=curHands[H];
           if(hand&&hand.length){
             var highest=[...hand].sort(function(a,b){return cv(b)-cv(a);})[0];
-            var nh=[...curHands];nh[H]=hand.filter(function(c){return c.id!==highest.id;});
-            setHands(nh);setMyPlayed([highest]);setSel([]);setPhase("pickup");
+            var nh2=[...curHands];nh2[H]=hand.filter(function(c){return c.id!==highest.id;});
             pop("Time up! Auto-played "+highest.value+highest.suit,"warning");
+            if(modeRef.current==="cpu"){
+              // CPU mode: just auto-play, player picks up manually
+              setHands(nh2);setMyPlayed([highest]);setSel([]);setPhase("pickup");
+            } else {
+              // Online mode: auto-complete full turn (play + pick from deck)
+              var curDeck=deckRef.current;
+              var drawn2=curDeck.length>0?curDeck[0]:null;
+              var rest2=drawn2?curDeck.slice(1):curDeck;
+              if(drawn2)nh2[H]=[...nh2[H],drawn2];
+              var newOpen2={cards:[highest],owner:H};
+              setHands(nh2);setDeck(rest2);setMyPlayed([]);setSel([]);setPhase("declare");setOpenPile(newOpen2);
+              var next2=(currentPlayerRef.current+1)%nPlayersRef.current;
+              setCurrentPlayer(next2);
+              if(broadcastMoveRef.current)broadcastMoveRef.current(nh2,rest2,newOpen2,next2,"declare",scoresRef.current);
+              if(next2===H){audio.turnChange();setShowYourTurn(true);clearTimeout(yourTurnTimer.current);yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);}
+            }
           }
-        } else if(curPhase==="declare"){
-          setPhase("play");pop("Time up! Play a card","warning");
         }
       }
     },1000);
@@ -1676,6 +1710,23 @@ export default function Cobra(){
         goScreen("game");
       }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
     }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
+  }
+
+  function onlineNextRound(newScores){
+    if(!isHost)return;
+    loadRoom(roomCode).then(function(room){
+      if(!room)return;
+      var n=room.players.length,d=shuffle(mkDeck()),h=[];
+      for(var i=0;i<n;i++)h.push(d.splice(0,7));
+      var gs={hands:h,deck:d,openPile:{cards:[],owner:-1},myPlayed:[],currentPlayer:0,phase:"declare",scores:newScores};
+      room.status="started";room.gameState=gs;
+      saveRoom(roomCode,room).then(function(){
+        roomRef.current=room;
+        rtBroadcast(room);
+        deal(newScores,n);
+        setScreen("game");
+      }).catch(function(){pop("Connection error","error");});
+    }).catch(function(){pop("Connection error","error");});
   }
 
   function joinGlobal(){
@@ -2560,10 +2611,21 @@ export default function Cobra(){
             })}
           </div>
           <div style={{display:"flex",gap:10}}>
-            <button className="btn_btn_gold" style={{flex:2,padding:17,fontSize:13,letterSpacing:2}}
-              onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();var ns=redResults.map(function(r){return r.newScore||0;});deal(ns,red.nPlayers||nPlayers);setScreen("game");}}>
-              🃏 NEXT ROUND
-            </button>
+            {mode==="online"&&!isHost?(
+              <div style={{flex:2,padding:17,fontSize:12,letterSpacing:2,fontFamily:"Cinzel,serif",color:"#5a7a60",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center",gap:8,border:"1px solid rgba(255,255,255,0.07)",borderRadius:12}}>
+                <ThinkingDots/> Waiting for host...
+              </div>
+            ):(
+              <button className="btn_btn_gold" style={{flex:2,padding:17,fontSize:13,letterSpacing:2}}
+                onClick={function(){
+                  audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
+                  var ns=redResults.map(function(r){return r.newScore||0;});
+                  if(mode==="online"){onlineNextRound(ns);}
+                  else{deal(ns,red.nPlayers||nPlayers);setScreen("game");}
+                }}>
+                🃏 NEXT ROUND
+              </button>
+            )}
             <button className="btn_btn_ghost" style={{flex:1,padding:17,fontSize:12,letterSpacing:1.5,border:"1px solid rgba(255,255,255,0.12)"}}
               onClick={function(){audio.buttonClick();setRoundEndData(null);setScores([]);setScreen("home");}}>
               🏠 HOME
@@ -2615,16 +2677,22 @@ export default function Cobra(){
             );})}
           </div>
           <div style={{display:"flex",gap:10}}>
-            <button className="btn_btn_gold" style={{flex:2,padding:16,fontSize:13,letterSpacing:2}}
-              onClick={function(){
-                audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
-                setGameOverData(null);
-                if(mode==="cpu"){startCPU();}
-                else if(mode==="online"&&isHost){startOnlineGame();}
-                else{deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}
-              }}>
-              🔄 REMATCH
-            </button>
+            {mode==="online"&&!isHost?(
+              <div style={{flex:2,padding:16,fontSize:12,letterSpacing:2,fontFamily:"Cinzel,serif",color:"#5a7a60",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center",gap:8,border:"1px solid rgba(255,255,255,0.07)",borderRadius:12}}>
+                <ThinkingDots/> Waiting for host...
+              </div>
+            ):(
+              <button className="btn_btn_gold" style={{flex:2,padding:16,fontSize:13,letterSpacing:2}}
+                onClick={function(){
+                  audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
+                  setGameOverData(null);
+                  if(mode==="cpu"){startCPU();}
+                  else if(mode==="online"){startOnlineGame();}
+                  else{deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}
+                }}>
+                🔄 REMATCH
+              </button>
+            )}
             <button className="btn_btn_ghost" style={{flex:1,padding:16,fontSize:12,letterSpacing:1.5}}
               onClick={function(){audio.buttonClick();setScores([]);goScreen("home");}}>
               🏠 HOME
