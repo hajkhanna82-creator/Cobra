@@ -1393,49 +1393,49 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
       <style>{GS}</style>
       <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
-      <div style={{flexShrink:0,padding:"calc(18px + env(safe-area-inset-top)) 20px 0",background:"linear-gradient(180deg,rgba(0,0,0,0.6),transparent)"}}>
-        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
+      <div style={{flexShrink:0,padding:"calc(18px + env(safe-area-inset-top)) 20px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11,color:"#c8d8c8",border:"1.5px solid rgba(255,255,255,0.18)"}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
         <div style={{textAlign:"center",marginBottom:16}}>
           <div style={{fontSize:36,marginBottom:4}}>🛒</div>
-          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,margin:0}}>SHOP</h2>
-          <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:8}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",fontWeight:700}}>{coins.toLocaleString()} 🪙</div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#c084fc",fontWeight:700}}>{gems} 💎</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:24,letterSpacing:4,margin:0,textShadow:"0 0 20px rgba(240,192,96,0.4)"}}>SHOP</h2>
+          <div style={{display:"flex",gap:20,justifyContent:"center",marginTop:10}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:"#f0c060",fontWeight:700,background:"rgba(240,192,96,0.1)",padding:"4px 12px",borderRadius:20,border:"1px solid rgba(240,192,96,0.3)"}}>{coins.toLocaleString()} 🪙</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:"#d8a0ff",fontWeight:700,background:"rgba(192,132,252,0.1)",padding:"4px 12px",borderRadius:20,border:"1px solid rgba(192,132,252,0.3)"}}>{gems} 💎</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:4,background:"rgba(0,0,0,0.3)",borderRadius:12,padding:4,marginBottom:12}}>
+        <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.06)",borderRadius:14,padding:5,marginBottom:14,border:"1px solid rgba(255,255,255,0.1)"}}>
           {[["themes","🎨 THEMES"],["avatars","😎 AVATARS"]].map(function(t){return(
             <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}}
-              style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:tab===t[0]?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"transparent",color:tab===t[0]?"#d4a843":"#3a5a3a",transition:"all 0.2s",touchAction:"manipulation"}}>
+              style={{flex:1,padding:"11px 4px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1.5,border:"none",borderRadius:10,cursor:"pointer",background:tab===t[0]?"linear-gradient(135deg,rgba(212,168,67,0.35),rgba(212,168,67,0.2))":"transparent",color:tab===t[0]?"#f0c060":"#7a9a7a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:tab===t[0]?"700":"400"}}>
               {t[1]}
             </button>
           );})}
         </div>
       </div>
-      <div style={{flex:1,overflowY:"auto",padding:"0 20px calc(20px + env(safe-area-inset-bottom))"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"0 20px calc(24px + env(safe-area-inset-bottom))"}}>
         {tab==="themes"&&(
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingTop:4}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,paddingTop:4}}>
             {SHOP_THEMES.map(function(item){
               var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
               var equipped=cardTheme===item.id;
               var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
               return(
-                <div key={item.id} style={{borderRadius:16,overflow:"hidden",border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.08)",background:"rgba(0,0,0,0.35)",transition:"all 0.2s",boxShadow:equipped?"0 0 20px rgba(212,168,67,0.25)":"none"}}>
-                  <div style={{height:80,background:CARD_THEMES[item.id].bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-                    <div style={{width:44,height:62,borderRadius:7,background:CARD_THEMES[item.id].bg,border:"2px solid "+CARD_THEMES[item.id].border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,boxShadow:"0 4px 14px rgba(0,0,0,0.5)"}}>🂡</div>
-                    {equipped&&<div style={{position:"absolute",top:6,right:6,background:"#d4a843",borderRadius:5,padding:"2px 6px",fontFamily:"Cinzel,serif",fontSize:7,color:"#010603",letterSpacing:1}}>ACTIVE</div>}
-                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>🔒</div>}
+                <div key={item.id} style={{borderRadius:18,overflow:"hidden",border:equipped?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",transition:"all 0.2s",boxShadow:equipped?"0 0 24px rgba(212,168,67,0.4),inset 0 0 0 1px rgba(240,192,96,0.2)":"0 2px 12px rgba(0,0,0,0.4)"}}>
+                  <div style={{height:90,background:CARD_THEMES[item.id].bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                    <div style={{width:48,height:68,borderRadius:8,background:CARD_THEMES[item.id].bg,border:"2px solid "+CARD_THEMES[item.id].border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,boxShadow:"0 6px 20px rgba(0,0,0,0.6)",color:"#fff"}}>🂡</div>
+                    {equipped&&<div style={{position:"absolute",top:7,right:7,background:"linear-gradient(135deg,#d4a843,#f0c060)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:8,color:"#010603",letterSpacing:1,fontWeight:700}}>✓ ACTIVE</div>}
+                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>🔒</div>}
                   </div>
-                  <div style={{padding:"10px 12px 12px"}}>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:equipped?"#d4a843":"#c8d8c8",letterSpacing:1,marginBottom:3}}>{item.name}</div>
-                    <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#3a5a3a",marginBottom:8}}>{item.desc}</div>
+                  <div style={{padding:"12px 14px 14px",background:"rgba(255,255,255,0.03)"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:equipped?"#f0c060":"#e8e8e8",letterSpacing:1,marginBottom:4,fontWeight:700}}>{item.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#8aaa8a",marginBottom:10,lineHeight:1.3}}>{item.desc}</div>
                     {owned?(
-                      <button onClick={function(){if(!equipped){audio.buttonClick();onEquipTheme(item.id);}}} style={{width:"100%",padding:"8px 0",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:"none",borderRadius:8,cursor:equipped?"default":"pointer",background:equipped?"rgba(212,168,67,0.1)":"rgba(212,168,67,0.18)",color:equipped?"#6b5a20":"#d4a843",touchAction:"manipulation"}}>
+                      <button onClick={function(){if(!equipped){audio.buttonClick();onEquipTheme(item.id);}}} style={{width:"100%",padding:"9px 0",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:equipped?"none":"1.5px solid rgba(212,168,67,0.5)",borderRadius:9,cursor:equipped?"default":"pointer",background:equipped?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.15))":"rgba(212,168,67,0.12)",color:equipped?"#f0c060":"#d4a843",touchAction:"manipulation",fontWeight:700}}>
                         {equipped?"✓ EQUIPPED":"EQUIP"}
                       </button>
                     ):(
-                      <button onClick={function(){if(canAfford)onBuy(item);else audio.buttonClick();}} style={{width:"100%",padding:"8px 0",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:"none",borderRadius:8,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.15))":"rgba(255,255,255,0.04)",color:canAfford?"#d4a843":"#3a5a3a",touchAction:"manipulation"}}>
-                        {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+                      <button onClick={function(){if(canAfford)onBuy(item);else{audio.buttonClick();} }} style={{width:"100%",padding:"9px 0",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.4)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:9,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.22),rgba(212,168,67,0.1))":"rgba(255,255,255,0.05)",color:canAfford?"#f0c060":"#6a7a6a",touchAction:"manipulation",fontWeight:700}}>
+                        {item.price===0?"FREE":(item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price)}
                       </button>
                     )}
                   </div>
@@ -1455,18 +1455,19 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
                   if(owned){audio.buttonClick();onEquipAvatar(item.id);}
                   else if(canAfford){audio.buttonClick();onBuy({...item,id:"av_"+item.id,displayId:item.id,isAvatar:true});}
                   else{audio.buttonClick();}
-                }} style={{borderRadius:14,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.07)",background:equipped?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation",transition:"all 0.2s",boxShadow:equipped?"0 0 14px rgba(212,168,67,0.2)":"none",position:"relative"}}>
-                  <div style={{fontSize:32,opacity:owned?1:0.4}}>{item.id}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:equipped?"#d4a843":"#3a5a3a",letterSpacing:1}}>{item.name.toUpperCase()}</div>
+                }} style={{borderRadius:16,padding:"14px 8px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:equipped?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.13)",background:equipped?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.05)",cursor:"pointer",touchAction:"manipulation",transition:"all 0.2s",boxShadow:equipped?"0 0 18px rgba(212,168,67,0.35)":"0 2px 8px rgba(0,0,0,0.3)",position:"relative"}}>
+                  <div style={{fontSize:34,opacity:owned?1:0.5,filter:equipped?"drop-shadow(0 0 6px rgba(240,192,96,0.7))":"none"}}>{item.id}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:equipped?"#f0c060":"#a0b8a0",letterSpacing:0.5,fontWeight:equipped?"700":"400"}}>{item.name.toUpperCase()}</div>
                   {owned?(
-                    equipped?<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:1}}>✓ ON</div>
-                    :<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#2a5a2a",letterSpacing:1}}>TAP</div>
+                    equipped
+                      ?<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:1,background:"rgba(212,168,67,0.15)",padding:"2px 6px",borderRadius:5}}>✓ ON</div>
+                      :<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#6aba6a",letterSpacing:1}}>EQUIP</div>
                   ):(
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:canAfford?"#d4a843":"#3a3a3a",letterSpacing:0.5}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:canAfford?"#d4a843":"#5a6a5a",letterSpacing:0.5,fontWeight:700}}>
                       {item.currency==="coins"?"🪙"+item.price:"💎"+item.price}
                     </div>
                   )}
-                  {!owned&&<div style={{position:"absolute",top:6,right:6,fontSize:10}}>🔒</div>}
+                  {!owned&&<div style={{position:"absolute",top:6,right:6,fontSize:11,opacity:0.7}}>🔒</div>}
                 </div>
               );
             })}
