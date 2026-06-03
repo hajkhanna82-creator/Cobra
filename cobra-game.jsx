@@ -1730,8 +1730,7 @@ export default function Cobra(){
       setPlayingCardIds([]);
       pop(""+seqLabel(played),"success",1200);
       if(played.length>=5)unlockAch("big_run");
-      // Broadcast so others see what was played on the pile
-      broadcastMove(nh,deck,openPile,currentPlayer,"pickup",scores);
+      // Don't broadcast here — wait until pickup so pile is correct
     },280);
   }
 
