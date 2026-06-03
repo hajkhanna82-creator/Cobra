@@ -395,7 +395,7 @@ export class AppErrorBoundary extends Component{
           <div style={{fontSize:22,marginBottom:12,letterSpacing:3}}>COBRA</div>
           <div style={{fontSize:13,color:"#f87171",marginBottom:24,maxWidth:300,lineHeight:1.5}}>Something went wrong loading the game.</div>
           <button onClick={()=>window.location.reload()} style={{background:"#d4a843",color:"#010603",border:"none",borderRadius:10,padding:"14px 28px",fontSize:13,letterSpacing:2,fontFamily:"Cinzel,serif",cursor:"pointer"}}>RELOAD</button>
-          {process.env.NODE_ENV!=="production"&&<pre style={{marginTop:24,fontSize:9,color:"#5a7a60",maxWidth:320,overflow:"auto",textAlign:"left"}}>{String(this.state.err)}</pre>}
+          <pre style={{marginTop:24,fontSize:10,color:"#f87171",maxWidth:340,overflow:"auto",textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}}>{String(this.state.err)}{"\n"}{this.state.err&&this.state.err.stack?"\n"+this.state.err.stack.slice(0,600):""}</pre>
         </div>
       );
     }
