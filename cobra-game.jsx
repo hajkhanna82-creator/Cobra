@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Component } from "react";
 import { supabase } from "./src/supabase.js";
 import { useRoom, saveRoomDB, loadRoomDB } from "./src/useRoom.js";
 import QRCode from "qrcode";
@@ -383,6 +383,26 @@ function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars}){
 
 const Divider=({c})=><div style={{height:1,background:"linear-gradient(90deg,transparent,"+(c||"#d4a843")+"55,transparent)",margin:"4px 0 20px"}}/>;
 const SLabel=({children})=><p style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#8aad80",letterSpacing:2,marginBottom:12,textAlign:"center",textTransform:"uppercase"}}>{children}</p>;
+
+export class AppErrorBoundary extends Component{
+  constructor(p){super(p);this.state={err:null};}
+  static getDerivedStateFromError(e){return{err:e};}
+  render(){
+    if(this.state.err){
+      return(
+        <div style={{background:"#010603",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,color:"#d4a843",fontFamily:"Cinzel,serif",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🐍</div>
+          <div style={{fontSize:22,marginBottom:12,letterSpacing:3}}>COBRA</div>
+          <div style={{fontSize:13,color:"#f87171",marginBottom:24,maxWidth:300,lineHeight:1.5}}>Something went wrong loading the game.</div>
+          <button onClick={()=>window.location.reload()} style={{background:"#d4a843",color:"#010603",border:"none",borderRadius:10,padding:"14px 28px",fontSize:13,letterSpacing:2,fontFamily:"Cinzel,serif",cursor:"pointer"}}>RELOAD</button>
+          {process.env.NODE_ENV!=="production"&&<pre style={{marginTop:24,fontSize:9,color:"#5a7a60",maxWidth:320,overflow:"auto",textAlign:"left"}}>{String(this.state.err)}</pre>}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function ThinkingDots(){return(<div style={{display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(function(i){return(<div key={i} className="think_dot" style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",animationDelay:(i*0.22)+"s"}}/>);})}</div>);}
 
 function MenuButton({onClick,active}){
@@ -1355,8 +1375,8 @@ export default function Cobra(){
   const addGems=function(n){setGems(function(g){var v=g+n;try{localStorage.setItem("cobra_gems",String(v));}catch(e){}return v;});};
 
   const gainXP=function(amount){
-    var curXP=parseInt(localStorage.getItem("cobra_xp")||"0")+amount;
-    var curLvl=parseInt(localStorage.getItem("cobra_level")||"1");
+    var curXP=parseInt(lsGet("cobra_xp","0"))+amount;
+    var curLvl=parseInt(lsGet("cobra_level","1"));
     var bonusCoins=0;
     while(curLvl<100&&curXP>=curLvl*100){curXP-=curLvl*100;curLvl++;bonusCoins+=100;}
     try{localStorage.setItem("cobra_xp",String(curXP));localStorage.setItem("cobra_level",String(curLvl));}catch(e){}
@@ -1410,7 +1430,8 @@ export default function Cobra(){
     if(mode==="cpu"||!roomRef.current)return;
     var gs={hands:nh,deck:nd,openPile:np,myPlayed:[],currentPlayer:nextPlayer,phase:nextPhase,scores:ns||scores};
     if(declared)gs.declared=declared;
-    var updatedRoom=Object.assign({},roomRef.current,{gameState:gs});
+    // Always force status:"started" — roomRef may still hold lobby status due to async round-trip
+    var updatedRoom=Object.assign({},roomRef.current,{gameState:gs,status:"started"});
     roomRef.current=updatedRoom;
     rtBroadcast(updatedRoom);
     saveRoom(updatedRoom.code,updatedRoom);
@@ -1647,6 +1668,7 @@ export default function Cobra(){
       room.status="started";room.gameState=gs;
       saveRoom(roomCode,room).then(function(){
         setStartingGame(false);
+        roomRef.current=room; // ensure roomRef has started status before any move
         rtBroadcast(room); // push to all players simultaneously
         setNames(room.players.map(function(p){return p.name;}));setNPlayers(n);
         setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
