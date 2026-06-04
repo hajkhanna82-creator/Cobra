@@ -1529,6 +1529,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
   const [tab,setTab]=useState("avatars");
   var ownedAvatars=SHOP_AVATARS.filter(function(a){return a.price===0||ownedItems.indexOf("av_"+a.id)>=0;});
   var ownedThemes=SHOP_THEMES.filter(function(t){return t.price===0||ownedItems.indexOf(t.id)>=0;});
+  var TXT="#e8f0e8";var TXT2="#c0d8c0";var DIM="rgba(255,255,255,0.45)";
   return(
     <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
       <style>{GS}</style>
@@ -1541,7 +1542,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         </div>
         <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8}}>
           {[["avatars","😎"],["themes","🎨"],["frames","🖼️"],["titles","🎖️"]].map(function(t){var a=tab===t[0];return(
-            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flexShrink:0,padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:a?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:a?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:a?"#f0c060":"#8aaa8a",touchAction:"manipulation",transition:"all 0.15s"}}>
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flexShrink:0,padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:a?"1.5px solid rgba(212,168,67,0.6)":"1.5px solid rgba(255,255,255,0.2)",borderRadius:20,cursor:"pointer",background:a?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.06)",color:a?"#f0c060":TXT2,touchAction:"manipulation",transition:"all 0.15s"}}>
               {t[1]} {t[0].toUpperCase()}
             </button>
           );})}
@@ -1550,16 +1551,15 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
       <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
         {tab==="avatars"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
               {SHOP_AVATARS.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
                 var eq=myAvatar===item.id;
-                return(<div key={item.id} onClick={function(){if(owned&&onEquipAvatar){audio.buttonClick();onEquipAvatar(item.id);}}} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.12)",background:eq?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",transition:"all 0.15s",boxShadow:eq?"0 0 16px rgba(212,168,67,0.35)":"none"}}>
-                  <div style={{fontSize:30}}>{item.id}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#c8d8c8",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
-                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060"}}>✓ ON</div>}
-                  {!owned&&<div style={{fontSize:9}}>🔒</div>}
+                return(<div key={item.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipAvatar&&onEquipAvatar(eq?"😎":item.id);}} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.15)",background:eq?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.06)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.15s",boxShadow:eq?"0 0 18px rgba(212,168,67,0.4)":"none"}}>
+                  <div style={{fontSize:28}}>{item.id}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":TXT,letterSpacing:0.5,textAlign:"center"}}>{item.name.toUpperCase()}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":owned?"#a0d0a0":"#888",letterSpacing:0.5}}>{eq?"✓ ON":owned?"owned":"🔒"}</div>
                 </div>);
               })}
             </div>
@@ -1567,21 +1567,21 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="themes"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {SHOP_THEMES.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
                 var eq=cardTheme===item.id;
                 var th=CARD_THEMES[item.id];
-                return(<div key={item.id} onClick={function(){if(owned&&onEquipTheme){audio.buttonClick();onEquipTheme(item.id);}}} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.12)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",boxShadow:eq?"0 0 20px rgba(212,168,67,0.35)":"none",transition:"all 0.15s"}}>
-                  <div style={{height:60,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
-                    {[0,1,2].map(function(ci){return(<div key={ci} style={{transform:"rotate("+(ci-1)*5+"deg)",opacity:owned?1:0.5}}><Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/></div>);})}
-                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🔒</div>}
-                    {eq&&<div style={{position:"absolute",top:5,right:10,fontFamily:"Cinzel,serif",fontSize:8,color:"#f0c060",background:"rgba(0,0,0,0.6)",padding:"2px 6px",borderRadius:5}}>✓ ACTIVE</div>}
+                return(<div key={item.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipTheme&&onEquipTheme(eq?"classic":item.id);}} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.15)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",boxShadow:eq?"0 0 22px rgba(212,168,67,0.4)":"none",transition:"all 0.15s"}}>
+                  <div style={{height:64,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+                    {[0,1,2].map(function(ci){return(<div key={ci} style={{transform:"rotate("+(ci-1)*6+"deg) translateY("+(ci===1?-4:2)+"px)"}}><Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/></div>);})}
+                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>🔒</div>}
+                    {eq&&<div style={{position:"absolute",top:6,right:10,fontFamily:"Cinzel,serif",fontSize:8,color:"#f0c060",background:"rgba(0,0,0,0.65)",padding:"3px 8px",borderRadius:6}}>✓ ACTIVE</div>}
                   </div>
-                  <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.04)"}}>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:eq?"#f0c060":"#e0e8e0",fontWeight:700}}>{item.name}</div>
-                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#a0d0a0",letterSpacing:1}}>TAP TO EQUIP</span>}
+                  <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.05)"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:eq?"#f0c060":TXT,fontWeight:700}}>{item.name}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:eq?"#f0c060":owned?"#a0d0a0":"#888"}}>{eq?"TAP TO UNEQUIP":owned?"TAP TO EQUIP":"🔒 LOCKED"}</div>
                   </div>
                 </div>);
               })}
@@ -1590,18 +1590,17 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="frames"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               {FRAMES.map(function(frame){
                 var owned=unlockedFrames.indexOf(frame.id)>=0;
                 var eq=equippedFrame===frame.id;
                 var rc=RARITY_COLORS[frame.rarity];
-                return(<div key={frame.id} onClick={function(){if(owned){audio.buttonClick();onEquipFrame(frame.id);}}} style={{borderRadius:16,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,border:eq?"2px solid "+rc:"1.5px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 16px "+RARITY_GLOW[frame.rarity]:"none"}}>
-                  <div style={{width:44,height:44,borderRadius:"50%",border:"3px solid "+(typeof frame.color==="string"&&!frame.color.includes("gradient")?frame.color:"#d4a843"),background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:owned&&frame.glow?"0 0 12px "+frame.glow:"none"}}>🐍</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:eq?rc:"#c8d8c8",fontWeight:700}}>{frame.name}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1}}>{frame.rarity.toUpperCase()}</div>
-                  {!owned&&<div style={{fontSize:12}}>🔒</div>}
-                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc}}>✓ EQUIPPED</div>}
+                return(<div key={frame.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipFrame(eq?"none":frame.id);}} style={{borderRadius:16,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,border:eq?"2px solid "+rc:"1.5px solid rgba(255,255,255,0.15)",background:eq?"rgba(212,168,67,0.08)":"rgba(255,255,255,0.05)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 18px "+RARITY_GLOW[frame.rarity]:"none"}}>
+                  <div style={{width:48,height:48,borderRadius:"50%",border:"3px solid "+(typeof frame.color==="string"&&!frame.color.includes("gradient")?frame.color:"#d4a843"),background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,boxShadow:owned&&frame.glow?"0 0 14px "+frame.glow:"none"}}>🐍</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:eq?rc:TXT,fontWeight:700,textAlign:"center"}}>{frame.name}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:rc,letterSpacing:1}}>{frame.rarity.toUpperCase()}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:eq?rc:owned?"#a0d0a0":"#888"}}>{eq?"✓ EQUIPPED":owned?"tap to equip":"🔒"}</div>
                 </div>);
               })}
             </div>
@@ -1609,23 +1608,22 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="titles"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{unlockedTitles.length}/{TITLES.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              <div onClick={function(){audio.buttonClick();onEquipTitle("");}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:equippedTitle===""?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(255,255,255,0.08)",background:equippedTitle===""?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation"}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#a0bba0",flex:1}}>No Title</div>
-                {equippedTitle===""&&<div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843"}}>✓ ON</div>}
+              <div onClick={function(){audio.buttonClick();onEquipTitle("");}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:equippedTitle===""?"1.5px solid rgba(212,168,67,0.5)":"1px solid rgba(255,255,255,0.15)",background:equippedTitle===""?"rgba(212,168,67,0.08)":"rgba(255,255,255,0.05)",cursor:"pointer",touchAction:"manipulation"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:TXT,flex:1}}>No Title</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:equippedTitle===""?"#f0c060":"#a0d0a0"}}>{equippedTitle===""?"✓ ON":"tap to set"}</div>
               </div>
               {TITLES.map(function(title){
                 var owned=unlockedTitles.indexOf(title.id)>=0;
                 var eq=equippedTitle===title.id;
                 var rc=RARITY_COLORS[title.rarity];
-                return(<div key={title.id} onClick={function(){if(owned){audio.buttonClick();onEquipTitle(title.id);}}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:eq?"1.5px solid "+rc:"1px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 12px "+RARITY_GLOW[title.rarity]:"none"}}>
+                return(<div key={title.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipTitle(eq?"":title.id);}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:eq?"1.5px solid "+rc:"1px solid rgba(255,255,255,0.15)",background:eq?"rgba(212,168,67,0.08)":"rgba(255,255,255,0.05)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 14px "+RARITY_GLOW[title.rarity]:"none"}}>
                   <div style={{flex:1}}>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:owned?title.color:"#8a9a8a",fontWeight:700,letterSpacing:1,textShadow:eq?"0 0 8px "+title.color:"none"}}>{title.name}</div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1,marginTop:2}}>{title.rarity.toUpperCase()}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:owned?title.color:TXT2,fontWeight:700,letterSpacing:1,textShadow:eq?"0 0 10px "+title.color:"none"}}>{title.name}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:rc,letterSpacing:1,marginTop:2}}>{title.rarity.toUpperCase()}</div>
                   </div>
-                  {!owned&&<div style={{fontSize:12}}>🔒</div>}
-                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:8,color:rc}}>✓ ON</div>}
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:eq?rc:owned?"#a0d0a0":"#888"}}>{eq?"✓ ON":owned?"tap":"🔒"}</div>
                 </div>);
               })}
             </div>
