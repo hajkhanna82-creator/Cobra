@@ -66,9 +66,12 @@ const audio={
   init(){
     if(this._ready)return;
     try{
+      // Sync mute flags from localStorage before any sound plays
+      try{this._muted=localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){}
+      try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
-      this._master=ctx.createGain();this._master.gain.value=0.7;this._master.connect(ctx.destination);
+      this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
       this._ready=true;this._startBg();
