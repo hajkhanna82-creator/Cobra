@@ -1703,6 +1703,129 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
   );
 }
 
+function CrateOpenModal({reveal,setReveal,onEquipTheme}){
+  const [phase,setPhase]=useState("idle"); // idle -> shaking -> tapping -> opening -> revealed
+  const [confetti,setConfetti]=useState([]);
+  const shakeRef=useRef(null);
+
+  useEffect(function(){
+    // Auto-start shake after mount
+    var t=setTimeout(function(){setPhase("shaking");},200);
+    return function(){clearTimeout(t);};
+  },[]);
+
+  function handleTap(){
+    if(phase==="shaking"||phase==="idle"){
+      audio.buttonClick();
+      setPhase("opening");
+      setTimeout(function(){
+        setPhase("revealed");
+        audio.achievement&&audio.achievement();
+        // spawn confetti
+        var cf=[];
+        for(var i=0;i<40;i++){cf.push({id:i,x:Math.random()*100,color:["#f0c060","#4ade80","#c084fc","#60a5fa","#ffffff","#f87171"][Math.floor(Math.random()*6)],size:Math.random()*8+4,delay:Math.random()*0.4,dur:Math.random()*1.2+1.0});}
+        setConfetti(cf);
+        setTimeout(function(){setConfetti([]);},3000);
+      },900);
+    }
+  }
+
+  function handleClose(){
+    if(reveal.wonTheme&&onEquipTheme){
+      onEquipTheme(reveal.wonId);
+    }
+    setReveal(null);
+  }
+
+  var th=reveal.wonTheme;
+  var rc=th?RARITY_COLORS[th.rarity]||"#f0c060":"#f0c060";
+  var rg=th?RARITY_GLOW[th.rarity]||"rgba(240,192,96,0.4)":"rgba(240,192,96,0.4)";
+  var crateIcon=reveal.crate.icon||"📦";
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.88)",backdropFilter:"blur(8px)"}}>
+      <style>{`
+        @keyframes crateShake{0%,100%{transform:rotate(0deg) scale(1)}15%{transform:rotate(-8deg) scale(1.05)}30%{transform:rotate(8deg) scale(1.08)}45%{transform:rotate(-6deg) scale(1.06)}60%{transform:rotate(6deg) scale(1.07)}75%{transform:rotate(-4deg) scale(1.05)}90%{transform:rotate(3deg) scale(1.03)}}
+        @keyframes crateExplode{0%{transform:scale(1);opacity:1}40%{transform:scale(1.5);opacity:0.8}100%{transform:scale(0.2);opacity:0}}
+        @keyframes revealPop{0%{transform:scale(0.2) rotate(-10deg);opacity:0}60%{transform:scale(1.15) rotate(3deg);opacity:1}80%{transform:scale(0.95) rotate(-1deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 30px ${rg},0 0 60px ${rg}40%}50%{box-shadow:0 0 50px ${rg},0 0 100px ${rg}60%}}
+        @keyframes cfFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+        @keyframes tapHint{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.08);opacity:1}}
+      `}</style>
+
+      {/* Confetti */}
+      {confetti.map(function(c){return(
+        <div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size,borderRadius:Math.random()>0.5?"50%":"2px",background:c.color,animation:"cfFall "+(c.dur)+"s "+(c.delay)+"s ease-in both",pointerEvents:"none",zIndex:10000}}/>
+      );})}
+
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24,padding:"40px 32px",maxWidth:340,width:"100%",textAlign:"center"}}>
+
+        {/* Title */}
+        <div style={{fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:4,color:"#d4a843",textShadow:"0 0 20px rgba(212,168,67,0.5)"}}>
+          {phase==="revealed"?"YOU GOT":"MYSTERY CRATE"}
+        </div>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"rgba(255,255,255,0.5)"}}>
+          {reveal.crate.name}
+        </div>
+
+        {/* Crate / Revealed item */}
+        {phase!=="revealed"?(
+          <div
+            onClick={handleTap}
+            style={{
+              cursor:"pointer",
+              fontSize:100,
+              lineHeight:1,
+              animation:phase==="shaking"?"crateShake 0.6s ease-in-out infinite":phase==="opening"?"crateExplode 0.9s ease-out forwards":"none",
+              filter:"drop-shadow(0 0 30px rgba(212,168,67,0.6))",
+              touchAction:"manipulation",
+              userSelect:"none",
+            }}
+          >
+            {crateIcon}
+          </div>
+        ):(
+          <div style={{animation:"revealPop 0.6s cubic-bezier(.34,1.56,.64,1) both"}}>
+            <div style={{borderRadius:24,padding:"28px 32px",background:"linear-gradient(145deg,rgba(20,20,10,0.95),rgba(10,10,5,0.98))",border:"2px solid "+rc,boxShadow:"0 0 40px "+rg+", inset 0 1px 0 rgba(255,255,255,0.08)",animation:"glowPulse 1.8s ease-in-out infinite",display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+              {/* Theme preview cards */}
+              {th&&(
+                <div style={{display:"flex",gap:4,marginBottom:4}}>
+                  {[0,1,2].map(function(ci){return(
+                    <div key={ci} style={{transform:"rotate("+(ci-1)*8+"deg) translateY("+(ci===1?-6:2)+"px)",zIndex:ci===1?2:1}}>
+                      <Card card={{suit:"♠",value:"A"}} faceDown size="sm" theme={reveal.wonId}/>
+                    </div>
+                  );})}
+                </div>
+              )}
+              {!th&&<div style={{fontSize:60}}>{crateIcon}</div>}
+              <div style={{fontFamily:"Cinzel,serif",fontSize:18,color:rc,fontWeight:900,letterSpacing:2,textShadow:"0 0 12px "+rc}}>{th?th.name:"Mystery Item"}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:9,background:rc+"22",border:"1px solid "+rc+"55",borderRadius:6,padding:"3px 10px",color:rc,letterSpacing:1}}>{th?th.rarity.toUpperCase():"RARE"}</div>
+              {th&&<div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"rgba(255,255,255,0.6)",fontStyle:"italic"}}>{th.desc}</div>}
+            </div>
+          </div>
+        )}
+
+        {/* Tap prompt / close */}
+        {phase!=="revealed"&&phase!=="opening"&&(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:3,color:"#d4a843",animation:"tapHint 1.2s ease-in-out infinite"}}>
+            TAP TO OPEN
+          </div>
+        )}
+        {phase==="opening"&&(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:3,color:"rgba(255,255,255,0.4)"}}>
+            OPENING...
+          </div>
+        )}
+        {phase==="revealed"&&(
+          <button onClick={handleClose} style={{padding:"14px 40px",fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:2.5,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:14,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 4px 20px rgba(212,168,67,0.5)"}}>
+            {th?"EQUIP & CLOSE":"COLLECT"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings}){
   var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
   var [cat,setCat]=useState("ALL");
@@ -2226,6 +2349,7 @@ export default function Cobra(){
   const [playerLevel,setPlayerLevel]=useState(function(){try{return parseInt(localStorage.getItem("cobra_level")||"1");}catch(e){return 1;}});
   const [activeScreen,setActiveScreen]=useState(null);
   const [rewardPopup,setRewardPopup]=useState(null);
+  const [crateReveal,setCrateReveal]=useState(null); // {crate, wonId, wonTheme, phase:"shake"|"open"|"reveal"}
   // battle-pass state (safe reads)
   const lsGet=function(k,fb){try{var v=localStorage.getItem(k);return v!==null?v:fb;}catch(e){return fb;}};
   const [bpLevel,setBpLevel]=useState(function(){return parseInt(lsGet("cobra_bp_level","1"));});
@@ -2298,23 +2422,17 @@ export default function Cobra(){
       setGems(function(v){var n=v-cost;try{localStorage.setItem("cobra_gems",String(n));}catch(e){}return n;});
     }
 
-    // Crate: pick random item from pool, add it, show reveal
+    // Crate: show reveal modal, award item after animation
     if(item.id&&item.id.startsWith("crate_")&&item.pool){
       var pool=item.pool;
       var won=pool[Math.floor(Math.random()*pool.length)];
       var wonTheme=SHOP_THEMES.find(function(t){return t.id===won;});
+      // Add item to owned now (payment already deducted)
       setOwnedItems(function(prev){
-        if(prev.indexOf(won)>=0)return prev; // already owned — no duplicate
+        if(prev.indexOf(won)>=0)return prev;
         var n=[...prev,won];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;
       });
-      if(wonTheme){
-        setCardTheme(won);
-        try{localStorage.setItem("cobra_card_theme",won);}catch(e){}
-        pop("🎉 CRATE OPENED! You got: "+wonTheme.name+" theme!","success");
-      } else {
-        pop("🎉 CRATE OPENED! You got a rare reward!","success");
-      }
-      audio.achievement();
+      setCrateReveal({crate:item,wonId:won,wonTheme:wonTheme,phase:"shake"});
       return;
     }
 
@@ -3962,24 +4080,35 @@ export default function Cobra(){
 
   // ─── SHOP ────────────────────────────────────────────
   if(screen==="shop"){
-    return <ShopScreen
-      goScreen={goScreen}
-      coins={coins}
-      gems={gems}
-      ownedItems={ownedItems}
-      onBuy={buyItem}
-      cardTheme={cardTheme}
-      onEquipTheme={function(id){setCardTheme(id);try{localStorage.setItem("cobra_card_theme",id);}catch(e){}}}
-      myAvatar={myAvatar}
-      onEquipAvatar={function(id){setMyAvatar(id);try{localStorage.setItem("cobra_player_avatar",id);}catch(e){}}}
-      sfxMuted={sfxMuted}
-      musicMuted={musicMuted}
-      sfxToggle={sfxToggle}
-      musToggle={musToggle}
-      gameStats={gameStats}
-      showSettings={showSettings}
-      setShowSettings={setShowSettings}
-    />;
+    return(
+      <>
+        <ShopScreen
+          goScreen={goScreen}
+          coins={coins}
+          gems={gems}
+          ownedItems={ownedItems}
+          onBuy={buyItem}
+          cardTheme={cardTheme}
+          onEquipTheme={function(id){setCardTheme(id);try{localStorage.setItem("cobra_card_theme",id);}catch(e){}}}
+          myAvatar={myAvatar}
+          onEquipAvatar={function(id){setMyAvatar(id);try{localStorage.setItem("cobra_player_avatar",id);}catch(e){}}}
+          sfxMuted={sfxMuted}
+          musicMuted={musicMuted}
+          sfxToggle={sfxToggle}
+          musToggle={musToggle}
+          gameStats={gameStats}
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        />
+        {crateReveal&&(
+          <CrateOpenModal
+            reveal={crateReveal}
+            setReveal={setCrateReveal}
+            onEquipTheme={function(id){setCardTheme(id);try{localStorage.setItem("cobra_card_theme",id);}catch(e){}}}
+          />
+        )}
+      </>
+    );
   }
 
   // ─── LEADERBOARD ────────────────────────────────────
