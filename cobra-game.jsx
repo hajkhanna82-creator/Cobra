@@ -1429,10 +1429,10 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
                   <div style={{height:100,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:10,position:"relative",overflow:"hidden"}}>
                     {/* Subtle pattern overlay */}
                     <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,"+th.pat+" 0%,transparent 60%),radial-gradient(circle at 80% 50%,"+th.pat2+" 0%,transparent 60%)"}}/>
-                    {/* Sample cards */}
-                    {[{suit:"♠",value:"K"},{suit:"♥",value:"A"},{suit:"♦",value:"7"}].map(function(c,ci){return(
+                    {/* Sample cards — face down to show the back design */}
+                    {[0,1,2].map(function(ci){return(
                       <div key={ci} style={{transform:"rotate("+(ci-1)*8+"deg) translateY("+(ci===1?-6:2)+"px)",zIndex:ci===1?2:1,position:"relative"}}>
-                        <Card card={c} size="sm" theme={item.id}/>
+                        <Card card={{suit:"♠",value:"A"}} faceDown size="sm" theme={item.id}/>
                       </div>
                     );})}
                     {equipped&&(
