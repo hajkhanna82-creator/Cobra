@@ -565,7 +565,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
         <div style={{padding:"18px 22px 14px",borderBottom:"1px solid rgba(212,168,67,0.1)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
           <div>
             <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:13,letterSpacing:5,margin:0}}>SETTINGS</h2>
-            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:11,marginTop:2}}>COBRA v2.0 PREMIUM</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:11,marginTop:2}}>COBRA v2.0 PREMIUM</div>
           </div>
           <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>✕</button>
         </div>
@@ -574,7 +574,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
 
           {/* AUDIO */}
           <div style={{paddingTop:20}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8ab08a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
               <span>🔊</span> AUDIO
             </div>
             {[
@@ -584,7 +584,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
               <div key={item.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,gap:12}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontFamily:"Crimson Text,serif",color:"#c8d8c8",fontSize:15,lineHeight:1.2}}>{item.label}</div>
-                  <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:12,marginTop:1}}>{item.sub}</div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7a",fontSize:12,marginTop:1}}>{item.sub}</div>
                 </div>
                 <PremiumToggle active={item.active} onToggle={item.onToggle}/>
               </div>
@@ -595,7 +595,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
 
           {/* GAME */}
           <div style={{paddingTop:18}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8ab08a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
               <span>🃏</span> GAME
             </div>
             <button onClick={function(){onHowToPlay();onClose();}} style={{
@@ -617,10 +617,10 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
 
           {/* STATISTICS */}
           <div style={{paddingTop:18}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a6a3a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8ab08a",letterSpacing:4,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
               <span>📊</span> STATISTICS
             </div>
-            {gameStats.rounds===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:13,textAlign:"center",marginBottom:12}}>No games played yet</div>}
+            {gameStats.rounds===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7a",fontSize:13,textAlign:"center",marginBottom:12}}>No games played yet</div>}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
               {[
                 {icon:"🏆",val:gameStats.wins,label:"Wins"},
@@ -637,7 +637,7 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
                 }}>
                   <div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
                   <div style={{fontFamily:"Cinzel,serif",fontSize:17,fontWeight:700,color:"#d4a843",lineHeight:1}}>{s.val}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#3a5a3a",letterSpacing:1,marginTop:4,textTransform:"uppercase"}}>{s.label}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#7a9a7a",letterSpacing:1,marginTop:4,textTransform:"uppercase"}}>{s.label}</div>
                 </div>
               );})}
             </div>
@@ -777,7 +777,7 @@ function AchievementBadge({ach,onDone}){
       <div>
         <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2,marginBottom:2}}>ACHIEVEMENT</div>
         <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0e8d0",letterSpacing:1}}>{ach.name}</div>
-        <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#4a6a4a",marginTop:1}}>{ach.desc}</div>
+        <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#8aaa8a",marginTop:1}}>{ach.desc}</div>
       </div>
     </div>
   );
@@ -837,7 +837,7 @@ function SplashScreen({onDone}){
           <span style={{fontSize:90,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:12,background:"linear-gradient(175deg,#f4cc52,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",textAlign:"center",marginBottom:8}}>COBRA</h1>
-        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:16,letterSpacing:6,textAlign:"center"}}>the ultimate card game</p>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:16,letterSpacing:6,textAlign:"center"}}>the ultimate card game</p>
       </div>
       <div style={{position:"absolute",bottom:"calc(60px + env(safe-area-inset-bottom))",display:"flex",gap:6}}>
         {[0,1,2].map(function(i){return(
@@ -1400,7 +1400,7 @@ function AchievementsScreen({goScreen,gameStats,achProgress,claimedAchs,onClaim,
         </div>
         <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8}}>
           {cats.map(function(c){var active=cat===c[0];return(
-            <button key={c[0]} onClick={function(){audio.buttonClick();setCat(c[0]);}} style={{flexShrink:0,padding:"7px 12px",fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1.5,border:active?"1.5px solid rgba(212,168,67,0.6)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:active?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:active?"#f0c060":"#4a6a4a",touchAction:"manipulation",transition:"all 0.15s"}}>
+            <button key={c[0]} onClick={function(){audio.buttonClick();setCat(c[0]);}} style={{flexShrink:0,padding:"7px 12px",fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1.5,border:active?"1.5px solid rgba(212,168,67,0.6)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:active?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:active?"#f0c060":"#8aaa8a",touchAction:"manipulation",transition:"all 0.15s"}}>
               {c[1]}
             </button>
           );})}
@@ -1423,11 +1423,11 @@ function AchievementsScreen({goScreen,gameStats,achProgress,claimedAchs,onClaim,
                     <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:claimed?"#4ade80":done?"#f0c060":"#8a9a8a",fontWeight:700,letterSpacing:0.5}}>{a.name}</span>
                     {a.title&&<span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#c084fc",background:"rgba(192,132,252,0.15)",padding:"2px 6px",borderRadius:5,letterSpacing:1}}>+TITLE</span>}
                   </div>
-                  <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#5a7a5a",marginBottom:6}}>{a.desc}</div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#9aba9a",marginBottom:6}}>{a.desc}</div>
                   <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
                     <div style={{height:"100%",width:pct+"%",background:claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#c49030,#f0c060)":"linear-gradient(90deg,#1a4a1a,#2a6a2a)",borderRadius:2,transition:"width 0.6s"}}/>
                   </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1}}>{prog}/{a.goal}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>{prog}/{a.goal}</div>
                 </div>
                 <div style={{flexShrink:0,textAlign:"right"}}>
                   <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:4}}>
@@ -1440,7 +1440,7 @@ function AchievementsScreen({goScreen,gameStats,achProgress,claimedAchs,onClaim,
                     </button>
                   )}
                   {claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4ade80",letterSpacing:1}}>✓ DONE</div>}
-                  {!done&&!claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#2a4a2a",letterSpacing:1}}>{pct}%</div>}
+                  {!done&&!claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6a9a6a",letterSpacing:1}}>{pct}%</div>}
                 </div>
               </div>
             </div>
@@ -1479,16 +1479,16 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
         <div style={{textAlign:"center",marginBottom:14}}>
           <div style={{fontSize:32,marginBottom:4}}>🎯</div>
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,margin:"0 0 6px"}}>MISSIONS</h2>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#3a5a3a",letterSpacing:2}}>RESETS IN {hLeft}h {mLeft}m</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#7a9a7a",letterSpacing:2}}>RESETS IN {hLeft}h {mLeft}m</div>
         </div>
         <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.05)",borderRadius:12,padding:4,marginBottom:12,border:"1px solid rgba(255,255,255,0.08)"}}>
           {[["daily","📅 DAILY"],["weekly","📆 WEEKLY"]].map(function(t){var a=tab===t[0];return(
-            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:a?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"transparent",color:a?"#f0c060":"#4a6a4a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:a?"700":"400"}}>{t[1]}</button>
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:a?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"transparent",color:a?"#f0c060":"#8aaa8a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:a?"700":"400"}}>{t[1]}</button>
           );})}
         </div>
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
-        {(!missions||!missions.missions)&&<div style={{fontFamily:"Crimson Text,serif",color:"#3a5a3a",textAlign:"center",padding:40,fontStyle:"italic"}}>Loading missions...</div>}
+        {(!missions||!missions.missions)&&<div style={{fontFamily:"Crimson Text,serif",color:"#7a9a7a",textAlign:"center",padding:40,fontStyle:"italic"}}>Loading missions...</div>}
         {missions&&missions.missions&&missions.missions.map(function(m,i){
           var prog=getMProg(m);
           var done=prog>=m.goal;
@@ -1515,7 +1515,7 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
               <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
                 <div style={{height:"100%",width:pct+"%",background:m.claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#c49030,#f0c060)":"linear-gradient(90deg,#1a4a1a,#2a8a2a)",borderRadius:2,transition:"width 0.5s"}}/>
               </div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#2a4a2a",letterSpacing:1}}>{prog}/{m.goal}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#6a9a6a",letterSpacing:1}}>{prog}/{m.goal}</div>
             </div>
           );
         })}
@@ -1541,7 +1541,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         </div>
         <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8}}>
           {[["avatars","😎"],["themes","🎨"],["frames","🖼️"],["titles","🎖️"]].map(function(t){var a=tab===t[0];return(
-            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flexShrink:0,padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:a?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:a?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:a?"#f0c060":"#4a6a4a",touchAction:"manipulation",transition:"all 0.15s"}}>
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flexShrink:0,padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:a?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:a?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:a?"#f0c060":"#8aaa8a",touchAction:"manipulation",transition:"all 0.15s"}}>
               {t[1]} {t[0].toUpperCase()}
             </button>
           );})}
@@ -1550,14 +1550,14 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
       <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
         {tab==="avatars"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
               {SHOP_AVATARS.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
                 var eq=myAvatar===item.id;
                 return(<div key={item.id} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.3)",opacity:owned?1:0.4}}>
                   <div style={{fontSize:30}}>{item.id}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#6a8a6a",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#a0bba0",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
                   {!owned&&<div style={{fontSize:9}}>🔒</div>}
                 </div>);
               })}
@@ -1566,7 +1566,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="themes"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {SHOP_THEMES.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
@@ -1580,7 +1580,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
                   </div>
                   <div style={{padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,0,0,0.3)"}}>
                     <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:eq?"#f0c060":"#c8d8c8",fontWeight:700}}>{item.name}</div>
-                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a"}}>OWNED</span>}
+                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a"}}>OWNED</span>}
                   </div>
                 </div>);
               })}
@@ -1589,7 +1589,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="frames"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               {FRAMES.map(function(frame){
                 var owned=unlockedFrames.indexOf(frame.id)>=0;
@@ -1608,10 +1608,10 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="titles"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               <div onClick={function(){audio.buttonClick();onEquipTitle("");}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:equippedTitle===""?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(255,255,255,0.08)",background:equippedTitle===""?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation"}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#6a8a6a",flex:1}}>No Title</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#a0bba0",flex:1}}>No Title</div>
                 {equippedTitle===""&&<div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843"}}>✓ ON</div>}
               </div>
               {TITLES.map(function(title){
@@ -1620,7 +1620,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
                 var rc=RARITY_COLORS[title.rarity];
                 return(<div key={title.id} onClick={function(){if(owned){audio.buttonClick();onEquipTitle(title.id);}}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:eq?"1.5px solid "+rc:"1px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 12px "+RARITY_GLOW[title.rarity]:"none"}}>
                   <div style={{flex:1}}>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:owned?title.color:"#4a5a4a",fontWeight:700,letterSpacing:1,textShadow:eq?"0 0 8px "+title.color:"none"}}>{title.name}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:owned?title.color:"#8a9a8a",fontWeight:700,letterSpacing:1,textShadow:eq?"0 0 8px "+title.color:"none"}}>{title.name}</div>
                     <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1,marginTop:2}}>{title.rarity.toUpperCase()}</div>
                   </div>
                   {!owned&&<div style={{fontSize:12}}>🔒</div>}
@@ -1656,7 +1656,7 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
         <div style={{textAlign:"center",marginBottom:20}}>
           <span style={{fontSize:40}}>🏆</span>
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>LEADERBOARD</h2>
-          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#8aaa8a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
         </div>
         {loading&&<div style={{textAlign:"center",padding:40}}><ThinkingDots/></div>}
         {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
@@ -1672,7 +1672,7 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
                 <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,color:i===0?"#d4a843":"#4ade80"}}>{row.wins}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1}}>WINS</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>WINS</div>
               </div>
             </div>
           );
@@ -1721,7 +1721,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
         <div style={{display:"flex",margin:"0 18px 4px",gap:8}}>
           {TABS.map(function(t){var active=tab===t[0];return(
             <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}}
-              style={{flex:1,padding:"12px 4px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,border:"none",borderRadius:0,borderBottom:active?"2.5px solid #d4a843":"2.5px solid rgba(255,255,255,0.07)",cursor:"pointer",background:"transparent",color:active?"#f0c060":"#4a6a4a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:active?"700":"400"}}>
+              style={{flex:1,padding:"12px 4px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,border:"none",borderRadius:0,borderBottom:active?"2.5px solid #d4a843":"2.5px solid rgba(255,255,255,0.07)",cursor:"pointer",background:"transparent",color:active?"#f0c060":"#8aaa8a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:active?"700":"400"}}>
               {t[1]} {t[2]}
             </button>
           );})}
@@ -2780,7 +2780,7 @@ export default function Cobra(){
           <span style={{fontSize:88,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
-        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#2a4a2e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
         {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>v2.0 PREMIUM</span>
@@ -2941,7 +2941,7 @@ export default function Cobra(){
             onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
         </div>
         {gameStats.rounds>0&&(
-          <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#4a5a4a"}}
+          <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
             onClick={function(){
               audio.buttonClick();
               try{localStorage.removeItem("cobra_stats");localStorage.removeItem("cobra_achs");}catch(e){}
@@ -3041,7 +3041,7 @@ export default function Cobra(){
                     else{audio.buttonClick();setShowAvatarPicker(false);goScreen("shop");}
                   }} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"10px 4px",borderRadius:12,border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.07)",background:equipped?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation",opacity:owned?1:0.5}}>
                     <div style={{fontSize:28}}>{item.id}</div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:equipped?"#d4a843":"#3a5a3a",letterSpacing:0.5}}>{owned?(equipped?"✓ ON":"tap"):"🔒"}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:equipped?"#d4a843":"#7a9a7a",letterSpacing:0.5}}>{owned?(equipped?"✓ ON":"tap"):"🔒"}</div>
                   </div>
                 );
               })}
@@ -3077,12 +3077,12 @@ export default function Cobra(){
             var icon=row.icon,t=row.t,txt=row.txt,items=row.items;
             return(
               <div key={t} style={{marginBottom:16,paddingBottom:16,borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                <p style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4b6040",letterSpacing:2,marginBottom:7,display:"flex",alignItems:"center",gap:8}}>
+                <p style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#8ab080",letterSpacing:2,marginBottom:7,display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:16}}>{icon}</span>{t}
                 </p>
-                {txt&&<p style={{fontFamily:"Crimson Text,serif",color:"#6a8a6a",fontSize:15,lineHeight:1.6}}>{txt}</p>}
+                {txt&&<p style={{fontFamily:"Crimson Text,serif",color:"#a0bba0",fontSize:15,lineHeight:1.6}}>{txt}</p>}
                 {items&&<ul style={{paddingLeft:0,listStyle:"none"}}>{items.map(function(item){return(
-                  <li key={item} style={{fontFamily:"Crimson Text,serif",color:"#6a8a6a",fontSize:15,lineHeight:1.7,display:"flex",gap:8}}>
+                  <li key={item} style={{fontFamily:"Crimson Text,serif",color:"#a0bba0",fontSize:15,lineHeight:1.7,display:"flex",gap:8}}>
                     <span style={{color:"#d4a843",flexShrink:0}}>.</span>{item}
                   </li>
                 );})}</ul>}
@@ -3220,7 +3220,7 @@ export default function Cobra(){
           <input value={myName} onChange={function(e){setMyName(e.target.value);}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:20}} placeholder="Enter your name"/>
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:"rgba(74,222,128,0.06)",border:"1px solid rgba(74,222,128,0.15)",borderRadius:12,marginBottom:20}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",boxShadow:"0 0 8px #4ade80",flexShrink:0}} className="pulse"/>
-            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#2a5a3a",letterSpacing:2}}>GLOBAL MATCHMAKING ACTIVE</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#7ab07a",letterSpacing:2}}>GLOBAL MATCHMAKING ACTIVE</span>
           </div>
           <button className="btn_btn_green" style={{width:"100%",padding:16,fontSize:14,letterSpacing:2.5}} onClick={joinGlobal}>PLAY NOW</button>
         </div>
@@ -3366,7 +3366,7 @@ export default function Cobra(){
           <button onClick={function(){setChatOpen(false);}} style={{width:28,height:28,borderRadius:7,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
         </div>
         <div ref={chatScrollRef} style={{flex:1,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:8}}>
-          {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
+          {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
           {chatMessages.map(function(m){return(
             <div key={m.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
               <span style={{fontSize:18,flexShrink:0}}>{m.avatar}</span>
@@ -3486,7 +3486,7 @@ export default function Cobra(){
                   <span style={{fontFamily:"Crimson Text,serif",fontSize:17,color:r.winner?"#d4a843":r.cobra?"#f87171":"#9aad9a"}}>{r.winner?"👑 ":r.cobra?"🐍 ":""}{r.name}</span>
                   <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:700,color:r.winner?"#4ade80":r.cobra?"#f87171":"#9aad9a",animation:"splashPop 0.4s cubic-bezier(.22,1.4,.36,1) both",animationDelay:(i*0.12)+"s"}}>
                     {r.winner?"+0":r.added>0?"+"+r.added:"+0"}
-                    <div style={{fontSize:8,color:"#4a6a4a",fontWeight:400,marginTop:2}}>{r.winner?"won":r.cobra?"cobra":"added"}</div>
+                    <div style={{fontSize:8,color:"#8aaa8a",fontWeight:400,marginTop:2}}>{r.winner?"won":r.cobra?"cobra":"added"}</div>
                   </div>
                   <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#c8d8c8",animation:"splashPop 0.5s cubic-bezier(.22,1.4,.36,1) both",animationDelay:(i*0.1)+"s"}}>{ns}</div>
                 </div>
@@ -3494,7 +3494,7 @@ export default function Cobra(){
             })}
           </div>
           <div style={{background:"rgba(0,0,0,0.25)",borderRadius:14,padding:"14px 16px",marginBottom:18,border:"1px solid rgba(255,255,255,0.05)"}}>
-            <p style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#4a6a4a",letterSpacing:2,marginBottom:12,textAlign:"center"}}>STANDINGS — FIRST TO {scoreLimit} IS OUT</p>
+            <p style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8aaa8a",letterSpacing:2,marginBottom:12,textAlign:"center"}}>STANDINGS — FIRST TO {scoreLimit} IS OUT</p>
             {redResults.map(function(r,i){
               var ns=r.newScore||0,slD=Math.round(scoreLimit*0.8),slW=Math.round(scoreLimit*0.5);
               return(
@@ -3752,9 +3752,9 @@ export default function Cobra(){
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <div style={{fontFamily:"Cinzel,serif",fontSize:17,fontWeight:900,letterSpacing:3,background:"linear-gradient(135deg,#e8c052,#c49030)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>🐍 COBRA</div>
             <button onClick={function(){haptic.light();setShowExitConfirm(true);}}
-              style={{width:30,height:30,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",color:"#6a8a6a",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>🏠</button>
+              style={{width:30,height:30,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",color:"#a0bba0",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>🏠</button>
             <button onClick={function(){setShowRules(true);haptic.light();}}
-              style={{width:30,height:30,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#6a8a6a",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>?</button>
+              style={{width:30,height:30,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#a0bba0",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>?</button>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{position:"relative"}}>
@@ -3776,7 +3776,7 @@ export default function Cobra(){
             )}
             {isSpectator&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1,padding:"2px 8px",background:"rgba(212,168,67,0.1)",borderRadius:8}}>👁 SPECTATING</div>}
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1,padding:"2px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8}}>R{roundNum}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1,padding:"2px 8px",background:"rgba(255,255,255,0.04)",borderRadius:8}}>R{roundNum}</div>
               <div style={{display:"flex",alignItems:"center",gap:4}}>
                 <div style={{width:5,height:5,borderRadius:"50%",background:"#16a34a",boxShadow:"0 0 6px #16a34a"}}/>
                 <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#5a7a60",letterSpacing:2}}>{deck.length}</span>
@@ -3800,7 +3800,7 @@ export default function Cobra(){
           var ci=i+1,ch=hands[ci]||[],active=ci===currentPlayer;
           return(
             <div key={ci} style={{padding:"4px 10px 6px",borderRadius:10,textAlign:"center",background:active?"linear-gradient(160deg,rgba(212,168,67,0.16),rgba(212,168,67,0.07))":"rgba(0,0,0,0.3)",border:active?"1.5px solid rgba(212,168,67,0.42)":"1px solid rgba(255,255,255,0.05)",boxShadow:active?"0 0 22px rgba(212,168,67,0.14)":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:7.5,letterSpacing:1.5,marginBottom:3,color:active?"#d4a843":"#4a6a4a",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:7.5,letterSpacing:1.5,marginBottom:3,color:active?"#d4a843":"#8aaa8a",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
                 {active&&cpuThinking&&mode==="cpu"?<ThinkingDots/>:<>{active&&<div style={{width:5,height:5,borderRadius:"50%",background:"#d4a843",boxShadow:"0 0 7px #d4a843"}} className="pulse"/>}{names[ci]}</>}
               </div>
               <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:4,position:"relative"}}>
@@ -3976,7 +3976,7 @@ export default function Cobra(){
               <button onClick={function(){setChatOpen(false);}} style={{width:28,height:28,borderRadius:7,border:"1px solid rgba(212,168,67,0.2)",background:"rgba(212,168,67,0.06)",color:"#d4a843",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>✕</button>
             </div>
             <div ref={chatScrollRef} style={{flex:1,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:8}}>
-              {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#3a5a3a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
+              {chatMessages.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7a",fontSize:14,textAlign:"center",marginTop:20}}>No messages yet. Say hello!</div>}
               {chatMessages.map(function(m){return(
                 <div key={m.id} style={{display:"flex",alignItems:"flex-start",gap:8}}>
                   <span style={{fontSize:18,flexShrink:0}}>{m.avatar}</span>
