@@ -205,6 +205,9 @@ const audio={
   timerTick(){this._tone(800,"sine",0.04,0.05,0);},
   timerUrgent(){this._tone(1000,"sine",0.1,0.07,0);},
   achievement(){[784,988,1174].forEach((f,i)=>this._tone(f,"sine",0.15,0.3,i*0.1));},
+  purchase(){this._sweep(300,900,0.18,0.12);this._tone(1200,"sine",0.12,0.2,0.08);this._tone(1600,"sine",0.08,0.15,0.18);},
+  crateOpen(){this._noise(0.25,0.18,3000);this._sweep(200,1200,0.2,0.35);[523,659,784,988,1174,1568].forEach((f,i)=>this._tone(f,"triangle",0.14,0.3,0.08+i*0.07));},
+  levelUp(){[392,494,587,784,988].forEach((f,i)=>this._tone(f,"sine",0.2,0.5,i*0.09));this._tone(1568,"sine",0.18,0.8,0.5);this._noise(0.12,0.2,5000);},
   shuffle_sfx(){for(let i=0;i<7;i++)setTimeout(()=>this.cardDeal(),i*85);},
   toggleMute(){this._muted=!this._muted;if(this._master&&this._ctx)this._master.gain.linearRampToValueAtTime(this._muted?0:0.7,this._ctx.currentTime+0.1);},
   toggleMusic(){
@@ -346,6 +349,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes sparkle{0%,100%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1) rotate(180deg);opacity:1}}
 @keyframes snakeWave{0%{transform:translateX(-100%) scaleY(1)}50%{transform:translateX(0%) scaleY(1.3)}100%{transform:translateX(100%) scaleY(1)}}
 @keyframes homeGlow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.55;transform:scale(1.08)}}
+@keyframes statSlideIn{0%{transform:translateX(-30px);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes trophyBounce{0%,100%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.2) rotate(-8deg)}75%{transform:scale(1.15) rotate(8deg)}}
+@keyframes rankReveal{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes shimmerSlide{0%{background-position:200% center}100%{background-position:-200% center}}
 `;
 
 const CARD_THEMES={
@@ -1730,7 +1737,7 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
       setPhase("opening");
       setTimeout(function(){
         setPhase("revealed");
-        audio.achievement&&audio.achievement();
+        audio.crateOpen&&audio.crateOpen();
         // spawn confetti
         var cf=[];
         for(var i=0;i<40;i++){cf.push({id:i,x:Math.random()*100,color:["#f0c060","#4ade80","#c084fc","#60a5fa","#ffffff","#f87171"][Math.floor(Math.random()*6)],size:Math.random()*8+4,delay:Math.random()*0.4,dur:Math.random()*1.2+1.0});}
@@ -2449,7 +2456,7 @@ export default function Cobra(){
       setCardTheme(first);
       try{localStorage.setItem("cobra_card_theme",first);}catch(e){}
       pop("Bundle unlocked! "+item._bundleItems.length+" themes added!","success");
-      audio.achievement();
+      audio.purchase();
       return;
     }
 
@@ -2492,7 +2499,7 @@ export default function Cobra(){
       try{localStorage.setItem("cobra_card_theme",itemId);}catch(e){}
       pop("Theme unlocked & equipped!","success");
     }
-    audio.achievement();
+    audio.purchase();
   };
 
   const gainXP=function(amount){
@@ -4092,46 +4099,89 @@ export default function Cobra(){
     // Trigger confetti if local player won (once)
     if(iWonGame&&confetti.length===0){
       setTimeout(function(){audio.win();haptic.heavy();},300);
-      var wConf=[];for(var wci=0;wci<30;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24"][Math.floor(Math.random()*6)],size:Math.random()*7+4,delay:Math.random()*0.8,dur:Math.random()*1.5+1.2});}
-      setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},3500);},100);
+      var wConf=[];for(var wci=0;wci<50;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24","#c084fc"][Math.floor(Math.random()*7)],size:Math.random()*9+4,delay:Math.random()*1.0,dur:Math.random()*1.5+1.4});}
+      setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},4000);},100);
     }
+    var xpEarned=iWonGame?150:50;
+    var coinsEarned=iWonGame?200:50;
+    var winnerAvatar=gameOverData.winner===H?myAvatar:"🤖";
+    var sortedPlayers=[...Array(nPlayers).keys()].sort(function(a,b){return gameOverData.scores[a]-gameOverData.scores[b];});
+    var rankMedals=["🥇","🥈","🥉","4️⃣"];
     return(
-      <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px",position:"relative"}}>
+      <div className="feltbg" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"0",position:"relative",overflowY:"auto",minHeight:"100%"}}>
         <style>{GS}</style>
         {confetti.map(function(c){return(<div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>);})}
         <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
-        <div style={{maxWidth:420,width:"100%",textAlign:"center",position:"relative",zIndex:1}} className="anim_up">
-          <div style={{fontSize:70,marginBottom:8,animation:"cobraBounce 1.2s ease-in-out 3"}}>{iWonGame?myAvatar:"👑"}</div>
-          <h1 style={{fontFamily:"Cinzel,serif",color:iWonGame?"#4ade80":"#d4a843",fontSize:32,letterSpacing:7,margin:"0 0 4px",textShadow:iWonGame?"0 0 30px rgba(74,222,128,0.6)":"0 0 30px rgba(212,168,67,0.5)"}}>{iWonGame?"YOU WIN! 🏆":"GAME OVER"}</h1>
-          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a7a4a",fontSize:22,marginBottom:6}}>{iWonGame?"Congratulations!":names[gameOverData.winner]+" wins"}</p>
-          <div style={{height:1,background:"linear-gradient(90deg,transparent,#d4a843,transparent)",margin:"14px auto 22px",width:110}}/>
-          <div className="panel" style={{overflow:"hidden",marginBottom:16}}>
-            {names.slice(0,nPlayers).map(function(n,i){return(
-              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"15px 24px",borderBottom:i<nPlayers-1?"1px solid rgba(255,255,255,0.04)":"none",background:i===gameOverData.winner?"rgba(212,168,67,0.08)":i===gameOverData.loser?"rgba(185,28,28,0.08)":"transparent"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:20}}>{i===gameOverData.winner?"👑":i===gameOverData.loser?"💀":" "}</span>
-                  <span style={{fontFamily:"Crimson Text,serif",fontSize:19,color:i===gameOverData.winner?"#d4a843":i===gameOverData.loser?"#f87171":"#5a7a5a"}}>{n}</span>
+
+        {/* Hero banner */}
+        <div style={{width:"100%",background:iWonGame?"linear-gradient(180deg,rgba(10,40,15,0.95),rgba(5,20,8,0.98))":"linear-gradient(180deg,rgba(20,10,5,0.95),rgba(10,5,3,0.98))",paddingTop:"calc(56px + env(safe-area-inset-top))",paddingBottom:28,textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",position:"relative",overflow:"hidden"}}>
+          {/* Background glow */}
+          <div style={{position:"absolute",inset:0,background:iWonGame?"radial-gradient(ellipse at 50% 0%,rgba(74,222,128,0.15),transparent 70%)":"radial-gradient(ellipse at 50% 0%,rgba(212,168,67,0.12),transparent 70%)",pointerEvents:"none"}}/>
+          {/* Winner avatar */}
+          <div style={{fontSize:80,lineHeight:1,marginBottom:8,animation:"trophyBounce 1s ease-in-out 4",display:"inline-block",filter:iWonGame?"drop-shadow(0 0 20px rgba(74,222,128,0.6))":"drop-shadow(0 0 20px rgba(212,168,67,0.5))"}}>{iWonGame?myAvatar||"🏆":winnerAvatar}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:iWonGame?34:26,fontWeight:900,letterSpacing:6,color:iWonGame?"#4ade80":"#d4a843",textShadow:iWonGame?"0 0 40px rgba(74,222,128,0.7)":"0 0 40px rgba(212,168,67,0.6)",margin:"0 0 6px"}}>{iWonGame?"VICTORY!":"GAME OVER"}</div>
+          <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:18,color:"rgba(255,255,255,0.5)"}}>{iWonGame?"Flawless performance":""+names[gameOverData.winner]+" takes the crown"}</div>
+          {/* XP + coins earned */}
+          {iWonGame&&(
+            <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(96,165,250,0.12)",border:"1px solid rgba(96,165,250,0.3)",borderRadius:20,padding:"6px 14px",animation:"statSlideIn 0.4s 0.5s both"}}>
+                <span style={{fontSize:14}}>⭐</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#93c5fd",fontWeight:700}}>+{xpEarned} XP</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:20,padding:"6px 14px",animation:"statSlideIn 0.4s 0.7s both"}}>
+                <span style={{fontSize:14}}>🪙</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",fontWeight:700}}>+{coinsEarned}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{width:"100%",maxWidth:440,padding:"20px 16px calc(24px + env(safe-area-inset-bottom))",display:"flex",flexDirection:"column",gap:14}}>
+
+          {/* Final standings */}
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:3,color:"rgba(212,168,67,0.6)",textAlign:"center",marginBottom:2}}>FINAL STANDINGS</div>
+          <div style={{borderRadius:20,overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)"}}>
+            {sortedPlayers.map(function(i,rank){
+              var isWinner=i===gameOverData.winner;
+              var isLoser=i===gameOverData.loser;
+              var isMe=i===H;
+              return(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 18px",borderBottom:rank<nPlayers-1?"1px solid rgba(255,255,255,0.05)":"none",background:isWinner?"linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05))":isLoser?"rgba(185,28,28,0.07)":"transparent",animation:"statSlideIn 0.35s "+(rank*0.08)+"s both"}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:22,width:32,textAlign:"center",animation:rank===0?"rankReveal 0.5s 0.3s both":"none"}}>{rankMedals[rank]||"·"}</div>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:isWinner?"linear-gradient(135deg,#d4a843,#a87020)":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,border:isMe?"2px solid rgba(212,168,67,0.5)":"none"}}>{isMe?myAvatar||"🐍":"🤖"}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:isWinner?"#f0c060":isLoser?"#f87171":"#e8f0e8",fontWeight:700,letterSpacing:0.5}}>{names[i]}{isMe?" (You)":""}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1,marginTop:2}}>{isWinner?"WINNER":isLoser?"ELIMINATED":"PLAYER"}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:26,fontWeight:900,color:isWinner?"#f0c060":isLoser?"#f87171":"#c8d8c8",lineHeight:1}}>{gameOverData.scores[i]}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>PTS</div>
+                  </div>
                 </div>
-                <span style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,color:i===gameOverData.winner?"#d4a843":i===gameOverData.loser?"#f87171":"#1a3020"}}>{gameOverData.scores[i]}</span>
+              );
+            })}
+          </div>
+
+          {/* Game stats */}
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:3,color:"rgba(212,168,67,0.6)",textAlign:"center",marginBottom:2}}>YOUR STATS</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {[["🏆",gameStats.wins,"TOTAL WINS","#f0c060"],["🐍",gameStats.cobras,"COBRAS","#4ade80"],["🔥",gameStats.streak||0,"BEST STREAK","#f97316"],["🃏",gameStats.rounds,"ROUNDS PLAYED","#60a5fa"]].map(function(row,i){return(
+              <div key={i} style={{borderRadius:14,padding:"14px 12px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",textAlign:"center",animation:"statSlideIn 0.35s "+(0.3+i*0.07)+"s both"}}>
+                <div style={{fontSize:22,marginBottom:4}}>{row[0]}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,color:row[3],lineHeight:1}}>{row[1]}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.4)",letterSpacing:1.5,marginTop:3}}>{row[2]}</div>
               </div>
             );})}
           </div>
-          <div style={{display:"flex",gap:12,justifyContent:"center",marginBottom:18}}>
-            {[["🏆",gameStats.wins,"Wins"],["🐍",gameStats.cobras,"Cobras"],["🔥",gameStats.streak||0,"Streak"],["🃏",gameStats.rounds,"Rounds"]].map(function(row){return(
-              <div key={row[2]} style={{textAlign:"center",padding:"8px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,border:"1px solid rgba(255,255,255,0.06)"}}>
-                <div style={{fontSize:18}}>{row[0]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:700,color:"#d4a843"}}>{row[1]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9d78",letterSpacing:1}}>{row[2]}</div>
-              </div>
-            );})}
-          </div>
-          <div style={{display:"flex",gap:10}}>
+
+          {/* Action buttons */}
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
             {mode==="online"&&!isHost?(
-              <div style={{flex:2,padding:16,fontSize:12,letterSpacing:2,fontFamily:"Cinzel,serif",color:"#5a7a60",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center",gap:8,border:"1px solid rgba(255,255,255,0.07)",borderRadius:12}}>
-                <ThinkingDots/> Waiting for host...
+              <div style={{padding:18,fontSize:12,letterSpacing:2,fontFamily:"Cinzel,serif",color:"rgba(255,255,255,0.4)",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center",gap:8,border:"1px solid rgba(255,255,255,0.07)",borderRadius:14}}>
+                <ThinkingDots/> Waiting for host to rematch...
               </div>
             ):(
-              <button className="btn_btn_gold" style={{flex:2,padding:16,fontSize:13,letterSpacing:2}}
+              <button className="btn_btn_gold" style={{width:"100%",padding:18,fontSize:14,letterSpacing:2.5,borderRadius:14}}
                 onClick={function(){
                   audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
                   setGameOverData(null);
@@ -4142,9 +4192,9 @@ export default function Cobra(){
                 🔄 REMATCH
               </button>
             )}
-            <button className="btn_btn_ghost" style={{flex:1,padding:16,fontSize:12,letterSpacing:1.5}}
+            <button className="btn_btn_ghost" style={{width:"100%",padding:16,fontSize:12,letterSpacing:2}}
               onClick={function(){audio.buttonClick();setScores([]);goScreen("home");}}>
-              🏠 HOME
+              🏠 BACK TO HOME
             </button>
           </div>
         </div>
