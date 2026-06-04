@@ -2686,49 +2686,84 @@ export default function Cobra(){
   );
 
   // ─── ACHIEVEMENTS ───────────────────────────────────
-  if(screen==="achievements")return(
-    <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
-      <style>{GS}</style>
-      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
-      <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
-        <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
-        <div style={{textAlign:"center",marginBottom:20}}>
-          <span style={{fontSize:40}}>🏆</span>
-          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>ACHIEVEMENTS</h2>
-          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,marginTop:4}}>{unlockedAchs.length} of {ACHIEVEMENTS.length} unlocked</p>
-        </div>
-        {unlockedAchs.length===0&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#5a7a60",fontSize:15,textAlign:"center",padding:"20px 0"}}>Play games to unlock achievements 🎴</div>}
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {ACHIEVEMENTS.map(function(a){
-            var unlocked=unlockedAchs.includes(a.id);
-            return(
-              <div key={a.id} style={{display:"flex",alignItems:"center",gap:16,padding:"16px 20px",borderRadius:16,background:unlocked?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.25)",border:unlocked?"1.5px solid rgba(212,168,67,0.25)":"1px solid rgba(255,255,255,0.05)",transition:"all 0.3s"}}>
-                <div style={{fontSize:36,opacity:unlocked?1:0.2,filter:unlocked?"drop-shadow(0 0 10px rgba(212,168,67,0.5))":"none",flexShrink:0}}>{a.icon}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:2,color:unlocked?"#d4a843":"#3a4a3a",marginBottom:4}}>{a.name}</div>
-                  <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:unlocked?"#7a9d78":"#3a4a3a",lineHeight:1.5}}>{a.desc}</div>
-                </div>
-                {unlocked&&<div style={{fontSize:18}}>✓</div>}
-                {!unlocked&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#2a3d28",letterSpacing:1}}>LOCKED</div>}
-              </div>
-            );
-          })}
-        </div>
-        <div style={{marginTop:20,padding:"14px 16px",background:"rgba(0,0,0,0.2)",borderRadius:12,border:"1px solid rgba(255,255,255,0.05)"}}>
-          <div style={{display:"flex",justifyContent:"space-around"}}>
-            {[["🏆",gameStats.wins,"Wins"],["🐍",gameStats.cobras,"Cobras"],["🔥",gameStats.streak||0,"Streak"],["🃏",gameStats.rounds,"Rounds"]].map(function(row){return(
-              <div key={row[2]} style={{textAlign:"center"}}>
-                <div style={{fontSize:20}}>{row[0]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:700,color:"#d4a843"}}>{row[1]}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#5a7a60",letterSpacing:1}}>{row[2]}</div>
-              </div>
-            );})}
-          </div>
-        </div>
-      </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
-    </div>
-  );
+  if(screen==="achievements"){
+    return <AchievementsScreen
+      goScreen={goScreen}
+      gameStats={gameStats}
+      achProgress={achProgress}
+      claimedAchs={claimedAchs}
+      playerLevel={playerLevel}
+      onClaim={claimAchievement}
+      showSettings={showSettings}
+      setShowSettings={setShowSettings}
+      sfxMuted={sfxMuted}
+      musicMuted={musicMuted}
+      sfxToggle={sfxToggle}
+      musToggle={musToggle}
+      cardTheme={cardTheme}
+      setCardTheme={setCardTheme}
+    />;
+  }
+
+  if(screen==="missions"){
+    var dm=getOrRefreshMissions("daily",dailyMissions);
+    var wm=getOrRefreshMissions("weekly",weeklyMissions);
+    if(!dailyMissions||dailyMissions.seed!==dm.seed)setDailyMissions(dm);
+    if(!weeklyMissions||weeklyMissions.seed!==wm.seed)setWeeklyMissions(wm);
+    return <MissionsScreen
+      goScreen={goScreen}
+      gameStats={gameStats}
+      achProgress={achProgress}
+      dailyMissions={dm}
+      weeklyMissions={wm}
+      onClaimMission={function(type,idx,m){
+        var setter=type==="daily"?setDailyMissions:setWeeklyMissions;
+        var key="cobra_"+(type==="daily"?"daily":"weekly")+"_missions";
+        setter(function(prev){
+          if(!prev)return prev;
+          var updated={...prev,missions:prev.missions.map(function(ms,i){return i===idx?{...ms,claimed:true}:ms;})};
+          try{localStorage.setItem(key,JSON.stringify(updated));}catch(e){}
+          return updated;
+        });
+        if(m.reward.xp)gainXP(m.reward.xp);
+        if(m.reward.coins)addCoins(m.reward.coins);
+        if(m.reward.gems)addGems(m.reward.gems);
+        setRewardPopup({coins:m.reward.coins||0,gems:m.reward.gems||0,label:"Mission Complete! 🎯"});
+        audio.achievement();
+      }}
+      showSettings={showSettings}
+      setShowSettings={setShowSettings}
+      sfxMuted={sfxMuted}
+      musicMuted={musicMuted}
+      sfxToggle={sfxToggle}
+      musToggle={musToggle}
+      cardTheme={cardTheme}
+      setCardTheme={setCardTheme}
+    />;
+  }
+
+  if(screen==="collection"){
+    return <CollectionScreen
+      goScreen={goScreen}
+      ownedItems={ownedItems}
+      myAvatar={myAvatar}
+      cardTheme={cardTheme}
+      equippedTitle={equippedTitle}
+      equippedFrame={equippedFrame}
+      unlockedTitles={unlockedTitles}
+      unlockedFrames={unlockedFrames}
+      onEquipTitle={function(id){setEquippedTitle(id);try{localStorage.setItem("cobra_title",id);}catch(e){}}}
+      onEquipFrame={function(id){setEquippedFrame(id);try{localStorage.setItem("cobra_frame",id);}catch(e){}}}
+      showSettings={showSettings}
+      setShowSettings={setShowSettings}
+      sfxMuted={sfxMuted}
+      musicMuted={musicMuted}
+      sfxToggle={sfxToggle}
+      musToggle={musToggle}
+      gameStats={gameStats}
+      setCardTheme={setCardTheme}
+    />;
+  }
 
   // ─── HOME ───────────────────────────────────────────
   if(screen==="home")return(
@@ -2895,11 +2930,15 @@ export default function Cobra(){
             {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
           </div>
         </div>
-        <div style={{display:"flex",gap:10,marginTop:10}}>
-          <button className="btn_btn_outline_gold" style={{flex:1,fontSize:12,padding:"13px",letterSpacing:2}}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}>
+          <button className="btn_btn_outline_gold" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
-          <button className="btn_btn_ghost" style={{flex:1,fontSize:12,padding:"13px",letterSpacing:2,border:"1.5px solid rgba(212,168,67,0.25)",color:"#d4a843"}}
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(212,168,67,0.25)",color:"#d4a843"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("shop");}}>🛒 SHOP</button>
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(96,165,250,0.3)",color:"#60a5fa"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS</button>
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(192,132,252,0.3)",color:"#c084fc"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
         </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#4a5a4a"}}
@@ -3747,6 +3786,13 @@ export default function Cobra(){
         </div>
         <ScoreStrip names={names} scores={scores} currentPlayer={currentPlayer} nPlayers={nPlayers} flashScores={flashScores} avatars={Array.from({length:nPlayers},function(_,i){return i===H?myAvatar:null;})} scoreLimit={scoreLimit}/>
       </div>
+      {/* Win streak indicator */}
+      {(gameStats.streak||0)>=3&&(
+        <div style={{position:"absolute",top:8,right:12,zIndex:10,display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:20,background:(gameStats.streak||0)>=10?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.1))":((gameStats.streak||0)>=5?"linear-gradient(135deg,rgba(192,192,192,0.2),rgba(192,192,192,0.08))":"linear-gradient(135deg,rgba(205,127,50,0.2),rgba(205,127,50,0.08))"),border:"1px solid "+((gameStats.streak||0)>=10?"rgba(212,168,67,0.5)":((gameStats.streak||0)>=5?"rgba(192,192,192,0.4)":"rgba(205,127,50,0.4)")),boxShadow:(gameStats.streak||0)>=10?"0 0 14px rgba(212,168,67,0.3)":((gameStats.streak||0)>=5?"0 0 10px rgba(192,192,192,0.2)":"none")}}>
+          <span style={{fontSize:12}}>{(gameStats.streak||0)>=10?"💛":((gameStats.streak||0)>=5?"⚪":"🟤")}</span>
+          <span style={{fontFamily:"Cinzel,serif",fontSize:9,fontWeight:700,color:(gameStats.streak||0)>=10?"#f0c060":((gameStats.streak||0)>=5?"#c0c0c0":"#cd7f32"),letterSpacing:1}}>{gameStats.streak} STREAK</span>
+        </div>
+      )}
 
       {/* OPPONENTS */}
       <div style={{flexShrink:0,padding:"4px 10px 4px",display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap",position:"relative",zIndex:4}}>
