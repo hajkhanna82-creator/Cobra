@@ -221,6 +221,7 @@ const audio={
 const haptic={
   light(){try{if(navigator.vibrate)navigator.vibrate(10);}catch(e){}},
   medium(){try{if(navigator.vibrate)navigator.vibrate(25);}catch(e){}},
+  heavy(){try{if(navigator.vibrate)navigator.vibrate(60);}catch(e){}},
   success(){try{if(navigator.vibrate)navigator.vibrate([10,5,20]);}catch(e){}},
   error(){try{if(navigator.vibrate)navigator.vibrate([50,20,50]);}catch(e){}},
   cardPlay(){try{if(navigator.vibrate)navigator.vibrate([15,5,10]);}catch(e){}},
@@ -1817,9 +1818,14 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
           </div>
         )}
         {phase==="revealed"&&(
-          <button onClick={handleClose} style={{padding:"14px 40px",fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:2.5,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:14,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 4px 20px rgba(212,168,67,0.5)"}}>
-            {th?"EQUIP & CLOSE":"COLLECT"}
-          </button>
+          <>
+            {reveal.alreadyOwned&&(
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#f0c060",fontStyle:"italic",textAlign:"center",marginBottom:4}}>Already owned — consolation coins awarded!</div>
+            )}
+            <button onClick={handleClose} style={{padding:"14px 40px",fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:2.5,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:14,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 4px 20px rgba(212,168,67,0.5)"}}>
+              {th?"EQUIP & CLOSE":"COLLECT"}
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -1970,7 +1976,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
           {allOwned?(
             <div style={{textAlign:"center",padding:"10px",background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",letterSpacing:1}}>✓ OWNED</div>
           ):(
-            <button onClick={function(){audio.buttonClick();if(canAfford){item.items.forEach(function(tid){var t=SHOP_THEMES.find(function(x){return x.id===tid;});if(t)onBuy({...t,id:t.id,_bundle:item.id});});}}} style={{width:"100%",padding:"12px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1.5,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:12,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 14px "+rc+"22":"none"}}>
+            <button onClick={function(){audio.buttonClick();if(canAfford){onBuy({id:"bundle_"+item.id,_bundleItems:item.items,price:item.price,currency:item.currency,_isBundle:true});}}} style={{width:"100%",padding:"12px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1.5,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:12,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 14px "+rc+"22":"none"}}>
               <span style={{textDecoration:"line-through",opacity:0.5,marginRight:8,fontSize:10}}>{item.currency==="coins"?"🪙"+item.originalPrice.toLocaleString():"💎"+item.originalPrice}</span>
               {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
             </button>
@@ -2173,7 +2179,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
                       return owned?(
                         <button onClick={function(){audio.buttonClick();onEquipTheme(dailyItem.id);}} style={{flexShrink:0,padding:"8px 16px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:10,background:"rgba(212,168,67,0.15)",color:"#f0c060",cursor:"pointer",touchAction:"manipulation",fontWeight:700}}>{cardTheme===dailyItem.id?"✓ ON":"EQUIP"}</button>
                       ):(
-                        <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(dailyItem);}} style={{flexShrink:0,padding:"8px 16px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"rgba(255,255,255,0.04)",color:canAfford?"#f0c060":"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",fontWeight:900}}>BUY NOW</button>
+                        <button onClick={function(){audio.buttonClick();if(canAfford)onBuy({...dailyItem,price:Math.round(dailyItem.price*0.6)});}} style={{flexShrink:0,padding:"8px 16px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"rgba(255,255,255,0.04)",color:canAfford?"#f0c060":"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",fontWeight:900}}>BUY NOW</button>
                       );
                     })()}
                   </div>
@@ -2422,17 +2428,43 @@ export default function Cobra(){
       setGems(function(v){var n=v-cost;try{localStorage.setItem("cobra_gems",String(n));}catch(e){}return n;});
     }
 
+    // Bundle: single charge, add all items
+    if(item._isBundle&&item._bundleItems){
+      setOwnedItems(function(prev){
+        var n=[...prev];
+        item._bundleItems.forEach(function(tid){if(n.indexOf(tid)<0)n.push(tid);});
+        try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}
+        return n;
+      });
+      var first=item._bundleItems[0];
+      setCardTheme(first);
+      try{localStorage.setItem("cobra_card_theme",first);}catch(e){}
+      pop("Bundle unlocked! "+item._bundleItems.length+" themes added!","success");
+      audio.achievement();
+      return;
+    }
+
     // Crate: show reveal modal, award item after animation
     if(item.id&&item.id.startsWith("crate_")&&item.pool){
       var pool=item.pool;
       var won=pool[Math.floor(Math.random()*pool.length)];
       var wonTheme=SHOP_THEMES.find(function(t){return t.id===won;});
+      var alreadyOwned=ownedItems.indexOf(won)>=0;
       // Add item to owned now (payment already deducted)
       setOwnedItems(function(prev){
         if(prev.indexOf(won)>=0)return prev;
         var n=[...prev,won];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;
       });
-      setCrateReveal({crate:item,wonId:won,wonTheme:wonTheme,phase:"shake"});
+      // Consolation if already owned
+      if(alreadyOwned){
+        if(item.currency==="coins"){
+          var refund=Math.round(item.price*0.5);
+          setCoins(function(v){var n=v+refund;try{localStorage.setItem("cobra_coins",String(n));}catch(e){}return n;});
+        } else {
+          setCoins(function(v){var n=v+200;try{localStorage.setItem("cobra_coins",String(n));}catch(e){}return n;});
+        }
+      }
+      setCrateReveal({crate:item,wonId:won,wonTheme:wonTheme,phase:"shake",alreadyOwned:alreadyOwned});
       return;
     }
 
@@ -2972,7 +3004,7 @@ export default function Cobra(){
 
   function pickFromDeck(){
     if(!deck.length){pop("Deck is empty!","warning");return;}
-    audio.init();audio.resume();audio.cardPickup();haptic.light();
+    audio.init();audio.resume();audio.cardPickup();haptic.light();haptic.medium();
     setPrevHand(null);
     setPickingUp(true);
     var drawn=deck[0];var rest=deck.slice(1);
@@ -3061,7 +3093,7 @@ export default function Cobra(){
   function doDeclare(){
     var myTotal=ht(hands[H]);
     if(myTotal>DECLARE_MAX){pop("Need total 30 or under to declare (yours: "+myTotal+")","error");haptic.error();return;}
-    audio.init();audio.resume();audio.declare();haptic.declare();
+    audio.init();audio.resume();audio.declare();haptic.declare();haptic.heavy();
     var totals=hands.map(function(h){return ht(h);});
     var minT=Math.min.apply(null,totals);
     var iWin=myTotal===minT&&totals.filter(function(t){return t===minT;}).length===1;
@@ -3069,7 +3101,7 @@ export default function Cobra(){
     if(iWin){
       ns=ns.map(function(s,i){return i===H?s:s+totals[i];});
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?0:totals[i],cobra:false,winner:i===H};});
-      setTimeout(function(){audio.win();haptic.win();},600);
+      setTimeout(function(){audio.win();haptic.win();haptic.heavy();},600);
       unlockAch("first_win");
       if(myTotal<=5)unlockAch("low_score");
       var elapsed=(Date.now()-roundStart)/1000;
@@ -3105,6 +3137,20 @@ export default function Cobra(){
     });}catch(e){}
   }
 
+  function syncAchProgress(newStats){
+    setAchProgress(function(prev){
+      var updated=Object.assign({},prev);
+      ACHIEVEMENTS.forEach(function(a){
+        if(a.stat==="wins")updated[a.stat]=newStats.wins||0;
+        else if(a.stat==="rounds")updated[a.stat]=newStats.rounds||0;
+        else if(a.stat==="cobras")updated[a.stat]=newStats.cobras||0;
+        else if(a.stat==="bestStreak")updated[a.stat]=newStats.bestStreak||0;
+      });
+      try{localStorage.setItem("cobra_ach_progress",JSON.stringify(updated));}catch(e){}
+      return updated;
+    });
+  }
+
   function finishRound(ns,res){
     // XP rewards for local player
     gainXP(25); // participation XP
@@ -3117,14 +3163,8 @@ export default function Cobra(){
       if(curStreak>=5)unlockFrame("silver");
       if(curStreak>=10)unlockFrame("gold");
     }
-    // Update achievement progress
-    setAchProgress(function(prev){
-      var n=Object.assign({},prev);
-      n.rounds=(n.rounds||0)+1;
-      if(winnerIdx===myIdx)n.wins=(n.wins||0)+1;
-      var saved=JSON.stringify(n);try{localStorage.setItem("cobra_ach_progress",saved);}catch(e){}
-      return n;
-    });
+    // Update achievement progress (synced from gameStats)
+    syncAchProgress(gameStats);
     var loser=ns.findIndex(function(s){return s>=scoreLimit;});
     var resWithScores=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
     var ned={results:resWithScores,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
@@ -3718,11 +3758,16 @@ export default function Cobra(){
         <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:54,fontWeight:900,letterSpacing:14,marginBottom:6,textShadow:"0 0 32px rgba(212,168,67,0.45)"}}>{roomCode}</div>
         <div className="panel" style={{padding:22,marginBottom:18}}>
           <p style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#1a3020",letterSpacing:3,marginBottom:14}}>{onlineStatus} PLAYERS</p>
-          {onlinePlayers.map(function(p,i){return(
+          {onlinePlayers.map(function(p,i){
+            var rp=roomRef.current&&roomRef.current.players&&roomRef.current.players[i];
+            var pAvatar=(i===myIdx)?myAvatar:(rp&&rp.avatar)||null;
+            return(
             <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:i===myIdx?"rgba(212,168,67,0.09)":"rgba(0,0,0,0.22)",borderRadius:12,marginBottom:8,border:i===myIdx?"1px solid rgba(212,168,67,0.25)":"1px solid rgba(255,255,255,0.04)"}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",boxShadow:"0 0 8px #4ade80"}} className="shimmer"/>
-              {i===myIdx&&<span style={{fontSize:18}}>{myAvatar}</span>}
-              <span style={{fontFamily:"Crimson Text,serif",fontSize:16,color:i===myIdx?"#d4a843":"#9ca3af",flex:1,textAlign:"left"}}>{p}</span>
+              {pAvatar&&<span style={{fontSize:18}}>{pAvatar}</span>}
+              <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
+                <span style={{fontFamily:"Crimson Text,serif",fontSize:16,color:i===myIdx?"#d4a843":"#9ca3af"}}>{p}</span>
+              </div>
               {i===0&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#1a3020",letterSpacing:2}}>HOST</span>}
               {i===myIdx&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2}}>YOU</span>}
               {isHost&&i!==0&&i!==myIdx&&(
@@ -4017,6 +4062,7 @@ export default function Cobra(){
     var iWonGame=gameOverData.winner===H;
     // Trigger confetti if local player won (once)
     if(iWonGame&&confetti.length===0){
+      setTimeout(function(){audio.win();haptic.heavy();},300);
       var wConf=[];for(var wci=0;wci<30;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24"][Math.floor(Math.random()*6)],size:Math.random()*7+4,delay:Math.random()*0.8,dur:Math.random()*1.5+1.2});}
       setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},3500);},100);
     }
