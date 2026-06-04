@@ -339,12 +339,12 @@ input::placeholder{color:#2a3d28;}
 `;
 
 const CARD_THEMES={
-  classic:{bg:"linear-gradient(148deg,#091609,#040c04,#071007)",border:"rgba(20,60,20,0.9)",pat:"rgba(212,168,67,0.065)",pat2:"rgba(212,168,67,0.05)"},
-  midnight:{bg:"linear-gradient(148deg,#06061a,#030310,#04041a)",border:"rgba(20,20,80,0.9)",pat:"rgba(160,180,255,0.065)",pat2:"rgba(120,140,220,0.05)"},
-  crimson:{bg:"linear-gradient(148deg,#1a0505,#0d0303,#120404)",border:"rgba(80,10,10,0.9)",pat:"rgba(220,80,80,0.065)",pat2:"rgba(180,60,60,0.05)"},
-  emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.08)",pat2:"rgba(40,160,60,0.06)"},
-  galaxy:{bg:"linear-gradient(148deg,#0a0520,#050212,#08031a)",border:"rgba(80,40,160,0.9)",pat:"rgba(180,100,255,0.08)",pat2:"rgba(140,60,220,0.06)"},
-  gold:{bg:"linear-gradient(148deg,#1a1200,#0d0a00,#161000)",border:"rgba(160,120,0,0.9)",pat:"rgba(255,200,0,0.1)",pat2:"rgba(212,168,0,0.07)"},
+  classic:{bg:"linear-gradient(148deg,#091609,#040c04,#071007)",border:"rgba(20,60,20,0.9)",pat:"rgba(212,168,67,0.22)",pat2:"rgba(212,168,67,0.15)"},
+  midnight:{bg:"linear-gradient(148deg,#06061a,#030310,#04041a)",border:"rgba(20,20,80,0.9)",pat:"rgba(160,180,255,0.22)",pat2:"rgba(120,140,220,0.15)"},
+  crimson:{bg:"linear-gradient(148deg,#1a0505,#0d0303,#120404)",border:"rgba(80,10,10,0.9)",pat:"rgba(220,80,80,0.22)",pat2:"rgba(180,60,60,0.15)"},
+  emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.24)",pat2:"rgba(40,160,60,0.17)"},
+  galaxy:{bg:"linear-gradient(148deg,#0a0520,#050212,#08031a)",border:"rgba(80,40,160,0.9)",pat:"rgba(180,100,255,0.24)",pat2:"rgba(140,60,220,0.17)"},
+  gold:{bg:"linear-gradient(148deg,#1a1200,#0d0a00,#161000)",border:"rgba(160,120,0,0.9)",pat:"rgba(255,200,0,0.28)",pat2:"rgba(212,168,0,0.2)"},
 };
 
 const SHOP_THEMES=[
@@ -407,8 +407,8 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
         border:glow?"2px solid #4ade80":selected?"2px solid #d4a843":"1.5px solid "+th.border,
         boxShadow:glow?"0 0 20px rgba(74,222,128,0.5),0 8px 24px rgba(0,0,0,0.8)":selected?"0 0 20px rgba(212,168,67,0.55),0 10px 28px rgba(0,0,0,0.8)":"0 5px 18px rgba(0,0,0,0.72)"}}>
       <div style={{position:"absolute",top:3,left:3,right:3,bottom:3,borderRadius:d.r-2,border:"1px solid rgba(212,168,67,0.2)"}}/>
-      <div style={{position:"absolute",top:5,left:5,right:5,bottom:5,borderRadius:d.r-3,overflow:"hidden",backgroundImage:"repeating-linear-gradient(45deg,"+th.pat+"0,"+th.pat+"1px,transparent 1px,transparent 7px),repeating-linear-gradient(-45deg,"+th.pat2+"0,"+th.pat2+"1px,transparent 1px,transparent 7px)"}}/>
-      <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:d.su*0.72,opacity:0.15}}>🐍</div>
+      <div style={{position:"absolute",top:5,left:5,right:5,bottom:5,borderRadius:d.r-3,overflow:"hidden",backgroundImage:"repeating-linear-gradient(45deg,"+th.pat+" 0,"+th.pat+" 1px,transparent 1px,transparent 7px),repeating-linear-gradient(-45deg,"+th.pat2+" 0,"+th.pat2+" 1px,transparent 1px,transparent 7px)"}}/>
+      <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:d.su*0.72,opacity:0.25}}>🐍</div>
       <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"linear-gradient(135deg,rgba(255,255,255,0.06)0%,transparent 45%,rgba(0,0,0,0.15)100%)",borderRadius:d.r}}/>
     </div>
   );}
@@ -1763,7 +1763,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
                   <div style={{padding:"14px 18px 16px",display:"flex",alignItems:"center",gap:14}}>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:equipped?"#f0c060":"#e8e8e8",letterSpacing:1,fontWeight:900,marginBottom:3}}>{item.name}</div>
-                      <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#6a8a6a",lineHeight:1.3}}>{item.desc}</div>
+                      <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#a0bba0",lineHeight:1.3}}>{item.desc}</div>
                     </div>
                     {owned?(
                       <button onClick={function(){if(!equipped){audio.buttonClick();onEquipTheme(item.id);}}} style={{flexShrink:0,padding:"10px 18px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:equipped?"none":"1.5px solid rgba(212,168,67,0.5)",borderRadius:12,cursor:equipped?"default":"pointer",background:equipped?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"linear-gradient(135deg,rgba(212,168,67,0.18),rgba(212,168,67,0.08))",color:equipped?"#f0c060":"#d4a843",touchAction:"manipulation",fontWeight:900,minWidth:80,textAlign:"center"}}>
@@ -1783,7 +1783,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
 
         {tab==="avatars"&&(
           <div>
-            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#4a6a4a",fontSize:14,textAlign:"center",marginBottom:16,lineHeight:1.5}}>Your avatar shows on the leaderboard and to other players in online games.</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#90aa90",fontSize:14,textAlign:"center",marginBottom:16,lineHeight:1.5}}>Your avatar shows on the leaderboard and to other players in online games.</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
               {SHOP_AVATARS.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
