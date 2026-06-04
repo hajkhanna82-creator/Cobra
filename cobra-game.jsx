@@ -12,12 +12,58 @@ const CPU_P=[{thinkMs:1200,risk:0.25},{thinkMs:800,risk:0.65},{thinkMs:1500,risk
 const EMOJIS=["👀","🔥","😂","🐍","💀","😤","🤡","👑"];
 const AVATAR_EMOJIS=["😎","🤠","👑","🐍","🔥","💀","🎭","🃏"];
 const ACHIEVEMENTS=[
-  {id:"first_win",icon:"🏆",name:"First Blood",desc:"Win your first round"},
-  {id:"low_score",icon:"💎",name:"Diamond Hand",desc:"Declare with total 5 or under"},
-  {id:"cobra_survive",icon:"🐍",name:"Snake Charmer",desc:"Survive a cobra penalty"},
-  {id:"speed_win",icon:"⚡",name:"Lightning",desc:"Win a round in under 10 seconds"},
-  {id:"big_run",icon:"🃏",name:"Full House",desc:"Play a run of 5+ cards"},
+  // Gameplay wins
+  {id:"first_win",icon:"🏆",name:"First Victory",desc:"Win your first game",cat:"gameplay",goal:1,stat:"wins",reward:{coins:200,gems:0},title:null},
+  {id:"win_10",icon:"🥇",name:"Ten Down",desc:"Win 10 games",cat:"gameplay",goal:10,stat:"wins",reward:{coins:500,gems:2},title:"Challenger"},
+  {id:"win_50",icon:"🎖️",name:"Half Century",desc:"Win 50 games",cat:"gameplay",goal:50,stat:"wins",reward:{coins:1500,gems:8},title:"Card Shark"},
+  {id:"win_100",icon:"👑",name:"Century Club",desc:"Win 100 games",cat:"gameplay",goal:100,stat:"wins",reward:{coins:5000,gems:25},title:"Cobra Master"},
+  // Rounds
+  {id:"play_10",icon:"🃏",name:"Getting Started",desc:"Play 10 rounds",cat:"gameplay",goal:10,stat:"rounds",reward:{coins:150,gems:0},title:null},
+  {id:"play_50",icon:"🎴",name:"Dedicated",desc:"Play 50 rounds",cat:"gameplay",goal:50,stat:"rounds",reward:{coins:400,gems:2},title:null},
+  {id:"play_200",icon:"🂠",name:"True Serpent",desc:"Play 200 rounds",cat:"gameplay",goal:200,stat:"rounds",reward:{coins:1200,gems:5},title:"Lucky Legend"},
+  // Cobras
+  {id:"cobra_1",icon:"🐍",name:"First Bite",desc:"Survive a cobra penalty",cat:"gameplay",goal:1,stat:"cobras",reward:{coins:100,gems:0},title:null},
+  {id:"cobra_10",icon:"🐍",name:"Snake Charmer",desc:"Survive 10 cobra penalties",cat:"gameplay",goal:10,stat:"cobras",reward:{coins:300,gems:1},title:null},
+  // Streaks
+  {id:"streak_3",icon:"🔥",name:"On Fire",desc:"Win 3 in a row",cat:"streak",goal:3,stat:"bestStreak",reward:{coins:250,gems:1},title:null},
+  {id:"streak_5",icon:"⚡",name:"Unstoppable",desc:"Win 5 in a row",cat:"streak",goal:5,stat:"bestStreak",reward:{coins:600,gems:3},title:null},
+  {id:"streak_10",icon:"💫",name:"Legendary Streak",desc:"Win 10 in a row",cat:"streak",goal:10,stat:"bestStreak",reward:{coins:2000,gems:10},title:"Grand Champion"},
+  // Progression
+  {id:"level_5",icon:"⭐",name:"Rising Star",desc:"Reach Level 5",cat:"progression",goal:5,stat:"level",reward:{coins:300,gems:2},title:"Rookie"},
+  {id:"level_10",icon:"🌟",name:"Veteran",desc:"Reach Level 10",cat:"progression",goal:10,stat:"level",reward:{coins:800,gems:5},title:null},
+  {id:"level_25",icon:"💎",name:"Elite",desc:"Reach Level 25",cat:"progression",goal:25,stat:"level",reward:{coins:2500,gems:15},title:null},
+  // Special
+  {id:"low_score",icon:"💎",name:"Diamond Hand",desc:"Declare with total 5 or under",cat:"gameplay",goal:1,stat:"lowScore",reward:{coins:400,gems:3},title:null},
+  {id:"speed_win",icon:"⚡",name:"Lightning",desc:"Win a round in under 10 seconds",cat:"gameplay",goal:1,stat:"speedWin",reward:{coins:350,gems:2},title:null},
+  {id:"big_run",icon:"🃏",name:"Full House",desc:"Play a run of 5+ cards",cat:"gameplay",goal:1,stat:"bigRun",reward:{coins:200,gems:1},title:null},
+  {id:"daily_7",icon:"📅",name:"Faithful",desc:"Claim daily reward 7 times",cat:"rewards",goal:7,stat:"dailyClaims",reward:{coins:500,gems:5},title:null},
+  {id:"spin_10",icon:"🎡",name:"Spin Doctor",desc:"Use lucky spin 10 times",cat:"rewards",goal:10,stat:"spinCount",reward:{coins:400,gems:3},title:null},
 ];
+
+const TITLES=[
+  {id:"rookie",name:"Rookie",color:"#9ca3af",rarity:"common",unlock:"achievement"},
+  {id:"challenger",name:"Challenger",color:"#60a5fa",rarity:"common",unlock:"achievement"},
+  {id:"card_shark",name:"Card Shark",color:"#4ade80",rarity:"rare",unlock:"achievement"},
+  {id:"cobra_master",name:"Cobra Master",color:"#d4a843",rarity:"epic",unlock:"achievement"},
+  {id:"lucky_legend",name:"Lucky Legend",color:"#c084fc",rarity:"epic",unlock:"achievement"},
+  {id:"grand_champion",name:"Grand Champion",color:"#f87171",rarity:"legendary",unlock:"achievement"},
+  {id:"serpent",name:"The Serpent",color:"#4ade80",rarity:"rare",unlock:"level",level:15},
+  {id:"untouchable",name:"Untouchable",color:"#f0c060",rarity:"legendary",unlock:"level",level:30},
+];
+
+const FRAMES=[
+  {id:"none",name:"None",rarity:"common",color:"transparent",unlock:"default"},
+  {id:"bronze",name:"Bronze",rarity:"common",color:"#cd7f32",glow:"rgba(205,127,50,0.6)",unlock:"streak",streak:3},
+  {id:"silver",name:"Silver",rarity:"rare",color:"#c0c0c0",glow:"rgba(192,192,192,0.6)",unlock:"streak",streak:5},
+  {id:"gold",name:"Gold",rarity:"epic",color:"#d4a843",glow:"rgba(212,168,67,0.7)",unlock:"streak",streak:10},
+  {id:"emerald",name:"Emerald",rarity:"rare",color:"#4ade80",glow:"rgba(74,222,128,0.5)",unlock:"achievement",achId:"win_50"},
+  {id:"cobra",name:"Cobra",rarity:"epic",color:"#f87171",glow:"rgba(248,113,113,0.6)",unlock:"achievement",achId:"cobra_10"},
+  {id:"diamond",name:"Diamond",rarity:"legendary",color:"#a5f3fc",glow:"rgba(165,243,252,0.7)",unlock:"achievement",achId:"win_100"},
+  {id:"champion",name:"Champion",rarity:"legendary",color:"linear-gradient(135deg,#d4a843,#f87171,#c084fc)",glow:"rgba(212,168,67,0.8)",unlock:"achievement",achId:"streak_10"},
+];
+
+const RARITY_COLORS={common:"#9ca3af",rare:"#60a5fa",epic:"#c084fc",legendary:"#f0c060"};
+const RARITY_GLOW={common:"rgba(156,163,175,0.4)",rare:"rgba(96,165,250,0.5)",epic:"rgba(192,132,252,0.6)",legendary:"rgba(240,192,96,0.7)"};
 const TUTORIAL_STEPS=[
   {icon:"🐍",title:"Welcome to COBRA!",body:"The goal is simple: have the LOWEST total card value in your hand when someone declares."},
   {icon:"🃏",title:"Your Hand",body:"You start with 7 cards. Ace=1 point, King=13 points. Lower is better! Your total shows bottom-right."},
@@ -1321,6 +1367,275 @@ function RewardPopup({reward,onClose}){
   );
 }
 
+function AchievementsScreen({goScreen,gameStats,achProgress,claimedAchs,onClaim,playerLevel,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,cardTheme,setCardTheme}){
+  const [cat,setCat]=useState("all");
+  const cats=[["all","ALL"],["gameplay","GAMEPLAY"],["streak","STREAKS"],["progression","PROGRESS"],["rewards","REWARDS"]];
+  var filtered=cat==="all"?ACHIEVEMENTS:ACHIEVEMENTS.filter(function(a){return a.cat===cat;});
+  function getProgress(a){
+    if(a.stat==="wins")return Math.min(a.goal,gameStats.wins||0);
+    if(a.stat==="rounds")return Math.min(a.goal,gameStats.rounds||0);
+    if(a.stat==="cobras")return Math.min(a.goal,gameStats.cobras||0);
+    if(a.stat==="bestStreak")return Math.min(a.goal,gameStats.bestStreak||0);
+    if(a.stat==="level")return Math.min(a.goal,playerLevel||1);
+    return Math.min(a.goal,achProgress[a.stat]||0);
+  }
+  var totalClaimed=claimedAchs.length;
+  var totalUnlocked=ACHIEVEMENTS.filter(function(a){return getProgress(a)>=a.goal;}).length;
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <style>{GS}</style>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
+      <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:14}}>
+          <div style={{fontSize:32,marginBottom:4}}>🏆</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,margin:"0 0 6px",textShadow:"0 0 20px rgba(212,168,67,0.3)"}}>ACHIEVEMENTS</h2>
+          <div style={{display:"flex",gap:14,justifyContent:"center"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#4ade80"}}>{totalClaimed}/{ACHIEVEMENTS.length} CLAIMED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843"}}>{totalUnlocked} UNLOCKED</div>
+          </div>
+          <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",margin:"10px 0 0",overflow:"hidden"}}>
+            <div style={{height:"100%",width:Math.round(totalClaimed/ACHIEVEMENTS.length*100)+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:2,transition:"width 0.6s cubic-bezier(.22,1,.36,1)"}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8}}>
+          {cats.map(function(c){var active=cat===c[0];return(
+            <button key={c[0]} onClick={function(){audio.buttonClick();setCat(c[0]);}} style={{flexShrink:0,padding:"7px 12px",fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1.5,border:active?"1.5px solid rgba(212,168,67,0.6)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:active?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:active?"#f0c060":"#4a6a4a",touchAction:"manipulation",transition:"all 0.15s"}}>
+              {c[1]}
+            </button>
+          );})}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
+        {filtered.map(function(a){
+          var prog=getProgress(a);
+          var done=prog>=a.goal;
+          var claimed=claimedAchs.indexOf(a.id)>=0;
+          var pct=Math.min(100,Math.round(prog/a.goal*100));
+          return(
+            <div key={a.id} style={{marginBottom:10,borderRadius:16,padding:"14px 16px",background:claimed?"rgba(74,222,128,0.05)":done?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.3)",border:claimed?"1.5px solid rgba(74,222,128,0.25)":done?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(255,255,255,0.07)",transition:"all 0.2s"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:44,height:44,borderRadius:12,background:claimed?"rgba(74,222,128,0.15)":done?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0,border:claimed?"1px solid rgba(74,222,128,0.3)":done?"1px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.07)",filter:claimed||done?"none":"grayscale(0.7) opacity(0.5)"}}>
+                  {claimed?"✅":a.icon}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                    <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:claimed?"#4ade80":done?"#f0c060":"#8a9a8a",fontWeight:700,letterSpacing:0.5}}>{a.name}</span>
+                    {a.title&&<span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#c084fc",background:"rgba(192,132,252,0.15)",padding:"2px 6px",borderRadius:5,letterSpacing:1}}>+TITLE</span>}
+                  </div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#5a7a5a",marginBottom:6}}>{a.desc}</div>
+                  <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
+                    <div style={{height:"100%",width:pct+"%",background:claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#c49030,#f0c060)":"linear-gradient(90deg,#1a4a1a,#2a6a2a)",borderRadius:2,transition:"width 0.6s"}}/>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:1}}>{prog}/{a.goal}</div>
+                </div>
+                <div style={{flexShrink:0,textAlign:"right"}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:4}}>
+                    {a.reward.coins>0&&"🪙"+a.reward.coins}
+                    {a.reward.gems>0&&" 💎"+a.reward.gems}
+                  </div>
+                  {done&&!claimed&&(
+                    <button onClick={function(){onClaim(a.id);}} style={{padding:"7px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:9,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 2px 12px rgba(212,168,67,0.4)"}}>
+                      CLAIM
+                    </button>
+                  )}
+                  {claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4ade80",letterSpacing:1}}>✓ DONE</div>}
+                  {!done&&!claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#2a4a2a",letterSpacing:1}}>{pct}%</div>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+    </div>
+  );
+}
+
+function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMissions,onClaimMission,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,cardTheme,setCardTheme}){
+  const [tab,setTab]=useState("daily");
+  var missions=tab==="daily"?dailyMissions:weeklyMissions;
+  var now=Date.now();
+  var dailySeed=Math.floor(now/(1000*60*60*24));
+  var weeklySeed=Math.floor(now/(1000*60*60*24*7));
+  var nextDaily=new Date((dailySeed+1)*1000*60*60*24);
+  var nextWeekly=new Date((weeklySeed+1)*1000*60*60*24*7);
+  var msLeft=tab==="daily"?nextDaily.getTime()-now:nextWeekly.getTime()-now;
+  var hLeft=Math.floor(msLeft/3600000);
+  var mLeft=Math.floor((msLeft%3600000)/60000);
+  function getMProg(m){
+    if(!m)return 0;
+    if(m.stat==="wins")return Math.min(m.goal,gameStats.wins||0);
+    if(m.stat==="rounds")return Math.min(m.goal,gameStats.rounds||0);
+    if(m.stat==="bestStreak")return Math.min(m.goal,gameStats.bestStreak||0);
+    return Math.min(m.goal,achProgress[m.stat]||0);
+  }
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <style>{GS}</style>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
+      <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:14}}>
+          <div style={{fontSize:32,marginBottom:4}}>🎯</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,margin:"0 0 6px"}}>MISSIONS</h2>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#3a5a3a",letterSpacing:2}}>RESETS IN {hLeft}h {mLeft}m</div>
+        </div>
+        <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.05)",borderRadius:12,padding:4,marginBottom:12,border:"1px solid rgba(255,255,255,0.08)"}}>
+          {[["daily","📅 DAILY"],["weekly","📆 WEEKLY"]].map(function(t){var a=tab===t[0];return(
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:a?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"transparent",color:a?"#f0c060":"#4a6a4a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:a?"700":"400"}}>{t[1]}</button>
+          );})}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
+        {(!missions||!missions.missions)&&<div style={{fontFamily:"Crimson Text,serif",color:"#3a5a3a",textAlign:"center",padding:40,fontStyle:"italic"}}>Loading missions...</div>}
+        {missions&&missions.missions&&missions.missions.map(function(m,i){
+          var prog=getMProg(m);
+          var done=prog>=m.goal;
+          var pct=Math.min(100,Math.round(prog/m.goal*100));
+          return(
+            <div key={i} style={{marginBottom:12,borderRadius:16,padding:"16px",background:m.claimed?"rgba(74,222,128,0.05)":done?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.3)",border:m.claimed?"1.5px solid rgba(74,222,128,0.2)":done?"1.5px solid rgba(212,168,67,0.35)":"1px solid rgba(255,255,255,0.08)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+                <div style={{width:40,height:40,borderRadius:11,background:m.claimed?"rgba(74,222,128,0.15)":done?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,border:m.claimed?"1px solid rgba(74,222,128,0.3)":done?"1px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.07)"}}>
+                  {m.claimed?"✅":m.icon}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:m.claimed?"#4ade80":done?"#f0c060":"#c8d8c8",fontWeight:700,marginBottom:2}}>{m.desc}</div>
+                  <div style={{display:"flex",gap:8}}>
+                    {m.reward.xp>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#60a5fa"}}>⭐{m.reward.xp} XP</span>}
+                    {m.reward.coins>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#f0c060"}}>🪙{m.reward.coins}</span>}
+                    {m.reward.gems>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#c084fc"}}>💎{m.reward.gems}</span>}
+                  </div>
+                </div>
+                {done&&!m.claimed&&(
+                  <button onClick={function(){onClaimMission(tab,i,m);}} style={{padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:9,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 2px 10px rgba(212,168,67,0.4)"}}>CLAIM</button>
+                )}
+                {m.claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4ade80"}}>✓</div>}
+              </div>
+              <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
+                <div style={{height:"100%",width:pct+"%",background:m.claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#c49030,#f0c060)":"linear-gradient(90deg,#1a4a1a,#2a8a2a)",borderRadius:2,transition:"width 0.5s"}}/>
+              </div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#2a4a2a",letterSpacing:1}}>{prog}/{m.goal}</div>
+            </div>
+          );
+        })}
+      </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+    </div>
+  );
+}
+
+function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,equippedFrame,unlockedTitles,unlockedFrames,onEquipTitle,onEquipFrame,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,setCardTheme}){
+  const [tab,setTab]=useState("avatars");
+  var ownedAvatars=SHOP_AVATARS.filter(function(a){return a.price===0||ownedItems.indexOf("av_"+a.id)>=0;});
+  var ownedThemes=SHOP_THEMES.filter(function(t){return t.price===0||ownedItems.indexOf(t.id)>=0;});
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <style>{GS}</style>
+      <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
+      <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:14}}>
+          <div style={{fontSize:32,marginBottom:4}}>📚</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,margin:0}}>COLLECTION</h2>
+        </div>
+        <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8}}>
+          {[["avatars","😎"],["themes","🎨"],["frames","🖼️"],["titles","🎖️"]].map(function(t){var a=tab===t[0];return(
+            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flexShrink:0,padding:"8px 14px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:a?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.08)",borderRadius:20,cursor:"pointer",background:a?"rgba(212,168,67,0.15)":"rgba(0,0,0,0.3)",color:a?"#f0c060":"#4a6a4a",touchAction:"manipulation",transition:"all 0.15s"}}>
+              {t[1]} {t[0].toUpperCase()}
+            </button>
+          );})}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
+        {tab==="avatars"&&(
+          <>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+              {SHOP_AVATARS.map(function(item){
+                var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
+                var eq=myAvatar===item.id;
+                return(<div key={item.id} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.3)",opacity:owned?1:0.4}}>
+                  <div style={{fontSize:30}}>{item.id}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#6a8a6a",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
+                  {!owned&&<div style={{fontSize:9}}>🔒</div>}
+                </div>);
+              })}
+            </div>
+          </>
+        )}
+        {tab==="themes"&&(
+          <>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {SHOP_THEMES.map(function(item){
+                var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+                var eq=cardTheme===item.id;
+                var th=CARD_THEMES[item.id];
+                return(<div key={item.id} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.08)",opacity:owned?1:0.4}}>
+                  <div style={{height:50,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+                    {[0,1,2].map(function(ci){return(<div key={ci} style={{transform:"rotate("+(ci-1)*5+"deg)",opacity:owned?1:0.5}}><Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/></div>);})}
+                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>🔒</div>}
+                    {eq&&<div style={{position:"absolute",top:4,right:8,fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060"}}>✓ ACTIVE</div>}
+                  </div>
+                  <div style={{padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,0,0,0.3)"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:eq?"#f0c060":"#c8d8c8",fontWeight:700}}>{item.name}</div>
+                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a"}}>OWNED</span>}
+                  </div>
+                </div>);
+              })}
+            </div>
+          </>
+        )}
+        {tab==="frames"&&(
+          <>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {FRAMES.map(function(frame){
+                var owned=unlockedFrames.indexOf(frame.id)>=0;
+                var eq=equippedFrame===frame.id;
+                var rc=RARITY_COLORS[frame.rarity];
+                return(<div key={frame.id} onClick={function(){if(owned){audio.buttonClick();onEquipFrame(frame.id);}}} style={{borderRadius:16,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,border:eq?"2px solid "+rc:"1.5px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 16px "+RARITY_GLOW[frame.rarity]:"none"}}>
+                  <div style={{width:44,height:44,borderRadius:"50%",border:"3px solid "+(typeof frame.color==="string"&&!frame.color.includes("gradient")?frame.color:"#d4a843"),background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:owned&&frame.glow?"0 0 12px "+frame.glow:"none"}}>🐍</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:eq?rc:"#c8d8c8",fontWeight:700}}>{frame.name}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1}}>{frame.rarity.toUpperCase()}</div>
+                  {!owned&&<div style={{fontSize:12}}>🔒</div>}
+                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc}}>✓ EQUIPPED</div>}
+                </div>);
+              })}
+            </div>
+          </>
+        )}
+        {tab==="titles"&&(
+          <>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#3a5a3a",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div onClick={function(){audio.buttonClick();onEquipTitle("");}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:equippedTitle===""?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(255,255,255,0.08)",background:equippedTitle===""?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#6a8a6a",flex:1}}>No Title</div>
+                {equippedTitle===""&&<div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843"}}>✓ ON</div>}
+              </div>
+              {TITLES.map(function(title){
+                var owned=unlockedTitles.indexOf(title.id)>=0;
+                var eq=equippedTitle===title.id;
+                var rc=RARITY_COLORS[title.rarity];
+                return(<div key={title.id} onClick={function(){if(owned){audio.buttonClick();onEquipTitle(title.id);}}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:eq?"1.5px solid "+rc:"1px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",transition:"all 0.2s",boxShadow:eq?"0 0 12px "+RARITY_GLOW[title.rarity]:"none"}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:owned?title.color:"#4a5a4a",fontWeight:700,letterSpacing:1,textShadow:eq?"0 0 8px "+title.color:"none"}}>{title.name}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1,marginTop:2}}>{title.rarity.toUpperCase()}</div>
+                  </div>
+                  {!owned&&<div style={{fontSize:12}}>🔒</div>}
+                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:8,color:rc}}>✓ ON</div>}
+                </div>);
+              })}
+            </div>
+          </>
+        )}
+      </div>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+    </div>
+  );
+}
+
 function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme,setCardTheme}){
   const [leaders,setLeaders]=useState(null);
   const [loading,setLoading]=useState(true);
@@ -1589,6 +1904,14 @@ export default function Cobra(){
   const [bpLevel,setBpLevel]=useState(function(){return parseInt(lsGet("cobra_bp_level","1"));});
   const [bpPremium,setBpPremium]=useState(function(){return lsGet("cobra_bp_premium","false")==="true";});
   const [bpClaimed,setBpClaimed]=useState(function(){try{return JSON.parse(lsGet("cobra_bp_claimed","[]"));}catch(e){return[];}});
+  const [claimedAchs,setClaimedAchs]=useState(function(){try{var v=localStorage.getItem("cobra_claimed_achs");return v?JSON.parse(v):[];}catch(e){return[];}});
+  const [achProgress,setAchProgress]=useState(function(){try{var v=localStorage.getItem("cobra_ach_progress");return v?JSON.parse(v):{};;}catch(e){return{};}});
+  const [dailyMissions,setDailyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_daily_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
+  const [weeklyMissions,setWeeklyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_weekly_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
+  const [equippedTitle,setEquippedTitle]=useState(function(){try{return localStorage.getItem("cobra_title")||"";}catch(e){return"";}});
+  const [equippedFrame,setEquippedFrame]=useState(function(){try{return localStorage.getItem("cobra_frame")||"none";}catch(e){return"none";}});
+  const [unlockedTitles,setUnlockedTitles]=useState(function(){try{var v=localStorage.getItem("cobra_titles");return v?JSON.parse(v):[];}catch(e){return[];}});
+  const [unlockedFrames,setUnlockedFrames]=useState(function(){try{var v=localStorage.getItem("cobra_frames");return v?JSON.parse(v):["none"];}catch(e){return["none"];}});
   const [dailyLast,setDailyLast]=useState(function(){return parseInt(lsGet("cobra_daily_last","0"));});
   const [dailyStreak,setDailyStreak]=useState(function(){return parseInt(lsGet("cobra_daily_streak","0"));});
   const [spinLast,setSpinLast]=useState(function(){return parseInt(lsGet("cobra_spin_last","0"));});
@@ -1875,6 +2198,80 @@ export default function Cobra(){
     setUnlockedAchs(function(p){var n=[...p,id];try{localStorage.setItem("cobra_achs",JSON.stringify(n));}catch(e){}return n;});
     setEarnedAch(ach);audio.achievement();
   }
+
+  // Generate missions for today/this week
+  const getMissions=function(type){
+    var seed=type==="daily"?Math.floor(Date.now()/(1000*60*60*24)):Math.floor(Date.now()/(1000*60*60*24*7));
+    var pool=type==="daily"?[
+      {id:"play3",desc:"Play 3 games",icon:"🃏",goal:3,stat:"rounds",reward:{xp:100,coins:150,gems:0}},
+      {id:"win2",desc:"Win 2 games",icon:"🏆",goal:2,stat:"wins",reward:{xp:200,coins:300,gems:1}},
+      {id:"daily",desc:"Claim daily reward",icon:"📅",goal:1,stat:"dailyClaims",reward:{xp:150,coins:200,gems:0}},
+      {id:"spin",desc:"Use lucky spin",icon:"🎡",goal:1,stat:"spinCount",reward:{xp:100,coins:150,gems:0}},
+      {id:"play5",desc:"Play 5 games",icon:"🃏",goal:5,stat:"rounds",reward:{xp:200,coins:250,gems:1}},
+      {id:"win3",desc:"Win 3 games",icon:"🥇",goal:3,stat:"wins",reward:{xp:300,coins:400,gems:2}},
+    ]:[
+      {id:"w_win15",desc:"Win 15 games",icon:"👑",goal:15,stat:"wins",reward:{xp:500,coins:1000,gems:5}},
+      {id:"w_play30",desc:"Play 30 games",icon:"🃏",goal:30,stat:"rounds",reward:{xp:400,coins:800,gems:3}},
+      {id:"w_coins",desc:"Earn 1000 coins",icon:"🪙",goal:1000,stat:"coinsEarned",reward:{xp:600,coins:1200,gems:5}},
+      {id:"w_streak3",desc:"Get a 3-win streak",icon:"🔥",goal:3,stat:"bestStreak",reward:{xp:700,coins:1500,gems:8}},
+      {id:"w_spin5",desc:"Use lucky spin 5 times",icon:"🎡",goal:5,stat:"spinCount",reward:{xp:300,coins:600,gems:3}},
+      {id:"w_daily5",desc:"Claim daily reward 5 times",icon:"📅",goal:5,stat:"dailyClaims",reward:{xp:400,coins:700,gems:4}},
+    ];
+    // deterministic pick based on seed
+    var picked=[];var used={};
+    for(var i=0;i<(type==="daily"?3:5);i++){
+      var idx=(seed*7+i*13)%pool.length;
+      while(used[idx])idx=(idx+1)%pool.length;
+      used[idx]=true;picked.push({...pool[idx],progress:0,claimed:false});
+    }
+    return{missions:picked,seed:seed,type:type};
+  };
+
+  const getOrRefreshMissions=function(type,current){
+    var seed=type==="daily"?Math.floor(Date.now()/(1000*60*60*24)):Math.floor(Date.now()/(1000*60*60*24*7));
+    if(current&&current.seed===seed)return current;
+    var fresh=getMissions(type);
+    try{localStorage.setItem("cobra_"+(type==="daily"?"daily":"weekly")+"_missions",JSON.stringify(fresh));}catch(e){}
+    return fresh;
+  };
+
+  const unlockTitle=function(titleId){
+    if(!titleId)return;
+    setUnlockedTitles(function(prev){
+      if(prev.indexOf(titleId)>=0)return prev;
+      var n=[...prev,titleId];try{localStorage.setItem("cobra_titles",JSON.stringify(n));}catch(e){}
+      pop("Title unlocked: "+titleId.replace(/_/g," ")+" 🎖️","success",2500);
+      return n;
+    });
+  };
+
+  const unlockFrame=function(frameId){
+    if(!frameId)return;
+    setUnlockedFrames(function(prev){
+      if(prev.indexOf(frameId)>=0)return prev;
+      var n=[...prev,frameId];try{localStorage.setItem("cobra_frames",JSON.stringify(n));}catch(e){}
+      pop("Frame unlocked: "+frameId+" ✨","success",2500);
+      return n;
+    });
+  };
+
+  const claimAchievement=function(achId){
+    var ach=ACHIEVEMENTS.find(function(a){return a.id===achId;});
+    if(!ach||claimedAchs.indexOf(achId)>=0)return;
+    var newClaimed=[...claimedAchs,achId];
+    setClaimedAchs(newClaimed);
+    try{localStorage.setItem("cobra_claimed_achs",JSON.stringify(newClaimed));}catch(e){}
+    if(ach.reward.coins)addCoins(ach.reward.coins);
+    if(ach.reward.gems)addGems(ach.reward.gems);
+    if(ach.title)unlockTitle(ach.title.toLowerCase().replace(/ /g,"_"));
+    // unlock frame for certain achievements
+    if(achId==="win_50")unlockFrame("emerald");
+    if(achId==="cobra_10")unlockFrame("cobra");
+    if(achId==="win_100")unlockFrame("diamond");
+    if(achId==="streak_10")unlockFrame("champion");
+    setRewardPopup({coins:ach.reward.coins,gems:ach.reward.gems,label:ach.name+" unlocked! 🏆"});
+    audio.achievement();
+  };
 
   const sendEmoji=function(emoji){
     audio.init();audio.resume();
@@ -2239,6 +2636,21 @@ export default function Cobra(){
     gainXP(25); // participation XP
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
     if(winnerIdx===myIdx)gainXP(50); // win bonus
+    // Unlock streak frames
+    var curStreak=gameStats.streak||0;
+    if(winnerIdx===myIdx){
+      if(curStreak>=3)unlockFrame("bronze");
+      if(curStreak>=5)unlockFrame("silver");
+      if(curStreak>=10)unlockFrame("gold");
+    }
+    // Update achievement progress
+    setAchProgress(function(prev){
+      var n=Object.assign({},prev);
+      n.rounds=(n.rounds||0)+1;
+      if(winnerIdx===myIdx)n.wins=(n.wins||0)+1;
+      var saved=JSON.stringify(n);try{localStorage.setItem("cobra_ach_progress",saved);}catch(e){}
+      return n;
+    });
     var loser=ns.findIndex(function(s){return s>=scoreLimit;});
     var resWithScores=res.map(function(r,i){return Object.assign({},r,{newScore:ns[i]});});
     var ned={results:resWithScores,scores:ns,nPlayers:nPlayers,names:names.slice(0,nPlayers)};
