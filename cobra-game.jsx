@@ -1525,7 +1525,7 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
   );
 }
 
-function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,equippedFrame,unlockedTitles,unlockedFrames,onEquipTitle,onEquipFrame,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,setCardTheme}){
+function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,equippedFrame,unlockedTitles,unlockedFrames,onEquipTitle,onEquipFrame,onEquipAvatar,onEquipTheme,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,setCardTheme}){
   const [tab,setTab]=useState("avatars");
   var ownedAvatars=SHOP_AVATARS.filter(function(a){return a.price===0||ownedItems.indexOf("av_"+a.id)>=0;});
   var ownedThemes=SHOP_THEMES.filter(function(t){return t.price===0||ownedItems.indexOf(t.id)>=0;});
@@ -1550,14 +1550,15 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
       <div style={{flex:1,overflowY:"auto",padding:"4px 18px calc(20px + env(safe-area-inset-bottom))"}}>
         {tab==="avatars"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
               {SHOP_AVATARS.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
                 var eq=myAvatar===item.id;
-                return(<div key={item.id} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.08)",background:eq?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.3)",opacity:owned?1:0.4}}>
+                return(<div key={item.id} onClick={function(){if(owned&&onEquipAvatar){audio.buttonClick();onEquipAvatar(item.id);}}} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.12)",background:eq?"rgba(212,168,67,0.15)":"rgba(255,255,255,0.05)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",transition:"all 0.15s",boxShadow:eq?"0 0 16px rgba(212,168,67,0.35)":"none"}}>
                   <div style={{fontSize:30}}>{item.id}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#a0bba0",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:eq?"#f0c060":"#c8d8c8",letterSpacing:0.5}}>{item.name.toUpperCase()}</div>
+                  {eq&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060"}}>✓ ON</div>}
                   {!owned&&<div style={{fontSize:9}}>🔒</div>}
                 </div>);
               })}
@@ -1566,21 +1567,21 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="themes"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {SHOP_THEMES.map(function(item){
                 var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
                 var eq=cardTheme===item.id;
                 var th=CARD_THEMES[item.id];
-                return(<div key={item.id} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.08)",opacity:owned?1:0.4}}>
-                  <div style={{height:50,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+                return(<div key={item.id} onClick={function(){if(owned&&onEquipTheme){audio.buttonClick();onEquipTheme(item.id);}}} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.12)",opacity:owned?1:0.35,cursor:owned?"pointer":"default",boxShadow:eq?"0 0 20px rgba(212,168,67,0.35)":"none",transition:"all 0.15s"}}>
+                  <div style={{height:60,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
                     {[0,1,2].map(function(ci){return(<div key={ci} style={{transform:"rotate("+(ci-1)*5+"deg)",opacity:owned?1:0.5}}><Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/></div>);})}
-                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>🔒</div>}
-                    {eq&&<div style={{position:"absolute",top:4,right:8,fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060"}}>✓ ACTIVE</div>}
+                    {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🔒</div>}
+                    {eq&&<div style={{position:"absolute",top:5,right:10,fontFamily:"Cinzel,serif",fontSize:8,color:"#f0c060",background:"rgba(0,0,0,0.6)",padding:"2px 6px",borderRadius:5}}>✓ ACTIVE</div>}
                   </div>
-                  <div style={{padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,0,0,0.3)"}}>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:eq?"#f0c060":"#c8d8c8",fontWeight:700}}>{item.name}</div>
-                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a"}}>OWNED</span>}
+                  <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.04)"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:eq?"#f0c060":"#e0e8e0",fontWeight:700}}>{item.name}</div>
+                    {owned&&!eq&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#a0d0a0",letterSpacing:1}}>TAP TO EQUIP</span>}
                   </div>
                 </div>);
               })}
@@ -1589,7 +1590,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="frames"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{unlockedFrames.length}/{FRAMES.length} COLLECTED</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               {FRAMES.map(function(frame){
                 var owned=unlockedFrames.indexOf(frame.id)>=0;
@@ -1608,7 +1609,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
         )}
         {tab==="titles"&&(
           <>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#b0d0b0",letterSpacing:2,marginBottom:10}}>{unlockedTitles.length}/{TITLES.length} COLLECTED</div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               <div onClick={function(){audio.buttonClick();onEquipTitle("");}} style={{borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,border:equippedTitle===""?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(255,255,255,0.08)",background:equippedTitle===""?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.3)",cursor:"pointer",touchAction:"manipulation"}}>
                 <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#a0bba0",flex:1}}>No Title</div>
@@ -2754,6 +2755,8 @@ export default function Cobra(){
       unlockedFrames={unlockedFrames}
       onEquipTitle={function(id){setEquippedTitle(id);try{localStorage.setItem("cobra_title",id);}catch(e){}}}
       onEquipFrame={function(id){setEquippedFrame(id);try{localStorage.setItem("cobra_frame",id);}catch(e){}}}
+      onEquipAvatar={function(id){setMyAvatar(id);try{localStorage.setItem("cobra_player_avatar",id);}catch(e){}}}
+      onEquipTheme={function(id){setCardTheme(id);try{localStorage.setItem("cobra_card_theme",id);}catch(e){}}}
       showSettings={showSettings}
       setShowSettings={setShowSettings}
       sfxMuted={sfxMuted}
