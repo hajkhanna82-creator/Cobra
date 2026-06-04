@@ -337,6 +337,15 @@ input::placeholder{color:#2a3d28;}
 .reward-card:active{transform:scale(0.95);}
 /* Gold text gradient */
 .gold-text{background:linear-gradient(135deg,#f4cc52,#d4a843,#a87020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+/* Home screen card drift animations */
+@keyframes cardDrift1{0%{transform:translate(0px,0px) rotate(-12deg);opacity:0}5%{opacity:1}90%{opacity:0.7}100%{transform:translate(-180px,-320px) rotate(-28deg);opacity:0}}
+@keyframes cardDrift2{0%{transform:translate(0px,0px) rotate(8deg);opacity:0}5%{opacity:0.8}90%{opacity:0.5}100%{transform:translate(200px,-280px) rotate(22deg);opacity:0}}
+@keyframes cardDrift3{0%{transform:translate(0px,0px) rotate(-5deg);opacity:0}5%{opacity:0.9}90%{opacity:0.6}100%{transform:translate(-120px,-350px) rotate(-18deg);opacity:0}}
+@keyframes cardDrift4{0%{transform:translate(0px,0px) rotate(15deg);opacity:0}5%{opacity:0.7}90%{opacity:0.4}100%{transform:translate(160px,-300px) rotate(30deg);opacity:0}}
+@keyframes cardDrift5{0%{transform:translate(0px,0px) rotate(-20deg);opacity:0}5%{opacity:0.85}90%{opacity:0.55}100%{transform:translate(-220px,-260px) rotate(-35deg);opacity:0}}
+@keyframes sparkle{0%,100%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1) rotate(180deg);opacity:1}}
+@keyframes snakeWave{0%{transform:translateX(-100%) scaleY(1)}50%{transform:translateX(0%) scaleY(1.3)}100%{transform:translateX(100%) scaleY(1)}}
+@keyframes homeGlow{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.55;transform:scale(1.08)}}
 `;
 
 const CARD_THEMES={
@@ -3286,9 +3295,29 @@ export default function Cobra(){
     <div className="feltbg" onClick={initAudio} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 20px",position:"relative"}}>
       <style>{GS}</style>
       <div style={{position:"fixed",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
+        {/* Ambient orbs */}
         {[{t:"-10%",l:"5%",w:500,c:"rgba(10,55,18,0.45)"},{t:"60%",r:"3%",w:380,c:"rgba(10,18,45,0.35)"},{t:"30%",l:"45%",w:700,c:"rgba(8,45,14,0.18)"}].map(function(o,i){return(
           <div key={i} className="orb_float" style={{position:"absolute",top:o.t,left:o.l,right:o.r,width:o.w,height:o.w,borderRadius:"50%",background:"radial-gradient(circle,"+o.c+",transparent 70%)",animationDelay:(i*2.8)+"s"}}/>
         );})}
+        {/* Animated floating cards */}
+        {[
+          {b:"8%",l:"15%",theme:"classic",anim:"cardDrift1",dur:"7s",delay:"0s",size:"sm"},
+          {b:"5%",l:"70%",theme:"midnight",anim:"cardDrift2",dur:"9s",delay:"1.5s",size:"sm"},
+          {b:"3%",l:"40%",theme:"crimson",anim:"cardDrift3",dur:"8s",delay:"3s",size:"xs"},
+          {b:"10%",l:"82%",theme:"emerald",anim:"cardDrift4",dur:"10s",delay:"0.8s",size:"xs"},
+          {b:"6%",l:"5%",theme:"gold",anim:"cardDrift5",dur:"7.5s",delay:"2.2s",size:"xs"},
+          {b:"4%",l:"55%",theme:"galaxy",anim:"cardDrift1",dur:"11s",delay:"4s",size:"sm"},
+        ].map(function(c,i){return(
+          <div key={i} style={{position:"absolute",bottom:c.b,left:c.l,animation:c.anim+" "+c.dur+" "+c.delay+" ease-in infinite",willChange:"transform,opacity"}}>
+            <Card card={{suit:"♠",value:"A"}} faceDown size={c.size} theme={c.theme}/>
+          </div>
+        );})}
+        {/* Sparkle particles */}
+        {[{t:"20%",l:"10%",d:"0s"},{t:"40%",l:"88%",d:"0.7s"},{t:"65%",l:"25%",d:"1.4s"},{t:"15%",l:"60%",d:"2.1s"},{t:"55%",l:"78%",d:"0.3s"},{t:"80%",l:"48%",d:"1.8s"},{t:"35%",l:"5%",d:"2.8s"},{t:"70%",l:"92%",d:"1.1s"}].map(function(s,i){return(
+          <div key={i} style={{position:"absolute",top:s.t,left:s.l,width:4,height:4,borderRadius:"50%",background:"#d4a843",animation:"sparkle 3s "+s.d+" ease-in-out infinite",boxShadow:"0 0 6px #d4a843"}}/>
+        );})}
+        {/* Bottom glow strip */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:120,background:"linear-gradient(0deg,rgba(10,40,12,0.6),transparent)",animation:"homeGlow 4s ease-in-out infinite"}}/>
       </div>
       <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:400,width:"100%"}} className="anim_up">
