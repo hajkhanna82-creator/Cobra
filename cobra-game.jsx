@@ -345,15 +345,36 @@ const CARD_THEMES={
   emerald:{bg:"linear-gradient(148deg,#021a06,#010d03,#021404)",border:"rgba(10,80,20,0.9)",pat:"rgba(50,200,80,0.24)",pat2:"rgba(40,160,60,0.17)"},
   galaxy:{bg:"linear-gradient(148deg,#0a0520,#050212,#08031a)",border:"rgba(80,40,160,0.9)",pat:"rgba(180,100,255,0.24)",pat2:"rgba(140,60,220,0.17)"},
   gold:{bg:"linear-gradient(148deg,#1a1200,#0d0a00,#161000)",border:"rgba(160,120,0,0.9)",pat:"rgba(255,200,0,0.28)",pat2:"rgba(212,168,0,0.2)"},
+  neon:{bg:"linear-gradient(148deg,#001a1a,#000d0d,#001515)",border:"rgba(0,255,200,0.7)",pat:"rgba(0,255,200,0.25)",pat2:"rgba(0,200,160,0.18)"},
+  royal:{bg:"linear-gradient(148deg,#0d0020,#060012,#0a001a)",border:"rgba(160,80,255,0.7)",pat:"rgba(160,80,255,0.25)",pat2:"rgba(120,60,200,0.18)"},
+  inferno:{bg:"linear-gradient(148deg,#1a0500,#0d0200,#150400)",border:"rgba(255,100,0,0.7)",pat:"rgba(255,100,0,0.25)",pat2:"rgba(200,60,0,0.18)"},
+  ice:{bg:"linear-gradient(148deg,#000d1a,#000610,#000f1a)",border:"rgba(100,200,255,0.7)",pat:"rgba(100,200,255,0.25)",pat2:"rgba(60,160,220,0.18)"},
 };
 
 const SHOP_THEMES=[
-  {id:"classic",name:"Classic",price:0,currency:"coins",color:"#091609",desc:"The original green felt"},
-  {id:"midnight",name:"Midnight",price:500,currency:"coins",color:"#06061a",desc:"Deep blue darkness"},
-  {id:"crimson",name:"Crimson",price:500,currency:"coins",color:"#1a0505",desc:"Blood red danger"},
-  {id:"emerald",name:"Emerald",price:500,currency:"coins",color:"#021a06",desc:"Lush green forest"},
-  {id:"galaxy",name:"Galaxy",price:1200,currency:"coins",color:"#0a0520",desc:"Cosmic purple depths"},
-  {id:"gold",name:"Gold Rush",price:1500,currency:"coins",color:"#1a1200",desc:"Pure luxury edition"},
+  {id:"classic",name:"Classic",price:0,currency:"coins",color:"#091609",desc:"The original green felt",rarity:"common"},
+  {id:"midnight",name:"Midnight",price:500,currency:"coins",color:"#06061a",desc:"Deep blue darkness",rarity:"rare"},
+  {id:"crimson",name:"Crimson",price:500,currency:"coins",color:"#1a0505",desc:"Blood red danger",rarity:"rare"},
+  {id:"emerald",name:"Emerald",price:500,currency:"coins",color:"#021a06",desc:"Lush green forest",rarity:"rare"},
+  {id:"galaxy",name:"Galaxy",price:1200,currency:"coins",color:"#0a0520",desc:"Cosmic purple depths",rarity:"epic"},
+  {id:"gold",name:"Gold Rush",price:1500,currency:"coins",color:"#1a1200",desc:"Pure luxury edition",rarity:"legendary"},
+  {id:"neon",name:"Neon Nights",price:1800,currency:"coins",color:"#001a1a",desc:"Electric cyan glow on deep black",rarity:"rare",isNew:true},
+  {id:"royal",name:"Royal Flush",price:2400,currency:"coins",color:"#0d0020",desc:"Deep purple with gold filigree",rarity:"epic",isNew:true},
+  {id:"inferno",name:"Inferno",price:2200,currency:"coins",color:"#1a0500",desc:"Blazing orange and red flames",rarity:"rare"},
+  {id:"ice",name:"Black Ice",price:2000,currency:"coins",color:"#000d1a",desc:"Frost blue crystalline finish",rarity:"rare"},
+];
+
+const BUNDLES=[
+  {id:"bundle_darkness",name:"Darkness Pack",desc:"Midnight + Crimson themes",icon:"🌙",items:["midnight","crimson"],price:3200,currency:"coins",originalPrice:4800,rarity:"rare"},
+  {id:"bundle_nature",name:"Nature Pack",desc:"Classic + Emerald themes",icon:"🌿",items:["classic","emerald"],price:2800,currency:"coins",originalPrice:4200,rarity:"rare"},
+  {id:"bundle_premium",name:"Elite Pack",desc:"Galaxy + Gold themes + 💎5",icon:"👑",items:["galaxy","gold"],price:18,currency:"gems",originalPrice:30,rarity:"epic",bonusGems:5},
+  {id:"bundle_neon_ice",name:"Neon Frost",desc:"Neon Nights + Black Ice themes",icon:"⚡",items:["neon","ice"],price:3000,currency:"coins",originalPrice:3800,rarity:"rare",isNew:true},
+];
+
+const CRATES=[
+  {id:"crate_standard",name:"Standard Crate",desc:"Random common or rare cosmetic",icon:"📦",price:500,currency:"coins",rarity:"common",pool:["classic","midnight","crimson"]},
+  {id:"crate_premium",name:"Premium Crate",desc:"Guaranteed rare or better",icon:"💼",price:1200,currency:"coins",rarity:"rare",pool:["emerald","galaxy","neon","inferno","ice"]},
+  {id:"crate_legendary",name:"Legendary Crate",desc:"Chance at epic or legendary",icon:"🎰",price:8,currency:"gems",rarity:"epic",pool:["gold","royal","bundle_premium"]},
 ];
 
 const SHOP_AVATARS=[
@@ -1683,139 +1704,446 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
 }
 
 function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings}){
-  const [tab,setTab]=useState("themes");
-  const TABS=[["themes","🎨","THEMES"],["avatars","😎","AVATARS"]];
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden",background:"linear-gradient(180deg,#020b03 0%,#010603 100%)"}}>
-      <style>{GS}</style>
-      {/* Header */}
-      <div style={{flexShrink:0,paddingTop:"calc(16px + env(safe-area-inset-top))"}}>
-        {/* Top bar */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 18px 14px"}}>
-          <button onClick={function(){audio.buttonClick();goScreen("home");}} style={{width:38,height:38,borderRadius:12,background:"rgba(255,255,255,0.07)",border:"1.5px solid rgba(255,255,255,0.12)",color:"#c8d8c8",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation"}}>←</button>
-          <div style={{textAlign:"center"}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,letterSpacing:5,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>SHOP</div>
-          </div>
-          <div style={{width:38}}/>
-        </div>
-        {/* Currency bar */}
-        <div style={{margin:"0 18px 16px",background:"linear-gradient(135deg,rgba(20,20,10,0.9),rgba(10,10,5,0.9))",borderRadius:16,padding:"12px 20px",border:"1px solid rgba(212,168,67,0.2)",display:"flex",justifyContent:"space-around",boxShadow:"0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#92600a,#d4a843)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:"0 2px 10px rgba(212,168,67,0.4)"}}>🪙</div>
-            <div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,color:"#f0c060",lineHeight:1}}>{coins.toLocaleString()}</div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(240,192,96,0.5)",letterSpacing:1.5}}>COINS</div>
+  var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
+  var [cat,setCat]=useState("ALL");
+  var [timeLeft,setTimeLeft]=useState("00:00:00");
+  var daySeed=Math.floor(Date.now()/(1000*60*60*24));
+  var dailyIdx=daySeed%SHOP_THEMES.length;
+  var dailyItem=SHOP_THEMES[dailyIdx];
+  var dailyDiscountedPrice=Math.floor(dailyItem.price*0.6);
+
+  useEffect(function(){
+    function tick(){
+      var now=new Date();
+      var midnight=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1));
+      var secs=Math.floor((midnight-now)/1000);
+      var h=Math.floor(secs/3600);
+      var m=Math.floor((secs%3600)/60);
+      var s=secs%60;
+      setTimeLeft((h<10?"0"+h:h)+":"+(m<10?"0"+m:m)+":"+(s<10?"0"+s:s));
+    }
+    tick();
+    var id=setInterval(tick,1000);
+    return function(){clearInterval(id);};
+  },[]);
+
+  function RarityBadge({rarity}){
+    var rc=RARITY_COLORS[rarity]||"#9ca3af";
+    return(
+      <span style={{background:rc+"22",border:"1px solid "+rc+"66",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1,fontWeight:700,textTransform:"uppercase",flexShrink:0}}>
+        {rarity||"common"}
+      </span>
+    );
+  }
+
+  function ThemeCard({item,compact}){
+    var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+    var equipped=cardTheme===item.id;
+    var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+    var th=CARD_THEMES[item.id]||CARD_THEMES.classic;
+    var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+    var rg=RARITY_GLOW[item.rarity]||"rgba(156,163,175,0.3)";
+    return(
+      <div style={{borderRadius:20,overflow:"hidden",border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",boxShadow:equipped?"0 0 28px rgba(212,168,67,0.35),inset 0 1px 0 rgba(255,255,255,0.08)":item.rarity==="legendary"?"0 0 20px "+rg+",0 4px 20px rgba(0,0,0,0.5)":"0 4px 20px rgba(0,0,0,0.5)",transition:"all 0.25s",position:"relative"}}>
+        {item.isNew&&<div style={{position:"absolute",top:10,left:10,zIndex:10,background:"#22c55e",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:"#fff",letterSpacing:1,fontWeight:700}}>NEW</div>}
+        <div style={{height:compact?80:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:compact?6:10,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,"+th.pat+" 0%,transparent 60%),radial-gradient(circle at 80% 50%,"+th.pat2+" 0%,transparent 60%)"}}/>
+          {[0,1,2].map(function(ci){return(
+            <div key={ci} style={{transform:"rotate("+(ci-1)*8+"deg) translateY("+(ci===1?-6:2)+"px)",zIndex:ci===1?2:1,position:"relative"}}>
+              <Card card={{suit:"♠",value:"A"}} faceDown size={compact?"xs":"sm"} theme={item.id}/>
             </div>
-          </div>
-          <div style={{width:1,background:"rgba(255,255,255,0.08)"}}/>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#4a1a8a,#9b59f8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:"0 2px 10px rgba(155,89,248,0.4)"}}>💎</div>
-            <div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,color:"#d8a0ff",lineHeight:1}}>{gems}</div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(216,160,255,0.5)",letterSpacing:1.5}}>GEMS</div>
-            </div>
-          </div>
-        </div>
-        {/* Tab bar */}
-        <div style={{display:"flex",margin:"0 18px 4px",gap:8}}>
-          {TABS.map(function(t){var active=tab===t[0];return(
-            <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}}
-              style={{flex:1,padding:"12px 4px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,border:"none",borderRadius:0,borderBottom:active?"2.5px solid #d4a843":"2.5px solid rgba(255,255,255,0.07)",cursor:"pointer",background:"transparent",color:active?"#f0c060":"#8aaa8a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:active?"700":"400"}}>
-              {t[1]} {t[2]}
-            </button>
           );})}
+          {equipped&&<div style={{position:"absolute",top:10,right:10,background:"linear-gradient(135deg,#a87020,#f0c060)",borderRadius:8,padding:"4px 10px",fontFamily:"Cinzel,serif",fontSize:8,color:"#010603",letterSpacing:1.5,fontWeight:900,boxShadow:"0 2px 8px rgba(0,0,0,0.4)"}}>✓ ACTIVE</div>}
+          {!owned&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(1px)",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontSize:28,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.8))"}}>🔒</div></div>}
+          {owned&&!equipped&&<div style={{position:"absolute",top:10,right:10,width:22,height:22,borderRadius:"50%",background:"rgba(34,197,94,0.25)",border:"1.5px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#22c55e"}}>✓</div>}
+        </div>
+        <div style={{padding:"12px 14px 14px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:equipped?"#f0c060":"#e8f0e8",letterSpacing:1,fontWeight:900,flex:1}}>{item.name}</div>
+            <RarityBadge rarity={item.rarity}/>
+          </div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#c0d8c0",lineHeight:1.4,marginBottom:10}}>{item.desc}</div>
+          {owned?(
+            <button onClick={function(){audio.buttonClick();if(!equipped)onEquipTheme(item.id);}} style={{width:"100%",padding:"10px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:equipped?"none":"1.5px solid rgba(212,168,67,0.5)",borderRadius:12,cursor:equipped?"default":"pointer",background:equipped?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.1))":"linear-gradient(135deg,rgba(212,168,67,0.18),rgba(212,168,67,0.08))",color:equipped?"#f0c060":"#d4a843",touchAction:"manipulation",fontWeight:900}}>
+              {equipped?"✓ EQUIPPED":"EQUIP"}
+            </button>
+          ):(
+            <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(item);}} style={{width:"100%",padding:"10px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:12,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"rgba(255,255,255,0.04)",color:canAfford?"#f0c060":"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 14px rgba(212,168,67,0.15)":"none"}}>
+              {item.price===0?"FREE":(item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price)}
+            </button>
+          )}
         </div>
       </div>
+    );
+  }
 
-      {/* Content */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px 18px calc(24px + env(safe-area-inset-bottom))"}}>
+  function AvatarCard({item}){
+    var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
+    var equipped=myAvatar===item.id;
+    var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+    var isPremium=item.currency==="gems";
+    return(
+      <div onClick={function(){
+        audio.buttonClick();
+        if(owned)onEquipAvatar(item.id);
+        else if(canAfford)onBuy({...item,id:"av_"+item.id,displayId:item.id,isAvatar:true});
+      }} style={{borderRadius:16,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,border:equipped?"2px solid #f0c060":isPremium&&!owned?"1.5px solid rgba(155,89,248,0.4)":"1.5px solid rgba(255,255,255,0.1)",background:equipped?"linear-gradient(160deg,rgba(212,168,67,0.15),rgba(212,168,67,0.06))":isPremium&&!owned?"linear-gradient(160deg,rgba(80,20,160,0.18),rgba(40,10,80,0.12))":"rgba(255,255,255,0.05)",cursor:"pointer",touchAction:"manipulation",transition:"all 0.2s",boxShadow:equipped?"0 0 20px rgba(212,168,67,0.4)":isPremium&&!owned?"0 0 12px rgba(155,89,248,0.2)":"none",position:"relative",overflow:"hidden"}}>
+        {isPremium&&!owned&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,rgba(155,89,248,0.8),transparent)"}}/>}
+        {equipped&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.9),transparent)"}}/>}
+        {owned&&!equipped&&<div style={{position:"absolute",top:6,right:6,width:16,height:16,borderRadius:"50%",background:"rgba(34,197,94,0.2)",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#22c55e"}}>✓</div>}
+        <div style={{fontSize:34,lineHeight:1,filter:equipped?"drop-shadow(0 0 8px rgba(240,192,96,0.8))":owned?"none":"grayscale(0.4)",opacity:owned?1:0.6}}>{item.id}</div>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:7.5,color:equipped?"#f0c060":owned?"#e8f0e8":"rgba(255,255,255,0.5)",letterSpacing:0.8,fontWeight:equipped?"900":"400",textAlign:"center"}}>{item.name.toUpperCase()}</div>
+        {owned?(
+          equipped?<div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.3),rgba(212,168,67,0.15))",borderRadius:5,padding:"2px 6px",fontFamily:"Cinzel,serif",fontSize:6.5,color:"#f0c060",letterSpacing:0.8}}>✓ ON</div>
+          :<div style={{fontFamily:"Cinzel,serif",fontSize:6.5,color:"#4ade80",letterSpacing:0.8}}>TAP TO USE</div>
+        ):(
+          <div style={{background:isPremium?"rgba(155,89,248,0.15)":"rgba(212,168,67,0.1)",borderRadius:5,padding:"2px 6px",fontFamily:"Cinzel,serif",fontSize:6.5,color:isPremium?"#c084fc":canAfford?"#d4a843":"rgba(255,255,255,0.3)",letterSpacing:0.5,fontWeight:700}}>
+            {item.currency==="coins"?"🪙"+item.price:"💎"+item.price}
+          </div>
+        )}
+        {!owned&&<div style={{position:"absolute",bottom:6,right:6,fontSize:8,opacity:0.4}}>🔒</div>}
+      </div>
+    );
+  }
 
-        {tab==="themes"&&(
-          <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            {SHOP_THEMES.map(function(item){
-              var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
-              var equipped=cardTheme===item.id;
-              var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
-              var th=CARD_THEMES[item.id];
+  function BundleCard({item}){
+    var allOwned=item.items.every(function(id){return SHOP_THEMES.find(function(t){return t.id===id;})&&(ownedItems.indexOf(id)>=0||id==="classic");});
+    var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+    var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+    var savePct=Math.round((1-item.price/item.originalPrice)*100);
+    return(
+      <div style={{borderRadius:20,overflow:"hidden",border:"1.5px solid "+rc+"44",background:"rgba(255,255,255,0.05)",boxShadow:"0 4px 24px rgba(0,0,0,0.5)",position:"relative"}}>
+        {item.isNew&&<div style={{position:"absolute",top:12,left:12,zIndex:5,background:"#22c55e",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:"#fff",letterSpacing:1,fontWeight:700}}>NEW</div>}
+        <div style={{position:"absolute",top:12,right:12,zIndex:5,background:"linear-gradient(135deg,#c84020,#f05030)",borderRadius:8,padding:"4px 10px",fontFamily:"Cinzel,serif",fontSize:9,color:"#fff",letterSpacing:1,fontWeight:900,boxShadow:"0 2px 8px rgba(0,0,0,0.4)"}}>SAVE {savePct}%</div>
+        <div style={{padding:"18px 16px 14px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+            <div style={{width:48,height:48,borderRadius:12,background:rc+"22",border:"1.5px solid "+rc+"44",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.icon}</div>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:"#e8f0e8",letterSpacing:1,fontWeight:900,marginBottom:4}}>{item.name}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><RarityBadge rarity={item.rarity}/></div>
+            </div>
+          </div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#c0d8c0",marginBottom:12}}>{item.desc}</div>
+          <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+            {item.items.map(function(tid){
+              var th=CARD_THEMES[tid]||CARD_THEMES.classic;
+              var tinfo=SHOP_THEMES.find(function(t){return t.id===tid;})||{name:tid};
               return(
-                <div key={item.id} style={{borderRadius:20,overflow:"hidden",border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.04)",boxShadow:equipped?"0 0 30px rgba(212,168,67,0.3),inset 0 1px 0 rgba(255,255,255,0.08)":"0 4px 20px rgba(0,0,0,0.5)",transition:"all 0.25s"}}>
-                  {/* Preview strip */}
-                  <div style={{height:100,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:10,position:"relative",overflow:"hidden"}}>
-                    {/* Subtle pattern overlay */}
-                    <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,"+th.pat+" 0%,transparent 60%),radial-gradient(circle at 80% 50%,"+th.pat2+" 0%,transparent 60%)"}}/>
-                    {/* Sample cards — face down to show the back design */}
-                    {[0,1,2].map(function(ci){return(
-                      <div key={ci} style={{transform:"rotate("+(ci-1)*8+"deg) translateY("+(ci===1?-6:2)+"px)",zIndex:ci===1?2:1,position:"relative"}}>
-                        <Card card={{suit:"♠",value:"A"}} faceDown size="sm" theme={item.id}/>
+                <div key={tid} style={{flex:1,minWidth:80,borderRadius:12,overflow:"hidden",border:"1px solid rgba(255,255,255,0.1)"}}>
+                  <div style={{height:52,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:4,position:"relative"}}>
+                    <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 50% 50%,"+th.pat+" 0%,transparent 70%)"}}/>
+                    {[0,1].map(function(ci){return(
+                      <div key={ci} style={{transform:"rotate("+(ci===0?-6:6)+"deg)",zIndex:1,position:"relative"}}>
+                        <Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={tid}/>
                       </div>
                     );})}
-                    {equipped&&(
-                      <div style={{position:"absolute",top:10,right:10,background:"linear-gradient(135deg,#a87020,#f0c060)",borderRadius:8,padding:"4px 10px",fontFamily:"Cinzel,serif",fontSize:8,color:"#010603",letterSpacing:1.5,fontWeight:900,boxShadow:"0 2px 8px rgba(0,0,0,0.4)"}}>✓ ACTIVE</div>
-                    )}
-                    {!owned&&(
-                      <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.45)",backdropFilter:"blur(1px)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                        <div style={{fontSize:32,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.8))"}}>🔒</div>
-                      </div>
-                    )}
                   </div>
-                  {/* Info row */}
-                  <div style={{padding:"14px 18px 16px",display:"flex",alignItems:"center",gap:14}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:equipped?"#f0c060":"#e8e8e8",letterSpacing:1,fontWeight:900,marginBottom:3}}>{item.name}</div>
-                      <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#a0bba0",lineHeight:1.3}}>{item.desc}</div>
-                    </div>
-                    {owned?(
-                      <button onClick={function(){if(!equipped){audio.buttonClick();onEquipTheme(item.id);}}} style={{flexShrink:0,padding:"10px 18px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:equipped?"none":"1.5px solid rgba(212,168,67,0.5)",borderRadius:12,cursor:equipped?"default":"pointer",background:equipped?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"linear-gradient(135deg,rgba(212,168,67,0.18),rgba(212,168,67,0.08))",color:equipped?"#f0c060":"#d4a843",touchAction:"manipulation",fontWeight:900,minWidth:80,textAlign:"center"}}>
-                        {equipped?"✓ ON":"EQUIP"}
-                      </button>
-                    ):(
-                      <button onClick={function(){if(canAfford){audio.buttonClick();onBuy(item);}}} style={{flexShrink:0,padding:"10px 18px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:12,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"rgba(255,255,255,0.04)",color:canAfford?"#f0c060":"#4a5a4a",touchAction:"manipulation",fontWeight:900,minWidth:80,textAlign:"center",boxShadow:canAfford?"0 0 14px rgba(212,168,67,0.15)":"none"}}>
-                        {item.price===0?"FREE":(item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price)}
-                      </button>
-                    )}
-                  </div>
+                  <div style={{padding:"4px 8px",background:"rgba(0,0,0,0.3)",fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.7)",letterSpacing:0.5,textAlign:"center"}}>{tinfo.name}</div>
                 </div>
               );
             })}
           </div>
-        )}
+          {item.bonusGems&&<div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#c084fc",marginBottom:10}}>+ Bonus 💎{item.bonusGems} Gems included!</div>}
+          {allOwned?(
+            <div style={{textAlign:"center",padding:"10px",background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",letterSpacing:1}}>✓ OWNED</div>
+          ):(
+            <button onClick={function(){audio.buttonClick();if(canAfford){item.items.forEach(function(tid){var t=SHOP_THEMES.find(function(x){return x.id===tid;});if(t)onBuy({...t,id:t.id,_bundle:item.id});});}}} style={{width:"100%",padding:"12px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1.5,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:12,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 14px "+rc+"22":"none"}}>
+              <span style={{textDecoration:"line-through",opacity:0.5,marginRight:8,fontSize:10}}>{item.currency==="coins"?"🪙"+item.originalPrice.toLocaleString():"💎"+item.originalPrice}</span>
+              {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-        {tab==="avatars"&&(
-          <div>
-            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#90aa90",fontSize:14,textAlign:"center",marginBottom:16,lineHeight:1.5}}>Your avatar shows on the leaderboard and to other players in online games.</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
-              {SHOP_AVATARS.map(function(item){
-                var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
-                var equipped=myAvatar===item.id;
+  function CrateCard({item}){
+    var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+    var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+    var rg=RARITY_GLOW[item.rarity]||"rgba(156,163,175,0.3)";
+    return(
+      <div style={{borderRadius:18,overflow:"hidden",border:"1.5px solid "+rc+"55",background:"rgba(255,255,255,0.05)",boxShadow:"0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px "+rc+"11",animation:item.rarity==="epic"?"legendaryShimmer 2.5s ease-in-out infinite":"none",position:"relative"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,"+rc+",transparent)",opacity:0.7}}/>
+        <div style={{padding:"18px 14px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,textAlign:"center"}}>
+          <div style={{fontSize:36,filter:"drop-shadow(0 0 10px "+rc+"88)"}}>{item.icon}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#e8f0e8",letterSpacing:1,fontWeight:900}}>{item.name}</div>
+          <RarityBadge rarity={item.rarity}/>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#c0d8c0",lineHeight:1.4}}>{item.desc}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(255,255,255,0.4)",letterSpacing:1,marginTop:-2}}>??? MYSTERY CONTENTS</div>
+          <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:10,color:"rgba(255,255,255,0.3)"}}>Contents are random</div>
+          <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(item);}} style={{width:"100%",padding:"10px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 12px "+rc+"33":"none",marginTop:4}}>
+            {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  var showFeatured=cat==="ALL"||cat==="FEATURED";
+  var showThemes=cat==="ALL"||cat==="THEMES";
+  var showAvatars=cat==="ALL"||cat==="AVATARS";
+  var showBundles=cat==="ALL"||cat==="BUNDLES";
+  var showCrates=cat==="ALL"||cat==="CRATES";
+  var newItems=SHOP_THEMES.filter(function(t){return t.isNew;});
+  var featuredItems=SHOP_THEMES.filter(function(t){return t.rarity==="epic"||t.rarity==="legendary";}).slice(0,3);
+
+  function SectionHeader({children}){
+    return(
+      <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:"#d4a843",marginBottom:12,marginTop:4,display:"flex",alignItems:"center",gap:8}}>
+        <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.3))"}}/>
+        {children}
+        <div style={{flex:1,height:1,background:"linear-gradient(90deg,rgba(212,168,67,0.3),transparent)"}}/>
+      </div>
+    );
+  }
+
+  function RarityBadge({rarity}){
+    var rc=RARITY_COLORS[rarity]||"#9ca3af";
+    return(
+      <span style={{background:rc+"22",border:"1px solid "+rc+"66",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:rc,letterSpacing:1,fontWeight:700,textTransform:"uppercase",flexShrink:0}}>
+        {rarity||"common"}
+      </span>
+    );
+  }
+
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <style>{GS}
+        {`@keyframes goldPulse{0%,100%{box-shadow:0 0 12px rgba(212,168,67,0.4),inset 0 0 0 1.5px rgba(212,168,67,0.4)}50%{box-shadow:0 0 30px rgba(212,168,67,0.8),inset 0 0 0 1.5px rgba(212,168,67,0.8)}}
+        @keyframes crateShimmer{0%,100%{border-color:rgba(192,132,252,0.3)}50%{border-color:rgba(192,132,252,0.8)}}
+        @keyframes legendaryShimmer{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.04)}50%{box-shadow:0 4px 28px rgba(0,0,0,0.5),0 0 16px rgba(192,132,252,0.25),0 0 1px rgba(192,132,252,0.3)}}
+        `}
+      </style>
+
+      {/* HEADER */}
+      <div style={{flexShrink:0,paddingTop:"calc(12px + env(safe-area-inset-top))",background:"linear-gradient(180deg,rgba(1,8,3,0.98),rgba(1,6,2,0.95))",borderBottom:"1px solid rgba(255,255,255,0.06)",zIndex:10}}>
+        <div style={{display:"flex",alignItems:"center",padding:"0 16px 12px",gap:10}}>
+          <button onClick={function(){audio.buttonClick();goScreen("home");}} style={{width:38,height:38,borderRadius:12,background:"rgba(255,255,255,0.07)",border:"1.5px solid rgba(255,255,255,0.12)",color:"rgba(255,255,255,0.8)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",flexShrink:0}}>←</button>
+          <div style={{flex:1,textAlign:"center"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,letterSpacing:6,background:"linear-gradient(135deg,#f4cc52,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1}}>SHOP</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:11,color:"rgba(212,168,67,0.45)",letterSpacing:2,marginTop:1}}>premium cosmetics</div>
+          </div>
+          <div style={{width:38,display:"flex",justifyContent:"flex-end"}}>
+            <MenuButton onClick={function(){audio.buttonClick();setShowSettings(true);}} active={showSettings}/>
+          </div>
+        </div>
+
+        {/* CURRENCY BAR */}
+        <div style={{margin:"0 16px 12px",background:"linear-gradient(135deg,rgba(18,14,4,0.95),rgba(10,8,2,0.95))",borderRadius:14,padding:"10px 18px",border:"1px solid rgba(212,168,67,0.18)",display:"flex",justifyContent:"space-around",boxShadow:"0 4px 16px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#92600a,#d4a843)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,boxShadow:"0 2px 8px rgba(212,168,67,0.35)"}}>🪙</div>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:"#f0c060",lineHeight:1}}>{coins.toLocaleString()}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(240,192,96,0.45)",letterSpacing:1.5}}>COINS</div>
+            </div>
+          </div>
+          <div style={{width:1,background:"rgba(255,255,255,0.07)"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#4a1a8a,#9b59f8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,boxShadow:"0 2px 8px rgba(155,89,248,0.35)"}}>💎</div>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:"#d8a0ff",lineHeight:1}}>{gems}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(216,160,255,0.45)",letterSpacing:1.5}}>GEMS</div>
+            </div>
+          </div>
+        </div>
+
+        {/* CATEGORY FILTER BAR */}
+        <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",display:"flex",gap:8,padding:"0 16px 12px",scrollbarWidth:"none"}}>
+          {CATS.map(function(c){
+            var active=cat===c;
+            return(
+              <button key={c} onClick={function(){audio.buttonClick();setCat(c);}} style={{flexShrink:0,padding:"7px 14px",borderRadius:20,fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1.5,border:active?"none":"1px solid rgba(255,255,255,0.2)",cursor:"pointer",background:active?"linear-gradient(135deg,#d4a843,#a87020)":"rgba(255,255,255,0.06)",color:active?"#010603":"rgba(255,255,255,0.75)",fontWeight:active?"700":"400",touchAction:"manipulation",transition:"all 0.18s",minHeight:32,whiteSpace:"nowrap"}}>
+                {c}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* SCROLLABLE CONTENT */}
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 16px calc(32px + env(safe-area-inset-bottom))"}}>
+
+        {/* FEATURED CAROUSEL */}
+        {showFeatured&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>FEATURED</SectionHeader>
+            <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",display:"flex",gap:12,paddingBottom:6,scrollbarWidth:"none"}}>
+              {featuredItems.map(function(item){
+                var th=CARD_THEMES[item.id]||CARD_THEMES.classic;
+                var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+                var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
                 var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
-                var isPremium=item.currency==="gems";
                 return(
-                  <div key={item.id} onClick={function(){
-                    if(owned){audio.buttonClick();onEquipAvatar(item.id);}
-                    else if(canAfford){audio.buttonClick();onBuy({...item,id:"av_"+item.id,displayId:item.id,isAvatar:true});}
-                    else audio.buttonClick();
-                  }} style={{borderRadius:18,padding:"16px 8px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:7,border:equipped?"2px solid #f0c060":isPremium&&!owned?"1.5px solid rgba(155,89,248,0.3)":"1.5px solid rgba(255,255,255,0.1)",background:equipped?"linear-gradient(160deg,rgba(212,168,67,0.15),rgba(212,168,67,0.06))":isPremium&&!owned?"linear-gradient(160deg,rgba(80,20,160,0.15),rgba(40,10,80,0.1))":"rgba(255,255,255,0.04)",cursor:"pointer",touchAction:"manipulation",transition:"all 0.2s",boxShadow:equipped?"0 0 20px rgba(212,168,67,0.4)":isPremium&&!owned?"0 0 12px rgba(155,89,248,0.15)":"none",position:"relative",overflow:"hidden"}}>
-                    {isPremium&&!owned&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,rgba(155,89,248,0.8),transparent)"}}/>}
-                    {equipped&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.9),transparent)"}}/>}
-                    <div style={{fontSize:36,lineHeight:1,filter:equipped?"drop-shadow(0 0 8px rgba(240,192,96,0.8))":owned?"none":"grayscale(0.3)",opacity:owned?1:0.55}}>{item.id}</div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:equipped?"#f0c060":owned?"#c8d8c8":"#5a6a5a",letterSpacing:1,fontWeight:equipped?"900":"400",textAlign:"center"}}>{item.name.toUpperCase()}</div>
-                    {owned?(
-                      equipped
-                        ?<div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.3),rgba(212,168,67,0.15))",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:1}}>✓ ACTIVE</div>
-                        :<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4aba4a",letterSpacing:1}}>TAP TO USE</div>
-                    ):(
-                      <div style={{background:isPremium?"rgba(155,89,248,0.15)":"rgba(212,168,67,0.1)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:isPremium?"#c084fc":canAfford?"#d4a843":"#4a5a4a",letterSpacing:0.5,fontWeight:700}}>
-                        {item.currency==="coins"?"🪙"+item.price:"💎"+item.price}
+                  <div key={item.id} style={{flexShrink:0,width:230,borderRadius:18,overflow:"hidden",border:"1.5px solid "+rc+"55",background:th.bg,boxShadow:"0 8px 32px rgba(0,0,0,0.6),0 0 16px "+rc+"22",position:"relative"}}>
+                    <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 40%,"+th.pat+" 0%,transparent 60%),radial-gradient(circle at 70% 60%,"+th.pat2+" 0%,transparent 60%)"}}/>
+                    <div style={{position:"absolute",top:10,left:10,background:"rgba(0,0,0,0.55)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:2,backdropFilter:"blur(4px)"}}>FEATURED</div>
+                    {item.isNew&&<div style={{position:"absolute",top:10,right:10,background:"#22c55e",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:"#fff",letterSpacing:1,fontWeight:700}}>NEW</div>}
+                    <div style={{height:100,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+                      {[0,1,2].map(function(ci){return(
+                        <div key={ci} style={{transform:"rotate("+(ci-1)*10+"deg) translateY("+(ci===1?-8:3)+"px)",zIndex:ci===1?2:1,position:"relative"}}>
+                          <Card card={{suit:"♠",value:"A"}} faceDown size="sm" theme={item.id}/>
+                        </div>
+                      );})}
+                    </div>
+                    <div style={{padding:"10px 14px 14px",position:"relative"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                        <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#e8f0e8",fontWeight:900,flex:1}}>{item.name}</div>
+                        <span style={{background:rc+"22",border:"1px solid "+rc+"55",borderRadius:5,padding:"2px 6px",fontFamily:"Cinzel,serif",fontSize:6.5,color:rc,letterSpacing:1,fontWeight:700}}>{item.rarity}</span>
                       </div>
-                    )}
-                    {!owned&&<div style={{position:"absolute",bottom:8,right:8,fontSize:9,opacity:0.5}}>🔒</div>}
+                      <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.65)",marginBottom:10}}>{item.desc}</div>
+                      {owned?(
+                        <button onClick={function(){audio.buttonClick();onEquipTheme(item.id);}} style={{width:"100%",padding:"8px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:"1px solid rgba(212,168,67,0.4)",borderRadius:10,background:"rgba(212,168,67,0.15)",color:"#f0c060",cursor:"pointer",touchAction:"manipulation",fontWeight:700}}>
+                          {cardTheme===item.id?"✓ EQUIPPED":"EQUIP"}
+                        </button>
+                      ):(
+                        <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(item);}} style={{width:"100%",padding:"8px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:canAfford?"1px solid "+rc+"55":"1px solid rgba(255,255,255,0.1)",borderRadius:10,background:canAfford?rc+"22":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",fontWeight:700}}>
+                          {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
         )}
+
+        {/* DAILY DEAL */}
+        {showFeatured&&dailyItem.price>0&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>DAILY DEAL</SectionHeader>
+            <div style={{borderRadius:20,overflow:"hidden",border:"2px solid rgba(212,168,67,0.5)",animation:"goldPulse 2.2s ease-in-out infinite",background:"rgba(20,14,2,0.95)",position:"relative"}}>
+              <div style={{background:"linear-gradient(90deg,rgba(212,168,67,0.18),rgba(212,168,67,0.06),rgba(212,168,67,0.18))",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(212,168,67,0.18)"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060",letterSpacing:3,fontWeight:900}}>⚡ TODAY ONLY</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(240,192,96,0.7)",letterSpacing:1}}>Resets in {timeLeft}</div>
+              </div>
+              <div style={{display:"flex",gap:14,padding:"14px 16px 16px",alignItems:"center"}}>
+                <div style={{flexShrink:0}}>
+                  {(function(){
+                    var th=CARD_THEMES[dailyItem.id]||CARD_THEMES.classic;
+                    return(
+                      <div style={{width:80,height:80,borderRadius:12,background:th.bg,border:"1.5px solid rgba(212,168,67,0.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:2,overflow:"hidden",position:"relative"}}>
+                        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 50% 50%,"+th.pat+" 0%,transparent 70%)"}}/>
+                        {[0,1].map(function(ci){return(
+                          <div key={ci} style={{transform:"rotate("+(ci===0?-7:7)+"deg)",zIndex:1}}>
+                            <Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={dailyItem.id}/>
+                          </div>
+                        );})}
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:"#f0c060",fontWeight:900,letterSpacing:1}}>{dailyItem.name}</div>
+                    <span style={{background:"#ef444422",border:"1px solid #ef444466",borderRadius:6,padding:"2px 8px",fontFamily:"Cinzel,serif",fontSize:8,color:"#ef4444",letterSpacing:1,fontWeight:700}}>40% OFF</span>
+                  </div>
+                  <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.65)",marginBottom:10}}>{dailyItem.desc}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div>
+                      <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"rgba(255,255,255,0.3)",textDecoration:"line-through",marginRight:8}}>🪙{dailyItem.price.toLocaleString()}</span>
+                      <span style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:"#f0c060"}}>🪙{dailyDiscountedPrice.toLocaleString()}</span>
+                    </div>
+                    {(function(){
+                      var owned=ownedItems.indexOf(dailyItem.id)>=0||dailyItem.price===0;
+                      var canAfford=coins>=dailyItem.price;
+                      return owned?(
+                        <button onClick={function(){audio.buttonClick();onEquipTheme(dailyItem.id);}} style={{flexShrink:0,padding:"8px 16px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:10,background:"rgba(212,168,67,0.15)",color:"#f0c060",cursor:"pointer",touchAction:"manipulation",fontWeight:700}}>{cardTheme===dailyItem.id?"✓ ON":"EQUIP"}</button>
+                      ):(
+                        <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(dailyItem);}} style={{flexShrink:0,padding:"8px 16px",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:1,border:canAfford?"1.5px solid rgba(212,168,67,0.5)":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,background:canAfford?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"rgba(255,255,255,0.04)",color:canAfford?"#f0c060":"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",fontWeight:900}}>BUY NOW</button>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NEW THIS WEEK */}
+        {showFeatured&&newItems.length>0&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>NEW THIS WEEK</SectionHeader>
+            <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",display:"flex",gap:10,paddingBottom:6,scrollbarWidth:"none"}}>
+              {newItems.map(function(item){
+                var th=CARD_THEMES[item.id]||CARD_THEMES.classic;
+                var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+                var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+                var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+                return(
+                  <div key={item.id} style={{flexShrink:0,width:160,borderRadius:14,overflow:"hidden",border:"1.5px solid "+rc+"44",background:"rgba(255,255,255,0.05)"}}>
+                    <div style={{height:70,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:4,position:"relative"}}>
+                      <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 50% 50%,"+th.pat+" 0%,transparent 65%)"}}/>
+                      <div style={{position:"absolute",top:6,left:6,background:"#22c55e",borderRadius:5,padding:"1px 5px",fontFamily:"Cinzel,serif",fontSize:6,color:"#fff",letterSpacing:1,fontWeight:700}}>NEW</div>
+                      {[0,1,2].map(function(ci){return(
+                        <div key={ci} style={{transform:"rotate("+(ci-1)*8+"deg) translateY("+(ci===1?-4:2)+"px)",zIndex:ci===1?2:1,position:"relative"}}>
+                          <Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/>
+                        </div>
+                      );})}
+                    </div>
+                    <div style={{padding:"8px 10px 10px"}}>
+                      <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#e8f0e8",fontWeight:900,letterSpacing:0.5,marginBottom:3}}>{item.name}</div>
+                      <span style={{background:rc+"22",border:"1px solid "+rc+"55",borderRadius:5,padding:"1px 5px",fontFamily:"Cinzel,serif",fontSize:6,color:rc,letterSpacing:0.8,fontWeight:700}}>{item.rarity}</span>
+                      <div style={{marginTop:8}}>
+                        {owned?(
+                          <button onClick={function(){audio.buttonClick();onEquipTheme(item.id);}} style={{width:"100%",padding:"6px",fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,border:"1px solid rgba(212,168,67,0.4)",borderRadius:8,background:"rgba(212,168,67,0.12)",color:"#f0c060",cursor:"pointer",touchAction:"manipulation",fontWeight:700}}>{cardTheme===item.id?"✓ ON":"EQUIP"}</button>
+                        ):(
+                          <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(item);}} style={{width:"100%",padding:"6px",fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:0.8,border:canAfford?"1px solid "+rc+"55":"1px solid rgba(255,255,255,0.1)",borderRadius:8,background:canAfford?rc+"18":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",fontWeight:700}}>
+                            {item.currency==="coins"?"🪙"+item.price.toLocaleString():"💎"+item.price}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* THEMES GRID */}
+        {showThemes&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>THEMES</SectionHeader>
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {SHOP_THEMES.map(function(item){return(<ThemeCard key={item.id} item={item}/>);})}
+            </div>
+          </div>
+        )}
+
+        {/* AVATARS GRID */}
+        {showAvatars&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>AVATARS</SectionHeader>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"rgba(255,255,255,0.55)",fontSize:13,textAlign:"center",marginBottom:12,lineHeight:1.5}}>Your avatar shows on the leaderboard and to other players in online games.</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+              {SHOP_AVATARS.map(function(item){return(<AvatarCard key={item.id} item={item}/>);})}
+            </div>
+          </div>
+        )}
+
+        {/* BUNDLES */}
+        {showBundles&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>BUNDLES</SectionHeader>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              {BUNDLES.map(function(item){return(<BundleCard key={item.id} item={item}/>);})}
+            </div>
+          </div>
+        )}
+
+        {/* CRATES */}
+        {showCrates&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>MYSTERY CRATES</SectionHeader>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
+              {CRATES.map(function(item){return(<CrateCard key={item.id} item={item}/>);})}
+            </div>
+          </div>
+        )}
+
       </div>
+
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={onEquipTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
