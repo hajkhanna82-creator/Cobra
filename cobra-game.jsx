@@ -1871,8 +1871,8 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
           <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#c0d8c0",lineHeight:1.4}}>{item.desc}</div>
           <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(255,255,255,0.4)",letterSpacing:1,marginTop:-2}}>??? MYSTERY CONTENTS</div>
           <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:10,color:"rgba(255,255,255,0.3)"}}>Contents are random</div>
-          <button onClick={function(){audio.buttonClick();if(canAfford)onBuy(item);}} style={{width:"100%",padding:"10px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 12px "+rc+"33":"none",marginTop:4}}>
-            {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price}
+          <button onClick={function(){if(!canAfford)return;audio.buttonClick();onBuy(item);}} disabled={!canAfford} style={{width:"100%",padding:"10px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,border:canAfford?"1.5px solid "+rc+"66":"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,cursor:canAfford?"pointer":"default",background:canAfford?"linear-gradient(135deg,"+rc+"22,"+rc+"11)":"rgba(255,255,255,0.04)",color:canAfford?rc:"rgba(255,255,255,0.3)",touchAction:"manipulation",fontWeight:900,boxShadow:canAfford?"0 0 12px "+rc+"33":"none",marginTop:4}}>
+            {item.currency==="coins"?"🪙 "+item.price.toLocaleString():"💎 "+item.price} OPEN
           </button>
         </div>
       </div>
@@ -2283,17 +2283,46 @@ export default function Cobra(){
   const addCoins=function(n){setCoins(function(c){var v=c+n;try{localStorage.setItem("cobra_coins",String(v));}catch(e){}return v;});};
   const addGems=function(n){setGems(function(g){var v=g+n;try{localStorage.setItem("cobra_gems",String(v));}catch(e){}return v;});};
 
+  const _buyLock=useRef(false);
   const buyItem=function(item){
+    if(_buyLock.current)return;
+    _buyLock.current=true;
+    setTimeout(function(){_buyLock.current=false;},1200);
+
     var cost=item.price;
     if(item.currency==="coins"){
-      if(coins<cost){pop("Not enough coins! Need 🪙"+cost.toLocaleString(),"error");return;}
+      if(coins<cost){pop("Not enough coins! Need 🪙"+cost.toLocaleString(),"error");_buyLock.current=false;return;}
       setCoins(function(v){var n=v-cost;try{localStorage.setItem("cobra_coins",String(n));}catch(e){}return n;});
     } else {
-      if(gems<cost){pop("Not enough gems! Need 💎"+cost,"error");return;}
+      if(gems<cost){pop("Not enough gems! Need 💎"+cost,"error");_buyLock.current=false;return;}
       setGems(function(v){var n=v-cost;try{localStorage.setItem("cobra_gems",String(n));}catch(e){}return n;});
     }
+
+    // Crate: pick random item from pool, add it, show reveal
+    if(item.id&&item.id.startsWith("crate_")&&item.pool){
+      var pool=item.pool;
+      var won=pool[Math.floor(Math.random()*pool.length)];
+      var wonTheme=SHOP_THEMES.find(function(t){return t.id===won;});
+      setOwnedItems(function(prev){
+        if(prev.indexOf(won)>=0)return prev; // already owned — no duplicate
+        var n=[...prev,won];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;
+      });
+      if(wonTheme){
+        setCardTheme(won);
+        try{localStorage.setItem("cobra_card_theme",won);}catch(e){}
+        pop("🎉 CRATE OPENED! You got: "+wonTheme.name+" theme!","success");
+      } else {
+        pop("🎉 CRATE OPENED! You got a rare reward!","success");
+      }
+      audio.achievement();
+      return;
+    }
+
     var itemId=item.id;
-    setOwnedItems(function(prev){var n=[...prev,itemId];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+    setOwnedItems(function(prev){
+      if(prev.indexOf(itemId)>=0)return prev;
+      var n=[...prev,itemId];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;
+    });
     if(item.isAvatar){
       var displayId=item.displayId||item.id.replace("av_","");
       setMyAvatar(displayId);
