@@ -2918,9 +2918,15 @@ export default function Cobra(){
     var rdeclarer=names[rd.declarerIdx]||"Player";
     var rdeclTotal=rtotals[rd.declarerIdx];
     var rdeclWon=rdeclTotal===rminT&&rtotals.filter(function(t){return t===rminT;}).length===1;
+    // Fire confetti on round win
+    if(rdeclWon&&confetti.length===0){
+      var rConf=[];for(var rci=0;rci<28;rci++){rConf.push({id:rci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24","#c084fc"][Math.floor(Math.random()*7)],size:Math.random()*6+4,delay:Math.random()*0.5,dur:Math.random()*1.2+1});}
+      setTimeout(function(){setConfetti(rConf);setTimeout(function(){setConfetti([]);},2800);},200);
+    }
     return(
       <div className="feltbg" style={{display:"flex",alignItems:"center",justifyContent:"center",padding:20,overflowY:"auto"}}>
         <style>{GS}</style>
+        {confetti.map(function(c){return(<div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>);})}
         <div style={{maxWidth:440,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
           <div style={{textAlign:"center",marginBottom:18}}>
             <div style={{fontSize:44,marginBottom:8}}>{rdeclWon?"👑":"🐍"}</div>
