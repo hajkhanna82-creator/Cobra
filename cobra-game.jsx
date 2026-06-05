@@ -13,7 +13,7 @@ const EMOJIS=["👀","🔥","😂","🐍","💀","😤","🤡","👑"];
 const AVATAR_EMOJIS=["😎","🤠","👑","🐍","🔥","💀","🎭","🃏"];
 const ACHIEVEMENTS=[
   // Gameplay wins
-  {id:"first_win",icon:"🏆",name:"First Victory",desc:"Win your first game",cat:"gameplay",goal:1,stat:"wins",reward:{coins:200,gems:0},title:null},
+  {id:"first_win",icon:"🏆",name:"First Victory",desc:"Win your first game",cat:"gameplay",goal:1,stat:"wins",reward:{coins:200,gems:0},title:"Rookie"},
   {id:"win_10",icon:"🥇",name:"Ten Down",desc:"Win 10 games",cat:"gameplay",goal:10,stat:"wins",reward:{coins:500,gems:2},title:"Challenger"},
   {id:"win_50",icon:"🎖️",name:"Half Century",desc:"Win 50 games",cat:"gameplay",goal:50,stat:"wins",reward:{coins:1500,gems:8},title:"Card Shark"},
   {id:"win_100",icon:"👑",name:"Century Club",desc:"Win 100 games",cat:"gameplay",goal:100,stat:"wins",reward:{coins:5000,gems:25},title:"Cobra Master"},
@@ -816,6 +816,45 @@ function AchievementBadge({ach,onDone}){
         <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2,marginBottom:2}}>ACHIEVEMENT</div>
         <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0e8d0",letterSpacing:1}}>{ach.name}</div>
         <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#8aaa8a",marginTop:1}}>{ach.desc}</div>
+      </div>
+    </div>
+  );
+}
+
+function TitleUnlockModal({title,onClose,onGoCollection}){
+  const [show,setShow]=useState(false);
+  useEffect(function(){var t=setTimeout(function(){setShow(true);},60);return function(){clearTimeout(t);};},[]);
+  var rc=RARITY_COLORS[title.rarity]||"#f0c060";
+  var rg=RARITY_GLOW[title.rarity]||"rgba(240,192,96,0.4)";
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.85)",backdropFilter:"blur(10px)",padding:"24px"}}>
+      <style>{`
+        @keyframes titleReveal{0%{transform:scale(0.4) rotate(-6deg);opacity:0}60%{transform:scale(1.08) rotate(1deg);opacity:1}80%{transform:scale(0.97)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+        @keyframes titleGlow{0%,100%{box-shadow:0 0 40px ${rg},0 0 80px ${rg}33}50%{box-shadow:0 0 60px ${rg},0 0 120px ${rg}55}}
+        @keyframes titleShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+      `}</style>
+      <div style={{maxWidth:320,width:"100%",textAlign:"center",animation:show?"titleReveal 0.6s cubic-bezier(.34,1.56,.64,1) both":"none"}}>
+        {/* Sparkle ring */}
+        <div style={{fontSize:48,marginBottom:12,filter:"drop-shadow(0 0 20px "+rc+"88)"}}>🎖️</div>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:4,color:"rgba(255,255,255,0.5)",marginBottom:8}}>TITLE UNLOCKED</div>
+        {/* Title card */}
+        <div style={{borderRadius:24,padding:"28px 32px",background:"linear-gradient(145deg,rgba(10,10,5,0.98),rgba(5,5,3,0.99))",border:"2px solid "+rc,boxShadow:"0 0 50px "+rg+", inset 0 1px 0 rgba(255,255,255,0.07)",animation:"titleGlow 2s ease-in-out infinite",marginBottom:20}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:26,fontWeight:900,letterSpacing:3,color:rc,textShadow:"0 0 20px "+rc,background:"linear-gradient(90deg,"+rc+",#ffffff,"+rc+")",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",backgroundSize:"200% auto",animation:"titleShimmer 3s linear infinite",marginBottom:10}}>
+            {title.name}
+          </div>
+          <div style={{display:"inline-block",background:rc+"22",border:"1px solid "+rc+"55",borderRadius:8,padding:"4px 14px",fontFamily:"Cinzel,serif",fontSize:9,color:rc,letterSpacing:2}}>
+            {title.rarity.toUpperCase()}
+          </div>
+        </div>
+        {/* Buttons */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <button onClick={function(){audio.buttonClick();onGoCollection();}} style={{width:"100%",padding:"14px",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,background:"linear-gradient(135deg,#c49030,#f0c060)",border:"none",borderRadius:14,color:"#010603",cursor:"pointer",touchAction:"manipulation",fontWeight:900,boxShadow:"0 4px 20px rgba(212,168,67,0.5)"}}>
+            📚 GO TO COLLECTION
+          </button>
+          <button onClick={function(){audio.buttonClick();onClose();}} style={{width:"100%",padding:"12px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,background:"rgba(255,255,255,0.06)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:14,color:"rgba(255,255,255,0.7)",cursor:"pointer",touchAction:"manipulation"}}>
+            CLOSE
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -2332,6 +2371,7 @@ export default function Cobra(){
   const [tutorialDone,setTutorialDone]=useState(function(){try{return localStorage.getItem("cobra_tutorial_done")==="1";}catch(e){return false;}});
   const [tutorialStep,setTutorialStep]=useState(-1);
   const [earnedAch,setEarnedAch]=useState(null);
+  const [titleUnlock,setTitleUnlock]=useState(null); // title object being shown
   const [unlockedAchs,setUnlockedAchs]=useState(function(){try{var a=localStorage.getItem("cobra_achs");return a?JSON.parse(a):[];}catch(e){return[];}});
   const [emojis,setEmojis]=useState([]);
   const [confetti,setConfetti]=useState([]);
@@ -2762,7 +2802,9 @@ export default function Cobra(){
     setUnlockedTitles(function(prev){
       if(prev.indexOf(titleId)>=0)return prev;
       var n=[...prev,titleId];try{localStorage.setItem("cobra_titles",JSON.stringify(n));}catch(e){}
-      pop("Title unlocked: "+titleId.replace(/_/g," ")+" 🎖️","success",2500);
+      // Show full-screen title unlock modal
+      var titleObj=TITLES.find(function(t){return t.id===titleId;});
+      if(titleObj){setTimeout(function(){setTitleUnlock(titleObj);audio.levelUp&&audio.levelUp();},400);}
       return n;
     });
   };
@@ -4294,6 +4336,7 @@ export default function Cobra(){
       <TableParticles/>
       {showTutorial&&<Tutorial onDone={function(){setShowTutorial(false);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}}/>}
       {earnedAch&&<AchievementBadge ach={earnedAch} onDone={function(){setEarnedAch(null);}}/>}
+      {titleUnlock&&<TitleUnlockModal title={titleUnlock} onClose={function(){setTitleUnlock(null);}} onGoCollection={function(){setTitleUnlock(null);goScreen("collection");}}/>}
       {emojis.map(function(e){return(<EmojiFloat key={e.id} emoji={e.emoji} x={e.x} y={e.y}/>);})}
       {confetti.map(function(c){return(
         <div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>
