@@ -2759,6 +2759,27 @@ export default function Cobra(){
     if(!ach)return;
     setUnlockedAchs(function(p){var n=[...p,id];try{localStorage.setItem("cobra_achs",JSON.stringify(n));}catch(e){}return n;});
     setEarnedAch(ach);audio.achievement();
+    // Auto-claim: give rewards and unlock title/frame immediately
+    setClaimedAchs(function(prev){
+      if(prev.indexOf(id)>=0)return prev;
+      var n=[...prev,id];try{localStorage.setItem("cobra_claimed_achs",JSON.stringify(n));}catch(e){}return n;
+    });
+    if(ach.reward&&ach.reward.coins)addCoins(ach.reward.coins);
+    if(ach.reward&&ach.reward.gems)addGems(ach.reward.gems);
+    if(ach.title){
+      var titleId=ach.title.toLowerCase().replace(/ /g,"_");
+      setUnlockedTitles(function(prev){
+        if(prev.indexOf(titleId)>=0)return prev;
+        var n=[...prev,titleId];try{localStorage.setItem("cobra_titles",JSON.stringify(n));}catch(e){}
+        var titleObj=TITLES.find(function(t){return t.id===titleId;});
+        if(titleObj){setTimeout(function(){setTitleUnlock(titleObj);audio.levelUp&&audio.levelUp();},600);}
+        return n;
+      });
+    }
+    if(id==="win_50")setUnlockedFrames(function(prev){if(prev.indexOf("emerald")>=0)return prev;var n=[...prev,"emerald"];try{localStorage.setItem("cobra_frames",JSON.stringify(n));}catch(e){}return n;});
+    if(id==="cobra_10")setUnlockedFrames(function(prev){if(prev.indexOf("cobra")>=0)return prev;var n=[...prev,"cobra"];try{localStorage.setItem("cobra_frames",JSON.stringify(n));}catch(e){}return n;});
+    if(id==="win_100")setUnlockedFrames(function(prev){if(prev.indexOf("diamond")>=0)return prev;var n=[...prev,"diamond"];try{localStorage.setItem("cobra_frames",JSON.stringify(n));}catch(e){}return n;});
+    if(id==="streak_10")setUnlockedFrames(function(prev){if(prev.indexOf("champion")>=0)return prev;var n=[...prev,"champion"];try{localStorage.setItem("cobra_frames",JSON.stringify(n));}catch(e){}return n;});
   }
 
   // Generate missions for today/this week
