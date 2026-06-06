@@ -925,34 +925,24 @@ function TableParticles(){
 }
 
 function SplashScreen({onDone}){
-  const [phase,setPhase]=useState(0);// 0=logo in, 1=pulse, 2=text in, 3=fade out
   useEffect(function(){
-    var t1=setTimeout(function(){setPhase(1);},400);
-    var t2=setTimeout(function(){setPhase(2);},900);
-    var t3=setTimeout(function(){setPhase(3);},2100);
-    var t4=setTimeout(onDone,2700);
-    return function(){clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);clearTimeout(t4);};
+    var t=setTimeout(onDone,2200);
+    return function(){clearTimeout(t);};
   },[]);
   return(
-    <div style={{position:"fixed",inset:0,background:"#010603",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:9999,overflow:"hidden",opacity:phase===3?0:1,transition:phase===3?"opacity 0.55s ease":"none"}}>
-      {/* radial glow behind logo */}
-      <div style={{position:"absolute",width:420,height:420,borderRadius:"50%",background:"radial-gradient(circle,rgba(212,168,67,0.13) 0%,transparent 70%)",transform:phase>=1?"scale(1)":"scale(0)",transition:"transform 0.8s ease",pointerEvents:"none"}}/>
-      {/* cobra SVG logo */}
-      <div style={{transform:phase>=1?"translateY(0) scale(1)":"translateY(40px) scale(0.7)",opacity:phase>=1?1:0,transition:"transform 0.55s cubic-bezier(.22,1.4,.36,1), opacity 0.45s ease",marginBottom:32}}>
-        <img src="/favicon.svg" alt="COBRA" style={{width:160,height:160,filter:"drop-shadow(0 0 28px rgba(212,168,67,0.5))",animation:phase>=1?"cobraFloat 3s ease-in-out infinite":"none"}}/>
+    <div style={{position:"fixed",inset:0,background:"#010603",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:9999,animation:"fadeIn 0.3s ease"}}>
+      <div style={{animation:"splashPop 0.6s cubic-bezier(.22,1.4,.36,1) both"}}>
+        <div style={{marginBottom:16,animation:"float 2s ease-in-out infinite"}}>
+          <span style={{fontSize:90,lineHeight:1,display:"block",textAlign:"center"}}>🐍</span>
+        </div>
+        <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:12,background:"linear-gradient(175deg,#f4cc52,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",textAlign:"center",marginBottom:8}}>COBRA</h1>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:16,letterSpacing:6,textAlign:"center"}}>the ultimate card game</p>
       </div>
-      {/* title */}
-      <div style={{transform:phase>=2?"translateY(0)":"translateY(20px)",opacity:phase>=2?1:0,transition:"transform 0.5s cubic-bezier(.22,1,.36,1), opacity 0.45s ease",textAlign:"center"}}>
-        <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:14,background:"linear-gradient(175deg,#f5d070,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:8,lineHeight:1}}>COBRA</h1>
-        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:6}}>the ultimate card game</p>
-      </div>
-      {/* loading dots */}
-      <div style={{position:"absolute",bottom:"calc(60px + env(safe-area-inset-bottom))",display:"flex",gap:7,opacity:phase>=2?1:0,transition:"opacity 0.4s ease"}}>
+      <div style={{position:"absolute",bottom:"calc(60px + env(safe-area-inset-bottom))",display:"flex",gap:6}}>
         {[0,1,2].map(function(i){return(
-          <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",opacity:0.7,animation:"thinkDot 1.2s ease-in-out infinite",animationDelay:(i*0.22)+"s"}}/>
+          <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#d4a843",opacity:0.6,animation:"thinkDot 1.2s ease-in-out infinite",animationDelay:(i*0.2)+"s"}}/>
         );})}
       </div>
-      <style>{`@keyframes cobraFloat{0%,100%{transform:translateY(0px);}50%{transform:translateY(-10px);}}`}</style>
     </div>
   );
 }
