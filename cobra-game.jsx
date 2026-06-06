@@ -109,12 +109,12 @@ function seqLabel(cards){
 const audio={
   _ctx:null,_master:null,_bgGain:null,_sfxGain:null,
   _muted:false,_musicMuted:false,_bgNodes:[],_ready:false,_arpTimer:null,
-  init(existingCtx){
+  init(){
     if(this._ready)return;
     try{
       try{this._muted=localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){}
       try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
-      const ctx=existingCtx||new(window.AudioContext||window.webkitAudioContext)();
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
@@ -920,6 +920,47 @@ function TableParticles(){
       {particles.map(function(p){return(
         <div key={p.id} style={{position:"absolute",top:p.top+"%",left:p.left+"%",width:p.sz,height:p.sz,borderRadius:"50%",background:p.color,animation:"particleFloat "+p.dur+"s "+p.delay+"s ease-in-out infinite"}}/>
       );})}
+    </div>
+  );
+}
+
+function DailyLoginModal({data,onClose}){
+  var days=["MON","TUE","WED","THU","FRI","SAT","SUN"];
+  var rewards=[
+    {coins:100,gems:0},{coins:150,gems:0},{coins:200,gems:1},
+    {coins:250,gems:1},{coins:300,gems:2},{coins:400,gems:2},{coins:500,gems:5}
+  ];
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:24,padding:"28px 24px",width:"100%",maxWidth:360,animation:"slideUp 0.4s cubic-bezier(.22,1,.36,1) both"}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:48,marginBottom:8}}>🎁</div>
+          <h2 style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,color:"#f0c060",letterSpacing:4,marginBottom:4}}>DAILY BONUS</h2>
+          <p style={{fontFamily:"Crimson Text,serif",color:"#7a9a7e",fontSize:14,fontStyle:"italic"}}>Day {data.streak} login streak</p>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:20}}>
+          {days.map(function(d,i){
+            var done=i<data.day;
+            var active=i===data.day;
+            var r=rewards[i];
+            return(
+              <div key={i} style={{background:active?"rgba(212,168,67,0.2)":done?"rgba(74,222,128,0.08)":"rgba(255,255,255,0.03)",border:active?"1.5px solid rgba(212,168,67,0.7)":done?"1px solid rgba(74,222,128,0.3)":"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"6px 2px",textAlign:"center"}}>
+                <div style={{fontSize:9,fontFamily:"Cinzel,serif",color:active?"#f0c060":done?"#4ade80":"#4a6a4e",letterSpacing:1,marginBottom:3}}>{d}</div>
+                <div style={{fontSize:14}}>{done?"✅":active?"⭐":r.gems>0?"💎":"🪙"}</div>
+                <div style={{fontSize:8,color:active?"#f0c060":done?"#4ade80":"#4a6a4e",fontFamily:"Cinzel,serif",marginTop:2}}>{r.gems>0?"+"+r.gems+"💎":"+"+r.coins}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:14,padding:"14px",textAlign:"center",marginBottom:18}}>
+          <p style={{fontFamily:"Crimson Text,serif",color:"#a09060",fontSize:13,marginBottom:6}}>Today's reward</p>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16}}>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:22,color:"#f0c060"}}>🪙 +{data.coins}</span>
+            {data.gems>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:22,color:"#60c8f0"}}>💎 +{data.gems}</span>}
+          </div>
+        </div>
+        <button onClick={onClose} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#d4a843,#a87020)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:15,fontWeight:700,color:"#010603",letterSpacing:3,cursor:"pointer"}}>CLAIM</button>
+      </div>
     </div>
   );
 }
@@ -2417,6 +2458,7 @@ export default function Cobra(){
   const [installPrompt,setInstallPrompt]=useState(null);
   const [installDismissed,setInstallDismissed]=useState(function(){try{return localStorage.getItem("cobra_install_dismissed")==="1";}catch(e){return false;}});
   const [showQR,setShowQR]=useState(false);
+  const [dailyLoginData,setDailyLoginData]=useState(null); // {day, coins, gems, streak}
   const [qrDataUrl,setQrDataUrl]=useState("");
   const [elimAnim,setElimAnim]=useState(null); // {name, idx}
   const [cardTheme,setCardTheme]=useState(function(){try{return localStorage.getItem("cobra_card_theme")||"classic";}catch(e){return"classic";}});
@@ -2485,6 +2527,26 @@ export default function Cobra(){
   useEffect(function(){modeRef.current=mode;},[mode]);
   useEffect(function(){roomCodeRef.current=roomCode;},[roomCode]);
   useEffect(function(){screenRef.current=screen;},[screen]);
+  useEffect(function(){
+    try{
+      var today=Math.floor(Date.now()/(1000*60*60*24));
+      var last=parseInt(localStorage.getItem("cobra_last_login")||"0");
+      var loginStreak=parseInt(localStorage.getItem("cobra_login_streak")||"0");
+      if(today===last)return;
+      var newStreak=today===last+1?loginStreak+1:1;
+      var day=(newStreak-1)%7;
+      var rewards=[
+        {coins:100,gems:0},{coins:150,gems:0},{coins:200,gems:1},
+        {coins:250,gems:1},{coins:300,gems:2},{coins:400,gems:2},{coins:500,gems:5}
+      ];
+      var reward=rewards[day];
+      localStorage.setItem("cobra_last_login",today.toString());
+      localStorage.setItem("cobra_login_streak",newStreak.toString());
+      setCoins(function(c){var n=c+reward.coins;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
+      if(reward.gems>0)setGems(function(g){var n=g+reward.gems;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
+      setTimeout(function(){setDailyLoginData({day:day,coins:reward.coins,gems:reward.gems,streak:newStreak});},2800);
+    }catch(e){}
+  },[]);
   const H=myIdx;
 
   const xpForLevel=function(lvl){return lvl*100;};
@@ -2692,22 +2754,15 @@ export default function Cobra(){
     if(audioInit.current)return;
     audioInit.current=true;
     try{
-      var ctx=new(window.AudioContext||window.webkitAudioContext)();
-      // iOS silent mode bypass: play a tiny inaudible noise buffer through the SAME
-      // AudioContext we'll use for the game. This switches the iOS audio session from
-      // "ambient" (ringer-controlled) to "playback" (ignores the silent switch).
-      // Reusing the same ctx is critical — creating a new one after closing this would
-      // revert the session back to ambient.
-      var buf=ctx.createBuffer(1,ctx.sampleRate*0.1,ctx.sampleRate);
-      var data=buf.getChannelData(0);
-      for(var i=0;i<data.length;i++){data[i]=(Math.random()*2-1)*0.0001;}
-      var src=ctx.createBufferSource();
-      src.buffer=buf;
-      src.connect(ctx.destination);
-      src.start(0);
-      src.onended=function(){
-        audio.init(ctx);
-      };
+      var WAV_B64="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";
+      var unlockAudio=new window.Audio("data:audio/wav;base64,"+WAV_B64);
+      unlockAudio.volume=0.001;
+      unlockAudio.addEventListener("ended",function(){
+        audio.init();
+      });
+      unlockAudio.play().catch(function(){
+        audio.init();
+      });
     }catch(e){
       audio.init();
     }
@@ -3439,13 +3494,7 @@ export default function Cobra(){
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
         {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}
-          onClick={function(){
-            audio.init();audio.resume();
-            var state=audio._ctx?audio._ctx.state:"no ctx";
-            var nodes=audio._bgNodes?audio._bgNodes.length:0;
-            var muted=audio._muted;var mMusic=audio._musicMuted;
-            alert("Audio ctx: "+state+"\nBG nodes: "+nodes+"\nSFX muted: "+muted+"\nMusic muted: "+mMusic+"\nReady: "+audio._ready);
-          }}>
+          onClick={function(){audio.init();audio.resume();}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>v2.0 PREMIUM</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:12,justifyContent:"center",marginBottom:24}}>
@@ -4733,6 +4782,7 @@ export default function Cobra(){
           onSkip={function(){setTutorialStep(-1);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}}
         />
       )}
+      {dailyLoginData&&<DailyLoginModal data={dailyLoginData} onClose={function(){setDailyLoginData(null);}}/>}
     </div>
   );
 }
