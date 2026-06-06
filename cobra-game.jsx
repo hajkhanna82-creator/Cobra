@@ -4471,7 +4471,7 @@ export default function Cobra(){
       )}
       {/* CPU play toast */}
       {showCpuPlay&&lastCpuPlay&&(
-        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:140,pointerEvents:"none",background:"rgba(10,20,10,0.92)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"10px 20px",boxShadow:"0 4px 20px rgba(0,0,0,0.5)",whiteSpace:"nowrap",animation:"slideUp 0.2s ease"}}>
+        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:140,pointerEvents:"none",background:"rgba(10,20,10,0.92)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"10px 20px",boxShadow:"0 4px 20px rgba(0,0,0,0.5)",whiteSpace:"nowrap",animation:"toastIn 0.35s cubic-bezier(.22,1,.36,1) both"}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#9ca3af",letterSpacing:1}}>{lastCpuPlay.player} played </span>
           <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",fontWeight:700,letterSpacing:1}}>{lastCpuPlay.seq}</span>
         </div>
