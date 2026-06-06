@@ -117,22 +117,23 @@ const audio={
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
-      // iOS silent mode bypass: route through MediaStreamDestination → DOM audio element
-      // so iOS uses the "playback" session (ignores ringer switch).
-      // On iOS we skip connecting to ctx.destination to avoid playing audio twice.
-      var usedStream=false;
-      try{
-        var streamDest=ctx.createMediaStreamDestination();
-        this._master.connect(streamDest);
-        var keeper=document.getElementById("_cobra_keeper");
-        if(!keeper){keeper=document.createElement("audio");keeper.id="_cobra_keeper";keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";document.body.appendChild(keeper);}
-        keeper.srcObject=streamDest.stream;
-        keeper.volume=1;
-        this._htmlAudio=keeper;
-        keeper.play().catch(function(){});
-        usedStream=true;
-      }catch(e){}
-      if(!usedStream){this._master.connect(ctx.destination);}
+      var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+      if(isIOS){
+        // iOS: route through MediaStreamDestination → DOM audio element to bypass ringer switch.
+        // Don't connect to ctx.destination or sound plays twice.
+        try{
+          var streamDest=ctx.createMediaStreamDestination();
+          this._master.connect(streamDest);
+          var keeper=document.getElementById("_cobra_keeper");
+          if(!keeper){keeper=document.createElement("audio");keeper.id="_cobra_keeper";keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";document.body.appendChild(keeper);}
+          keeper.srcObject=streamDest.stream;
+          keeper.volume=1;
+          this._htmlAudio=keeper;
+          keeper.play().catch(function(){});
+        }catch(e){this._master.connect(ctx.destination);}
+      }else{
+        this._master.connect(ctx.destination);
+      }
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
       this._ready=true;
