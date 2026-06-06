@@ -234,7 +234,24 @@ const audio={
   cardDeal(){this._sweep(280,1500,0.14,0.15);this._noise(0.1,0.12,6000);},
   cardPickup(){this._sweep(900,280,0.1,0.15);},
   cardSelect(){this._tone(1000,"sine",0.08,0.06,0);this._tone(1300,"sine",0.05,0.04,0.012);},
-  cardPlay(){this._sweep(200,600,0.15,0.09);},
+  cardPlay(){
+    try{
+      if(!this._ctx||this._muted)return;
+      const ctx=this._ctx,now=ctx.currentTime;
+      // Swoosh: fast high→low sweep + filtered noise burst
+      const o=ctx.createOscillator(),og=ctx.createGain();
+      o.type="sine";o.frequency.setValueAtTime(1800,now);o.frequency.exponentialRampToValueAtTime(180,now+0.22);
+      og.gain.setValueAtTime(0.0001,now);og.gain.linearRampToValueAtTime(0.18,now+0.01);og.gain.exponentialRampToValueAtTime(0.0001,now+0.22);
+      o.connect(og);og.connect(this._sfxGain);o.start(now);o.stop(now+0.25);
+      // Noise whoosh layer
+      const buf=ctx.createBuffer(1,ctx.sampleRate*0.2,ctx.sampleRate);
+      const d=buf.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1);
+      const src=ctx.createBufferSource(),filt=ctx.createBiquadFilter(),ng=ctx.createGain();
+      src.buffer=buf;filt.type="bandpass";filt.frequency.setValueAtTime(3000,now);filt.frequency.exponentialRampToValueAtTime(400,now+0.2);filt.Q.value=1.2;
+      ng.gain.setValueAtTime(0.0001,now);ng.gain.linearRampToValueAtTime(0.22,now+0.015);ng.gain.exponentialRampToValueAtTime(0.0001,now+0.2);
+      src.connect(filt);filt.connect(ng);ng.connect(this._sfxGain);src.start(now);
+    }catch(e){}
+  },
   declare(){[261,329,392,523].forEach((f,i)=>this._tone(f,"sine",0.17,0.55,i*0.065));},
   cobraStrike(){this._sweep(500,60,0.22,0.45);this._noise(0.15,0.3,2000);},
   win(){[523,659,784,1047].forEach((f,i)=>this._tone(f,"sine",0.18,0.45,i*0.1));this._tone(1047,"triangle",0.12,0.7,0.4);},
