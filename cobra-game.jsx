@@ -117,13 +117,23 @@ const audio={
       try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
+      // iOS: must resume immediately inside the user gesture that called init()
+      if(ctx.state==="suspended"){ctx.resume().catch(function(){});}
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
       this._ready=true;this._startBg();
     }catch(e){}
   },
-  resume(){if(this._ctx&&this._ctx.state==="suspended")this._ctx.resume();},
+  resume(){
+    if(!this._ctx)return;
+    if(this._ctx.state==="suspended"){
+      this._ctx.resume().then(function(){
+        // After iOS unlocks the context, restart bg music if it should be playing
+        if(!audio._musicMuted&&(!audio._bgNodes||audio._bgNodes.length===0)){audio._startBg();}
+      }).catch(function(){});
+    }
+  },
   _startBg(){
     if(!this._ctx||this._musicMuted)return;
     const ctx=this._ctx;
@@ -2669,7 +2679,13 @@ export default function Cobra(){
   const initAudio=useCallback(function(){
     if(audioInit.current)return;
     audioInit.current=true;
-    audio.init();audio.resume();
+    audio.init();
+    // iOS: resume must happen synchronously inside the gesture
+    if(audio._ctx&&audio._ctx.state==="suspended"){
+      audio._ctx.resume().then(function(){
+        if(!audio._musicMuted&&(!audio._bgNodes||audio._bgNodes.length===0))audio._startBg();
+      }).catch(function(){});
+    }
   },[]);
 
   useEffect(function(){
