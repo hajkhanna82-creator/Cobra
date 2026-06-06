@@ -3413,7 +3413,14 @@ export default function Cobra(){
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
         {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
-        <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}>
+        <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}
+          onClick={function(){
+            audio.init();audio.resume();
+            var state=audio._ctx?audio._ctx.state:"no ctx";
+            var nodes=audio._bgNodes?audio._bgNodes.length:0;
+            var muted=audio._muted;var mMusic=audio._musicMuted;
+            alert("Audio ctx: "+state+"\nBG nodes: "+nodes+"\nSFX muted: "+muted+"\nMusic muted: "+mMusic+"\nReady: "+audio._ready);
+          }}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>v2.0 PREMIUM</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:12,justifyContent:"center",marginBottom:24}}>
