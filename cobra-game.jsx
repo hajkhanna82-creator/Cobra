@@ -2691,7 +2691,23 @@ export default function Cobra(){
   const initAudio=useCallback(function(){
     if(audioInit.current)return;
     audioInit.current=true;
-    audio.init(); // init() handles resume + _startBg in correct order for iOS
+    // Play a silent MP3 first — this switches iOS from ringer to media volume
+    // so audio works even when the phone is on silent mode
+    try{
+      var silentAudio=new window.Audio("/silent.mp3");
+      silentAudio.volume=0.001;
+      silentAudio.play().then(function(){
+        silentAudio.pause();
+        audio.init();
+        if(audio._ctx&&audio._ctx.state!=="running"){audio._ctx.resume().catch(function(){});}
+      }).catch(function(){
+        // Fallback if silent.mp3 fails
+        audio.init();
+        if(audio._ctx&&audio._ctx.state!=="running"){audio._ctx.resume().catch(function(){});}
+      });
+    }catch(e){
+      audio.init();
+    }
   },[]);
 
   useEffect(function(){
