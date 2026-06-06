@@ -252,9 +252,50 @@ const audio={
       src.connect(filt);filt.connect(ng);ng.connect(this._sfxGain);src.start(now);
     }catch(e){}
   },
-  declare(){[261,329,392,523].forEach((f,i)=>this._tone(f,"sine",0.17,0.55,i*0.065));},
-  cobraStrike(){this._sweep(500,60,0.22,0.45);this._noise(0.15,0.3,2000);},
-  win(){[523,659,784,1047].forEach((f,i)=>this._tone(f,"sine",0.18,0.45,i*0.1));this._tone(1047,"triangle",0.12,0.7,0.4);},
+  declare(){
+    try{
+      if(!this._ctx||this._muted)return;
+      const ctx=this._ctx,now=ctx.currentTime;
+      // Rising triumphant arpeggio
+      [[261.6,0],[329.6,0.08],[392,0.16],[523.2,0.25],[659.2,0.36]].forEach(function([f,t]){
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="triangle";o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,now+t);g.gain.linearRampToValueAtTime(0.16,now+t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.35);
+        o.connect(g);g.connect(this._sfxGain);o.start(now+t);o.stop(now+t+0.4);
+      }.bind(this));
+    }catch(e){}
+  },
+  cobraStrike(){
+    try{
+      if(!this._ctx||this._muted)return;
+      const ctx=this._ctx,now=ctx.currentTime;
+      // Deep thud + descending alarm
+      this._sweep(800,40,0.3,0.4);
+      this._noise(0.2,0.3,800);
+      // Alarm blips
+      [0,0.15,0.30].forEach(function(t){
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="sawtooth";o.frequency.value=440;
+        g.gain.setValueAtTime(0.0001,now+t);g.gain.linearRampToValueAtTime(0.12,now+t+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.1);
+        o.connect(g);g.connect(this._sfxGain);o.start(now+t);o.stop(now+t+0.12);
+      }.bind(this));
+    }catch(e){}
+  },
+  win(){
+    try{
+      if(!this._ctx||this._muted)return;
+      const ctx=this._ctx,now=ctx.currentTime;
+      [[523.2,0,0.18],[659.2,0.1,0.16],[783.9,0.2,0.14],[1046.5,0.3,0.22],[783.9,0.45,0.12],[1046.5,0.55,0.28]].forEach(function([f,t,v]){
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="sine";o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,now+t);g.gain.linearRampToValueAtTime(v,now+t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.5);
+        o.connect(g);g.connect(this._sfxGain);o.start(now+t);o.stop(now+t+0.55);
+      }.bind(this));
+    }catch(e){}
+  },
   turnChange(){this._tone(520,"sine",0.06,0.1,0);},
   timerTick(){this._tone(800,"sine",0.04,0.05,0);},
   timerUrgent(){this._tone(1000,"sine",0.1,0.07,0);},
@@ -276,15 +317,16 @@ const audio={
 };
 
 const haptic={
-  light(){try{if(navigator.vibrate)navigator.vibrate(10);}catch(e){}},
-  medium(){try{if(navigator.vibrate)navigator.vibrate(25);}catch(e){}},
+  light(){try{if(navigator.vibrate)navigator.vibrate(12);}catch(e){}},
+  medium(){try{if(navigator.vibrate)navigator.vibrate(40);}catch(e){}},
   heavy(){try{if(navigator.vibrate)navigator.vibrate(60);}catch(e){}},
-  success(){try{if(navigator.vibrate)navigator.vibrate([10,5,20]);}catch(e){}},
+  success(){try{if(navigator.vibrate)navigator.vibrate([30,20,60,20,100]);}catch(e){}},
   error(){try{if(navigator.vibrate)navigator.vibrate([50,20,50]);}catch(e){}},
-  cardPlay(){try{if(navigator.vibrate)navigator.vibrate([15,5,10]);}catch(e){}},
-  declare(){try{if(navigator.vibrate)navigator.vibrate([20,10,20,10,40]);}catch(e){}},
-  cobra(){try{if(navigator.vibrate)navigator.vibrate([80,30,80]);}catch(e){}},
-  win(){try{if(navigator.vibrate)navigator.vibrate([10,5,10,5,10,5,40]);}catch(e){}},
+  cardPlay(){try{if(navigator.vibrate)navigator.vibrate([25,8,15]);}catch(e){}},
+  cardPickup(){try{if(navigator.vibrate)navigator.vibrate([12]);}catch(e){}},
+  declare(){try{if(navigator.vibrate)navigator.vibrate([20,10,20,10,60]);}catch(e){}},
+  cobra(){try{if(navigator.vibrate)navigator.vibrate([100,30,100,30,200]);}catch(e){}},
+  win(){try{if(navigator.vibrate)navigator.vibrate([30,20,60,20,100]);}catch(e){}},
 };
 
 // saveRoom / loadRoom now delegate to Supabase (see src/useRoom.js)
@@ -480,7 +522,8 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
   const red=card&&isRed(card);
   const D={xs:{w:32,h:46,fs:7.5,su:13,r:5},sm:{w:44,h:63,fs:10,su:18,r:6},md:{w:58,h:84,fs:13,su:25,r:8},lg:{w:68,h:98,fs:15,su:30,r:10}};
   const d=D[size]||D.md;
-  const sc=red?"#b91c1c":"#1a1a2e";
+  const isFace=card&&["J","Q","K","A"].includes(card.value);
+  const sc=red?"#e85555":"#e8f0e8";
   const lift=selected?-18:hov&&clickable?-4:0;
   const sc2=selected?1.08:hov&&clickable?1.02:1;
   const base={width:d.w,height:d.h,borderRadius:d.r,flexShrink:0,position:"relative",
@@ -513,22 +556,23 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
         cursor:base.cursor,transform:base.transform,transition:base.transition,opacity:base.opacity,
         userSelect:"none",overflow:"hidden",animationDelay:base.animationDelay,
         WebkitTapHighlightColor:"transparent",touchAction:"manipulation",
-        background:"linear-gradient(165deg,#fefdf6,#faf7e5 55%,#f2ecd0)",
-        border:selected?"2.5px solid #d4a843":glow?"2px solid #4ade80":hov&&clickable?"1.5px solid rgba(212,168,67,0.4)":"1.5px solid rgba(0,0,0,0.15)",
-        boxShadow:selected?"0 0 24px rgba(212,168,67,0.6),0 14px 32px rgba(0,0,0,0.75),inset 0 1px 0 rgba(255,255,255,0.95)":glow?"0 0 20px rgba(74,222,128,0.45),0 6px 20px rgba(0,0,0,0.55)":hov&&clickable?"0 10px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.95)":"0 5px 18px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.95)",
+        background:isFace?"linear-gradient(135deg,#1e2a10,#141e0a)":"linear-gradient(135deg,#1a2e1a,#0d1a0d)",
+        border:selected?"2.5px solid #d4a843":glow?"2px solid #4ade80":isFace?"1.5px solid rgba(212,168,67,0.35)":hov&&clickable?"1.5px solid rgba(212,168,67,0.25)":"1.5px solid rgba(255,255,255,0.08)",
+        boxShadow:selected?"0 0 24px rgba(212,168,67,0.6),0 14px 32px rgba(0,0,0,0.75)":glow?"0 0 20px rgba(74,222,128,0.45),0 6px 20px rgba(0,0,0,0.55)":hov&&clickable?"0 10px 24px rgba(0,0,0,0.55)":"0 5px 18px rgba(0,0,0,0.5)",
         display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",
         padding:Math.round(d.fs*0.38)+"px "+Math.round(d.fs*0.34)+"px"}}>
+      {isFace&&<div style={{position:"absolute",inset:3,borderRadius:d.r-2,border:"1px solid rgba(212,168,67,0.18)",pointerEvents:"none",zIndex:0}}/>}
       <div style={{alignSelf:"flex-start",lineHeight:1,zIndex:1}}>
-        <div style={{fontSize:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1}}>{card.value}</div>
+        <div style={{fontSize:isFace?d.fs*1.15:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1,textShadow:red?"0 0 8px rgba(232,85,85,0.4)":"0 0 8px rgba(232,240,232,0.25)"}}>{card.value}</div>
         <div style={{fontSize:d.fs*0.82,color:sc,lineHeight:1.1}}>{card.suit}</div>
       </div>
-      <div style={{fontSize:d.su,color:sc,lineHeight:1,zIndex:1,transition:"filter 0.2s",filter:selected?"drop-shadow(0 0 6px "+(red?"rgba(185,28,28,0.6)":"rgba(26,26,70,0.5)")+")":glow?"drop-shadow(0 0 6px rgba(74,222,128,0.7))":"none"}}>{card.suit}</div>
+      <div style={{fontSize:isFace?d.su*1.18:d.su,color:sc,lineHeight:1,zIndex:1,transition:"filter 0.2s",filter:selected?"drop-shadow(0 0 8px "+(red?"rgba(232,85,85,0.7)":"rgba(232,240,232,0.5)")+")":glow?"drop-shadow(0 0 6px rgba(74,222,128,0.7))":isFace?"drop-shadow(0 0 6px "+(red?"rgba(232,85,85,0.35)":"rgba(212,168,67,0.3)")+")":"none"}}>{card.suit}</div>
       <div style={{alignSelf:"flex-end",transform:"rotate(180deg)",lineHeight:1,zIndex:1}}>
-        <div style={{fontSize:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1}}>{card.value}</div>
+        <div style={{fontSize:isFace?d.fs*1.15:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1,textShadow:red?"0 0 8px rgba(232,85,85,0.4)":"0 0 8px rgba(232,240,232,0.25)"}}>{card.value}</div>
         <div style={{fontSize:d.fs*0.82,color:sc,lineHeight:1.1}}>{card.suit}</div>
       </div>
       {selected&&<div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"rgba(212,168,67,0.08)",borderRadius:d.r-1,pointerEvents:"none"}}/>}
-      <div style={{position:"absolute",top:0,left:0,right:0,height:"40%",background:"linear-gradient(180deg,rgba(255,255,255,0.55)0%,transparent)",borderRadius:d.r+"px "+d.r+"px 0 0",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:0,left:0,right:0,height:"40%",background:"linear-gradient(180deg,rgba(255,255,255,0.06)0%,transparent)",borderRadius:d.r+"px "+d.r+"px 0 0",pointerEvents:"none"}}/>
     </div>
   );
 }
