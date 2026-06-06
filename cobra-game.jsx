@@ -49,6 +49,10 @@ const TITLES=[
   {id:"grand_champion",name:"Grand Champion",color:"#f87171",rarity:"legendary",unlock:"achievement"},
   {id:"serpent",name:"The Serpent",color:"#4ade80",rarity:"rare",unlock:"level",level:15},
   {id:"untouchable",name:"Untouchable",color:"#f0c060",rarity:"legendary",unlock:"level",level:30},
+  {id:"shadow",name:"Shadow",rarity:"rare",color:"#8888aa",glow:"rgba(100,100,180,0.5)",unlock:"achievement",achId:"cobra_10"},
+  {id:"void_walker",name:"Void Walker",rarity:"epic",color:"linear-gradient(135deg,#666,#aaa,#666)",glow:"rgba(150,150,150,0.6)",unlock:"achievement",achId:"win_50"},
+  {id:"serpent_king",name:"Serpent King",rarity:"legendary",color:"linear-gradient(135deg,#40c060,#d4a843,#40c060)",glow:"rgba(64,192,96,0.8)",unlock:"achievement",achId:"win_100"},
+  {id:"the_collector",name:"The Collector",rarity:"epic",color:"linear-gradient(135deg,#c084fc,#818cf8)",glow:"rgba(192,132,252,0.7)",unlock:"achievement",achId:"play_200"},
 ];
 
 const FRAMES=[
@@ -466,6 +470,10 @@ const CARD_THEMES={
   royal:{bg:"linear-gradient(148deg,#0d0020,#060012,#0a001a)",border:"rgba(160,80,255,0.7)",pat:"rgba(160,80,255,0.25)",pat2:"rgba(120,60,200,0.18)"},
   inferno:{bg:"linear-gradient(148deg,#1a0500,#0d0200,#150400)",border:"rgba(255,100,0,0.7)",pat:"rgba(255,100,0,0.25)",pat2:"rgba(200,60,0,0.18)"},
   ice:{bg:"linear-gradient(148deg,#000d1a,#000610,#000f1a)",border:"rgba(100,200,255,0.7)",pat:"rgba(100,200,255,0.25)",pat2:"rgba(60,160,220,0.18)"},
+  sakura:{bg:"linear-gradient(148deg,#1a0812,#0d0408,#160610)",border:"rgba(180,80,120,0.9)",pat:"rgba(255,150,180,0.2)",pat2:"rgba(200,100,140,0.15)"},
+  storm:{bg:"linear-gradient(148deg,#0a0a1a,#050510,#08081a)",border:"rgba(100,120,255,0.8)",pat:"rgba(120,140,255,0.22)",pat2:"rgba(80,100,220,0.15)"},
+  serpent:{bg:"linear-gradient(148deg,#0a1a0a,#051005,#081508)",border:"rgba(40,180,60,0.8)",pat:"rgba(60,200,80,0.22)",pat2:"rgba(40,160,55,0.15)"},
+  void:{bg:"linear-gradient(148deg,#080808,#030303,#060606)",border:"rgba(80,80,80,0.6)",pat:"rgba(100,100,100,0.1)",pat2:"rgba(80,80,80,0.08)"},
 };
 
 const SHOP_THEMES=[
@@ -479,6 +487,10 @@ const SHOP_THEMES=[
   {id:"royal",name:"Royal Flush",price:2400,currency:"coins",color:"#0d0020",desc:"Deep purple with gold filigree",rarity:"epic",isNew:true},
   {id:"inferno",name:"Inferno",price:2200,currency:"coins",color:"#1a0500",desc:"Blazing orange and red flames",rarity:"rare"},
   {id:"ice",name:"Black Ice",price:2000,currency:"coins",color:"#000d1a",desc:"Frost blue crystalline finish",rarity:"rare"},
+  {id:"sakura",name:"Sakura",price:1800,currency:"coins",color:"#1a0812",desc:"Cherry blossom pink and white",rarity:"rare",isNew:true},
+  {id:"storm",name:"Thunderstorm",price:2200,currency:"coins",color:"#0a0a1a",desc:"Dark clouds and electric energy",rarity:"epic",isNew:true},
+  {id:"serpent",name:"Serpent",price:2800,currency:"coins",color:"#0a1a0a",desc:"Cobra scales in deep green",rarity:"legendary",isNew:true},
+  {id:"void",name:"Void",price:3500,currency:"coins",color:"#050505",desc:"Pure darkness, absolute black",rarity:"legendary",isNew:true},
 ];
 
 const BUNDLES=[
@@ -486,12 +498,15 @@ const BUNDLES=[
   {id:"bundle_nature",name:"Nature Pack",desc:"Classic + Emerald themes",icon:"🌿",items:["classic","emerald"],price:2800,currency:"coins",originalPrice:4200,rarity:"rare"},
   {id:"bundle_premium",name:"Elite Pack",desc:"Galaxy + Gold themes + 💎5",icon:"👑",items:["galaxy","gold"],price:18,currency:"gems",originalPrice:30,rarity:"epic",bonusGems:5},
   {id:"bundle_neon_ice",name:"Neon Frost",desc:"Neon Nights + Black Ice themes",icon:"⚡",items:["neon","ice"],price:3000,currency:"coins",originalPrice:3800,rarity:"rare",isNew:true},
+  {id:"bundle_serpent",name:"Serpent Pack",desc:"Serpent + Void themes",icon:"🐍",items:["serpent","void"],price:22,currency:"gems",originalPrice:35,rarity:"legendary",isNew:true},
+  {id:"bundle_storm",name:"Storm Pack",desc:"Thunderstorm + Sakura themes",icon:"⚡",items:["storm","sakura"],price:3500,currency:"coins",originalPrice:4000,rarity:"epic",isNew:true},
 ];
 
 const CRATES=[
   {id:"crate_standard",name:"Standard Crate",desc:"Random common or rare cosmetic",icon:"📦",price:500,currency:"coins",rarity:"common",pool:["classic","midnight","crimson"]},
   {id:"crate_premium",name:"Premium Crate",desc:"Guaranteed rare or better",icon:"💼",price:1200,currency:"coins",rarity:"rare",pool:["emerald","galaxy","neon","inferno","ice"]},
   {id:"crate_legendary",name:"Legendary Crate",desc:"Chance at epic or legendary",icon:"🎰",price:8,currency:"gems",rarity:"epic",pool:["gold","royal","bundle_premium"]},
+  {id:"crate_serpent",name:"Serpent Crate",desc:"Chance at legendary Serpent or Void theme",icon:"🐍",price:15,currency:"gems",rarity:"legendary",pool:["serpent","void","bundle_serpent"],isNew:true},
 ];
 
 const SHOP_AVATARS=[
@@ -515,6 +530,17 @@ const SHOP_AVATARS=[
   {id:"🌙",name:"Moon",price:30,currency:"gems"},
   {id:"🏆",name:"Trophy",price:40,currency:"gems"},
   {id:"🎯",name:"Target",price:50,currency:"gems"},
+  {id:"🦅",name:"Eagle",price:600,currency:"coins"},
+  {id:"🐺",name:"Wolf",price:600,currency:"coins"},
+  {id:"🦋",name:"Butterfly",price:400,currency:"coins"},
+  {id:"🌊",name:"Wave",price:500,currency:"coins"},
+  {id:"⚔️",name:"Sword",price:700,currency:"coins"},
+  {id:"🎪",name:"Circus",price:500,currency:"coins"},
+  {id:"🧊",name:"Ice",price:600,currency:"coins"},
+  {id:"🌋",name:"Volcano",price:900,currency:"coins"},
+  {id:"🦄",name:"Unicorn",price:35,currency:"gems"},
+  {id:"👁️",name:"Eye",price:45,currency:"gems"},
+  {id:"🔮",name:"Crystal",price:50,currency:"gems"},
 ];
 
 function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx,theme}){
