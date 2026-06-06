@@ -350,7 +350,7 @@ html{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 input{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#e5e7eb;font-size:16px;font-family:Crimson Text,serif;outline:none;transition:all 0.2s;width:100%;display:block;padding:14px 16px;-webkit-appearance:none;}
 input:focus{border-color:rgba(212,168,67,0.6);box-shadow:0 0 0 3px rgba(212,168,67,0.12);}
 input::placeholder{color:#2a3d28;}
-.feltbg{background:radial-gradient(ellipse 180% 90% at 50% -15%,#0d2e14 0%,#040f05 60%,#010402 100%);min-height:100vh;position:relative;}
+.feltbg{background:radial-gradient(ellipse at 30% 20%,rgba(15,40,18,0.8) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(8,25,12,0.6) 0%,transparent 50%),repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px),linear-gradient(160deg,#0a1f0b 0%,#061208 40%,#040d05 100%);min-height:100vh;position:relative;}
 .feltbg::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.003)2px,rgba(255,255,255,0.003)3px),repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(255,255,255,0.0025)2px,rgba(255,255,255,0.0025)3px);}
 .feltbg::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 90% 80% at 50% 50%,transparent 28%,rgba(0,0,0,0.75)100%);}
 @media screen and (orientation:landscape) and (max-height:500px){body::before{content:"Rotate to portrait mode";position:fixed;inset:0;background:#010603;color:#d4a843;font-family:Cinzel,serif;font-size:18px;display:flex;align-items:center;justify-content:center;text-align:center;z-index:9999;padding:20px;}#root{display:none;}}
@@ -380,6 +380,7 @@ input::placeholder{color:#2a3d28;}
 @keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}20%{transform:translateY(-12px) scale(1.12);opacity:1}100%{transform:translateY(-130px) scale(0.65) rotate(8deg);opacity:0}}
 @keyframes cardPickup{0%{opacity:0;transform:translateY(-60px) rotate(-5deg) scale(0.75)}50%{transform:translateY(5px) rotate(1deg) scale(1.04)}100%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}}
 @keyframes yourTurnGlow{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.5),0 0 40px rgba(212,168,67,0.2),inset 0 0 20px rgba(212,168,67,0.05)}50%{box-shadow:0 0 50px rgba(212,168,67,0.9),0 0 90px rgba(212,168,67,0.5),inset 0 0 30px rgba(212,168,67,0.12)}}
+@keyframes glowPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
 @keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
@@ -558,7 +559,7 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
         WebkitTapHighlightColor:"transparent",touchAction:"manipulation",
         background:"linear-gradient(165deg,#fefdf6,#faf7e5 55%,#f2ecd0)",
         border:selected?"2.5px solid #d4a843":glow?"2px solid #4ade80":hov&&clickable?"1.5px solid rgba(212,168,67,0.4)":"1.5px solid rgba(0,0,0,0.15)",
-        boxShadow:selected?"0 0 24px rgba(212,168,67,0.6),0 14px 32px rgba(0,0,0,0.75),inset 0 1px 0 rgba(255,255,255,0.95)":glow?"0 0 20px rgba(74,222,128,0.45),0 6px 20px rgba(0,0,0,0.55)":hov&&clickable?"0 10px 24px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.95)":"0 5px 18px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.95)",
+        boxShadow:selected?"0 12px 32px rgba(212,168,67,0.5),0 4px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.95)":glow?"0 0 20px rgba(74,222,128,0.45),0 6px 20px rgba(0,0,0,0.55)":hov&&clickable?"0 8px 20px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.95)":"0 4px 12px rgba(0,0,0,0.4),0 1px 3px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.95)",
         display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",
         padding:Math.round(d.fs*0.38)+"px "+Math.round(d.fs*0.34)+"px"}}>
       <div style={{alignSelf:"flex-start",lineHeight:1,zIndex:1}}>
@@ -589,7 +590,7 @@ function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars,sco
             boxShadow:active?"0 0 20px rgba(212,168,67,0.18)":danger?"0 0 14px rgba(185,28,28,0.22)":"none",
             opacity:out?0.45:1,
             transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,marginBottom:2,color:out?"#4b5563":active?"#d4a843":danger?"#f87171":warn?"#f59e0b":"#2a3d20",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:60}}>{avatars[i]?<span style={{marginRight:2}}>{avatars[i]}</span>:null}{out?"ELIMINATED":n}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,marginBottom:2,color:out?"#4b5563":active?"#d4a843":danger?"#f87171":warn?"#f59e0b":"#2a3d20",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:60,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>{avatars[i]?<span style={{marginRight:2}}>{avatars[i]}</span>:null}{out?"ELIMINATED":n}{i===0&&<div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:18,height:18,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",fontFamily:"Cinzel,serif",fontSize:8,fontWeight:900,color:"#010603",boxShadow:"0 0 8px rgba(212,168,67,0.6)",animation:"pulse 2s ease-in-out infinite",marginLeft:4,flexShrink:0}}>D</div>}</div>
             <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,lineHeight:1,color:out?"#4b5563":danger?"#f87171":warn?"#fbbf24":active?"#d4a843":"#1a2d14",animation:flashScores[i]?"scoreFlash 0.6s ease both":"none",transition:"color 0.4s"}}>
               {s}
               {flashScores[i]&&<span style={{fontSize:10,color:"#f87171",marginLeft:3,animation:"scoreFlash 0.6s ease both"}}>!</span>}
@@ -4684,7 +4685,7 @@ export default function Cobra(){
         </div>
         {/* Pile */}
         <div id="tut-pile" style={{flex:1,display:"flex",flexDirection:"column",gap:7,minWidth:0}}>
-          <div className={canPickPile?"glow_pile":""} style={{flex:1,borderRadius:18,background:canPickPile?"linear-gradient(160deg,rgba(14,60,22,0.9),rgba(6,28,10,0.85))":pile.length>0?"linear-gradient(160deg,rgba(20,20,40,0.85),rgba(10,10,24,0.8))":"rgba(0,0,0,0.35)",border:canPickPile?"2px solid rgba(74,222,128,0.6)":pile.length>0?"1.5px solid rgba(212,168,67,0.3)":"1.5px solid rgba(255,255,255,0.1)",padding:"12px 14px",display:"flex",flexDirection:"column",boxShadow:canPickPile?"0 0 24px rgba(74,222,128,0.2)":pile.length>0?"0 0 18px rgba(212,168,67,0.08)":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
+          <div className={canPickPile?"glow_pile":""} style={{flex:1,borderRadius:18,background:canPickPile?"linear-gradient(160deg,rgba(14,60,22,0.9),rgba(6,28,10,0.85))":pile.length>0?"linear-gradient(160deg,rgba(20,20,40,0.85),rgba(10,10,24,0.8))":"rgba(0,0,0,0.35)",border:canPickPile?"2px solid rgba(74,222,128,0.6)":pile.length>0?"1.5px solid rgba(212,168,67,0.3)":"1.5px solid rgba(255,255,255,0.1)",padding:"12px 14px",display:"flex",flexDirection:"column",boxShadow:canPickPile?"0 0 24px rgba(74,222,128,0.2)":pile.length>0?"0 0 30px rgba(74,222,128,0.3),0 0 60px rgba(74,222,128,0.1)":"none",animation:pile.length>0?"glowPulse 2.5s ease-in-out infinite":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
                 <span style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:2,color:canPickPile?"#4ade80":pile.length>0?"#d4a843":"#3a5a3a",fontWeight:700}}>
@@ -4731,7 +4732,7 @@ export default function Cobra(){
           <button className="btn_btn_ghost" style={{padding:"12px 28px",fontSize:12,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("home");}}>LEAVE</button>
         </div>
       ):(
-      <div style={{flexShrink:0,padding:"7px 12px calc(8px + env(safe-area-inset-bottom))",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)"}}>
+      <div style={{flexShrink:0,padding:"7px 12px calc(8px + env(safe-area-inset-bottom))",position:"relative",zIndex:5,background:"linear-gradient(0deg,rgba(0,0,0,0.92)0%,rgba(0,0,0,0.6)100%)",borderTop:isMyTurn?"1.5px solid rgba(212,168,67,0.5)":"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",animation:isMyTurn?"yourTurnGlow 2s ease-in-out infinite":"none"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5,gap:6}}>
           <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
             {!isMyTurn&&(
