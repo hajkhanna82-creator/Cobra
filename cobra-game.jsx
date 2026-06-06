@@ -112,26 +112,32 @@ const audio={
   init(){
     if(this._ready)return;
     try{
-      // Sync mute flags from localStorage before any sound plays
       try{this._muted=localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){}
       try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
-      // iOS: must resume immediately inside the user gesture that called init()
-      if(ctx.state==="suspended"){ctx.resume().catch(function(){});}
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
-      this._ready=true;this._startBg();
+      this._ready=true;
+      // iOS: context starts suspended — resume first, then start bg music only after running
+      var self=this;
+      if(ctx.state==="running"){
+        self._startBg();
+      } else {
+        ctx.resume().then(function(){self._startBg();}).catch(function(){});
+      }
     }catch(e){}
   },
   resume(){
     if(!this._ctx)return;
+    var self=this;
     if(this._ctx.state==="suspended"){
       this._ctx.resume().then(function(){
-        // After iOS unlocks the context, restart bg music if it should be playing
-        if(!audio._musicMuted&&(!audio._bgNodes||audio._bgNodes.length===0)){audio._startBg();}
+        if(!self._musicMuted&&self._bgNodes.length===0){self._startBg();}
       }).catch(function(){});
+    } else if(this._ctx.state==="running"&&!this._musicMuted&&this._bgNodes.length===0){
+      this._startBg();
     }
   },
   _startBg(){
@@ -2679,13 +2685,7 @@ export default function Cobra(){
   const initAudio=useCallback(function(){
     if(audioInit.current)return;
     audioInit.current=true;
-    audio.init();
-    // iOS: resume must happen synchronously inside the gesture
-    if(audio._ctx&&audio._ctx.state==="suspended"){
-      audio._ctx.resume().then(function(){
-        if(!audio._musicMuted&&(!audio._bgNodes||audio._bgNodes.length===0))audio._startBg();
-      }).catch(function(){});
-    }
+    audio.init(); // init() handles resume + _startBg in correct order for iOS
   },[]);
 
   useEffect(function(){
