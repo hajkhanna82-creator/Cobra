@@ -120,23 +120,29 @@ const audio={
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
       this._ready=true;
-      // iOS: context starts suspended — resume first, then start bg music only after running
       var self=this;
+      // Listen for state changes — handles iOS "interrupted" (e.g. after Spotify/calls)
+      ctx.addEventListener("statechange",function(){
+        if(ctx.state==="running"&&!self._musicMuted&&self._bgNodes.length===0){
+          self._startBg();
+        }
+      });
       if(ctx.state==="running"){
         self._startBg();
       } else {
-        ctx.resume().then(function(){self._startBg();}).catch(function(){});
+        // suspended or interrupted — try resume, bg will start via statechange listener
+        ctx.resume().catch(function(){});
       }
     }catch(e){}
   },
   resume(){
     if(!this._ctx)return;
     var self=this;
-    if(this._ctx.state==="suspended"){
-      this._ctx.resume().then(function(){
-        if(!self._musicMuted&&self._bgNodes.length===0){self._startBg();}
-      }).catch(function(){});
-    } else if(this._ctx.state==="running"&&!this._musicMuted&&this._bgNodes.length===0){
+    // Works for suspended AND interrupted states
+    if(this._ctx.state!=="running"){
+      this._ctx.resume().catch(function(){});
+      // bg music starts automatically via statechange listener in init()
+    } else if(!this._musicMuted&&this._bgNodes.length===0){
       this._startBg();
     }
   },
