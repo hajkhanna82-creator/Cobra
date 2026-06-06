@@ -698,7 +698,9 @@ function PremiumToggle({active,onToggle}){
   );
 }
 
+var _settingsPop=null;
 function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme}){
+  var onPop=_settingsPop;
   var winRate=gameStats.rounds>0?Math.round(gameStats.wins/gameStats.rounds*100):0;
   var bestStreak=gameStats.bestStreak||0;
   return(
@@ -755,6 +757,29 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
               </div>
             );})}
           </div>
+
+          {"Notification" in window && (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+              <div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:2}}>NOTIFICATIONS</div>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,marginTop:2}}>Daily bonus reminders</div>
+              </div>
+              <button onClick={function(){
+                if(Notification.permission==="granted"){
+                  // Can't revoke programmatically, show info
+                  if(typeof onPop==="function")onPop("To disable, use your browser settings","info");
+                } else {
+                  Notification.requestPermission().then(function(p){
+                    if(p==="granted"){
+                      if(typeof onPop==="function")onPop("Notifications enabled!","success");
+                    }
+                  });
+                }
+              }} style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(212,168,67,0.3)",background:Notification.permission==="granted"?"rgba(74,222,128,0.15)":"rgba(212,168,67,0.08)",color:Notification.permission==="granted"?"#4ade80":"#d4a843",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:2,cursor:"pointer"}}>
+                {Notification.permission==="granted"?"ON":"ENABLE"}
+              </button>
+            </div>
+          )}
 
           <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"4px 0 0"}}/>
 
@@ -2632,6 +2657,24 @@ export default function Cobra(){
   useEffect(function(){modeRef.current=mode;},[mode]);
   useEffect(function(){roomCodeRef.current=roomCode;},[roomCode]);
   useEffect(function(){screenRef.current=screen;},[screen]);
+  function scheduleDailyReminder(){
+    try{
+      if(!("Notification" in window)||Notification.permission!=="granted")return;
+      var delay=23*60*60*1000;
+      setTimeout(function(){
+        if(document.visibilityState==="hidden"){
+          new Notification("🐍 COBRA",{
+            body:"Your daily bonus is ready! Come claim your coins.",
+            icon:"/icons/icon-192.png",
+            badge:"/icons/icon-72.png",
+            tag:"daily-bonus",
+            renotify:true
+          });
+        }
+      },delay);
+    }catch(e){}
+  }
+
   useEffect(function(){
     try{
       var today=Math.floor(Date.now()/(1000*60*60*24));
@@ -2650,6 +2693,10 @@ export default function Cobra(){
       setCoins(function(c){var n=c+reward.coins;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
       if(reward.gems>0)setGems(function(g){var n=g+reward.gems;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
       setTimeout(function(){setDailyLoginData({day:day,coins:reward.coins,gems:reward.gems,streak:newStreak});},2800);
+      scheduleDailyReminder();
+      if("Notification" in window&&Notification.permission==="default"){
+        Notification.requestPermission();
+      }
     }catch(e){}
   },[]);
   const H=myIdx;
@@ -2843,6 +2890,14 @@ export default function Cobra(){
           audio._bgGain.gain.setValueAtTime(0,t);
           audio._bgGain.gain.linearRampToValueAtTime(0.5,t+1.5);
         }
+        // Check if daily bonus is available — modal handles display, skip double-notification
+        try{
+          var today2=Math.floor(Date.now()/(1000*60*60*24));
+          var last2=parseInt(localStorage.getItem("cobra_last_login")||"0");
+          if(today2>last2&&"Notification" in window&&Notification.permission==="granted"){
+            // Don't show notification when app is open/visible — the modal handles it
+          }
+        }catch(e){}
       }
     }
     document.addEventListener("visibilitychange",handleVis);
@@ -2882,6 +2937,7 @@ export default function Cobra(){
     clearTimeout(toastT.current);setToast({msg:msg,type:type});
     toastT.current=setTimeout(function(){setToast({msg:"",type:"info"});},ms);
   };
+  _settingsPop=pop;
 
   // Turn timer
   useEffect(function(){
