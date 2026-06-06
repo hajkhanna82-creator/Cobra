@@ -556,19 +556,18 @@ function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx
         cursor:base.cursor,transform:base.transform,transition:base.transition,opacity:base.opacity,
         userSelect:"none",overflow:"hidden",animationDelay:base.animationDelay,
         WebkitTapHighlightColor:"transparent",touchAction:"manipulation",
-        background:isFace?"linear-gradient(135deg,#1e2a10,#141e0a)":"linear-gradient(135deg,#1a2e1a,#0d1a0d)",
-        border:selected?"2.5px solid #d4a843":glow?"2px solid #4ade80":isFace?"1.5px solid rgba(212,168,67,0.35)":hov&&clickable?"1.5px solid rgba(212,168,67,0.25)":"1.5px solid rgba(255,255,255,0.08)",
+        background:"linear-gradient(135deg,#1a2e1a,#0d1a0d)",
+        border:selected?"2.5px solid #d4a843":glow?"2px solid #4ade80":hov&&clickable?"1.5px solid rgba(212,168,67,0.25)":"1.5px solid rgba(255,255,255,0.08)",
         boxShadow:selected?"0 0 24px rgba(212,168,67,0.6),0 14px 32px rgba(0,0,0,0.75)":glow?"0 0 20px rgba(74,222,128,0.45),0 6px 20px rgba(0,0,0,0.55)":hov&&clickable?"0 10px 24px rgba(0,0,0,0.55)":"0 5px 18px rgba(0,0,0,0.5)",
         display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",
         padding:Math.round(d.fs*0.38)+"px "+Math.round(d.fs*0.34)+"px"}}>
-      {isFace&&<div style={{position:"absolute",inset:3,borderRadius:d.r-2,border:"1px solid rgba(212,168,67,0.18)",pointerEvents:"none",zIndex:0}}/>}
       <div style={{alignSelf:"flex-start",lineHeight:1,zIndex:1}}>
-        <div style={{fontSize:isFace?d.fs*1.15:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1,textShadow:red?"0 0 8px rgba(232,85,85,0.4)":"0 0 8px rgba(232,240,232,0.25)"}}>{card.value}</div>
+        <div style={{fontSize:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1}}>{card.value}</div>
         <div style={{fontSize:d.fs*0.82,color:sc,lineHeight:1.1}}>{card.suit}</div>
       </div>
-      <div style={{fontSize:isFace?d.su*1.18:d.su,color:sc,lineHeight:1,zIndex:1,transition:"filter 0.2s",filter:selected?"drop-shadow(0 0 8px "+(red?"rgba(232,85,85,0.7)":"rgba(232,240,232,0.5)")+")":glow?"drop-shadow(0 0 6px rgba(74,222,128,0.7))":isFace?"drop-shadow(0 0 6px "+(red?"rgba(232,85,85,0.35)":"rgba(212,168,67,0.3)")+")":"none"}}>{card.suit}</div>
+      <div style={{fontSize:d.su,color:sc,lineHeight:1,zIndex:1,transition:"filter 0.2s",filter:selected?"drop-shadow(0 0 8px "+(red?"rgba(232,85,85,0.7)":"rgba(232,240,232,0.5)")+")":glow?"drop-shadow(0 0 6px rgba(74,222,128,0.7))":"none"}}>{card.suit}</div>
       <div style={{alignSelf:"flex-end",transform:"rotate(180deg)",lineHeight:1,zIndex:1}}>
-        <div style={{fontSize:isFace?d.fs*1.15:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1,textShadow:red?"0 0 8px rgba(232,85,85,0.4)":"0 0 8px rgba(232,240,232,0.25)"}}>{card.value}</div>
+        <div style={{fontSize:d.fs,fontWeight:900,color:sc,fontFamily:"Georgia,serif",lineHeight:1}}>{card.value}</div>
         <div style={{fontSize:d.fs*0.82,color:sc,lineHeight:1.1}}>{card.suit}</div>
       </div>
       {selected&&<div style={{position:"absolute",top:0,left:0,right:0,bottom:0,background:"rgba(212,168,67,0.08)",borderRadius:d.r-1,pointerEvents:"none"}}/>}
