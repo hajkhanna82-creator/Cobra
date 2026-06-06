@@ -2526,6 +2526,89 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
   );
 }
 
+function TournamentScreen({onStart,onBack,coins,gems}){
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 20px",minHeight:"100vh"}}>
+      <style>{GS}</style>
+      <div style={{maxWidth:380,width:"100%",textAlign:"center"}}>
+        <div style={{fontSize:56,marginBottom:12}}>🏆</div>
+        <h1 style={{fontFamily:"Cinzel,serif",fontSize:28,fontWeight:900,color:"#f0c060",letterSpacing:6,marginBottom:8}}>TOURNAMENT</h1>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7e",fontSize:15,marginBottom:32}}>4-player bracket · Best of 1 · Win it all</p>
+        {/* Bracket preview */}
+        <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:16,padding:"20px",marginBottom:24}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#d4a843",letterSpacing:3,marginBottom:16}}>BRACKET</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:12}}>
+            <div style={{flex:1,background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:8,padding:"8px 6px",fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",textAlign:"center"}}>YOU<br/><span style={{color:"#6a8a6e",fontSize:8}}>vs</span><br/>CPU 1</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"rgba(212,168,67,0.4)"}}>⚔️</div>
+            <div style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"8px 6px",fontFamily:"Cinzel,serif",fontSize:9,color:"#8aaa8a",textAlign:"center"}}>CPU 2<br/><span style={{color:"#4a6a4a",fontSize:8}}>vs</span><br/>CPU 3</div>
+          </div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a6a4e",letterSpacing:2,textAlign:"center"}}>↓ FINAL ↓</div>
+          <div style={{marginTop:12,background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:8,padding:"10px",fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",textAlign:"center",letterSpacing:2}}>WINNER vs WINNER</div>
+        </div>
+        {/* Rewards */}
+        <div style={{display:"flex",gap:10,marginBottom:28,justifyContent:"center"}}>
+          <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:12,padding:"12px 20px",textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:4}}>🪙</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#f0c060",fontWeight:900}}>1000</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8a7a3e",letterSpacing:2,marginTop:2}}>WIN REWARD</div>
+          </div>
+          <div style={{background:"rgba(96,200,240,0.08)",border:"1px solid rgba(96,200,240,0.2)",borderRadius:12,padding:"12px 20px",textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:4}}>💎</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#60c8f0",fontWeight:900}}>10</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#406070",letterSpacing:2,marginTop:2}}>CHAMPION</div>
+          </div>
+        </div>
+        <button className="btn_btn_gold" style={{width:"100%",padding:"16px",fontSize:14,letterSpacing:4,marginBottom:12}} onClick={onStart}>
+          ⚔️ START TOURNAMENT
+        </button>
+        <button onClick={onBack} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:11,color:"rgba(255,255,255,0.4)",letterSpacing:2,cursor:"pointer"}}>
+          BACK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TournamentResultScreen({data,onClaim,playerName}){
+  var won=data.champion===playerName||data.champion==="You";
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 20px",minHeight:"100vh"}}>
+      <style>{GS}</style>
+      <div style={{maxWidth:380,width:"100%",textAlign:"center",animation:"fadeUp 0.5s cubic-bezier(.22,1,.36,1) both"}}>
+        <div style={{fontSize:72,marginBottom:12,animation:"float 2s ease-in-out infinite"}}>{won?"🏆":"🥈"}</div>
+        <h1 style={{fontFamily:"Cinzel,serif",fontSize:won?30:24,fontWeight:900,color:won?"#f0c060":"#8aaa8a",letterSpacing:4,marginBottom:8}}>
+          {won?"CHAMPION!":"TOURNAMENT OVER"}
+        </h1>
+        <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7e",fontSize:15,marginBottom:8}}>
+          {won?"You conquered the tournament!":"Better luck next time, "+playerName}
+        </p>
+        <p style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:3,marginBottom:28}}>
+          CHAMPION: {data.champion}
+        </p>
+        {/* Bracket results */}
+        <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:16,padding:"16px",marginBottom:20,textAlign:"left"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:3,marginBottom:12,textAlign:"center"}}>RESULTS</div>
+          {data.bracket.map(function(match,i){return(
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:i<data.bracket.length-1?"1px solid rgba(255,255,255,0.06)":"none"}}>
+              <span style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#6a8a6e"}}>{i===0?"Semi 1":i===1?"Semi 2":"Final"}</span>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060"}}>{match.winner} wins</span>
+            </div>
+          );})}
+        </div>
+        {won&&(
+          <div style={{display:"flex",gap:10,marginBottom:20,justifyContent:"center"}}>
+            <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:12,padding:"10px 18px",fontFamily:"Cinzel,serif",fontSize:15,color:"#f0c060"}}>🪙 +1000</div>
+            <div style={{background:"rgba(96,200,240,0.08)",border:"1px solid rgba(96,200,240,0.25)",borderRadius:12,padding:"10px 18px",fontFamily:"Cinzel,serif",fontSize:15,color:"#60c8f0"}}>💎 +10</div>
+          </div>
+        )}
+        <button className="btn_btn_gold" style={{width:"100%",padding:"14px",fontSize:13,letterSpacing:3}} onClick={onClaim}>
+          {won?"CLAIM REWARDS":"BACK TO HOME"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Cobra(){
   const [showSplash,setShowSplash]=useState(true);
   const [screen,setScreen]=useState("home");
@@ -2572,6 +2655,8 @@ export default function Cobra(){
   const [showRules,setShowRules]=useState(false);
   const [showExitConfirm,setShowExitConfirm]=useState(false);
   const [hovOpponent,setHovOpponent]=useState(-1);
+  const [tournamentData,setTournamentData]=useState(null);
+  // {phase:"semi1"|"final"|"done", bracket:[{p1,p2,winner},{p1,p2,winner},{p1,p2,winner}], champion:null}
   const [turnTime,setTurnTime]=useState(TURN_SEC);
   const [timerOn,setTimerOn]=useState(true);
   const [roundStart,setRoundStart]=useState(null);
@@ -3605,6 +3690,41 @@ export default function Cobra(){
     />;
   }
 
+  // ─── TOURNAMENT ─────────────────────────────────────
+  if(screen==="tournament"&&!tournamentData){
+    return <TournamentScreen
+      onBack={function(){setScreen("home");}}
+      onStart={function(){
+        audio.buttonClick();haptic.medium();
+        var bracket=[{p1:"You",p2:"CPU 1",winner:null},{p1:"CPU 2",p2:"CPU 3",winner:null},{p1:null,p2:null,winner:null}];
+        setTournamentData({phase:"semi1",bracket:bracket,champion:null});
+        setMode("cpu");
+        var tNames=["You","CPU 1","CPU 2","CPU 3","CPU 4"];
+        setNPlayers(2);setNames(tNames);setCpuCount(1);setCpuDiff(1);setMyIdx(0);
+        setRoundRes(null);setRoundEndData(null);setRevealData(null);setGameOverData(null);
+        deal(Array(2).fill(0),2);
+        goScreen("game");
+      }}
+      coins={coins}
+      gems={gems}
+    />;
+  }
+
+  if(screen==="tournamentResult"){
+    return <TournamentResultScreen
+      data={tournamentData||{bracket:[],champion:""}}
+      playerName={names[0]||"You"}
+      onClaim={function(){
+        if(tournamentData&&(tournamentData.champion===(names[0]||"You")||tournamentData.champion==="You")){
+          setCoins(function(c){var n=c+1000;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
+          setGems(function(g){var n=g+10;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
+          if(audio.win)audio.win();haptic.success();
+        }
+        setTournamentData(null);setScreen("home");
+      }}
+    />;
+  }
+
   // ─── HOME ───────────────────────────────────────────
   if(screen==="home")return(
     <div className="feltbg" onClick={initAudio} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 20px",position:"relative"}}>
@@ -3674,6 +3794,10 @@ export default function Cobra(){
             </button>
           );})}
         </div>
+        <button className="btn_btn_gold" style={{width:"100%",padding:"14px 20px",fontSize:12,letterSpacing:3,marginBottom:10}}
+          onClick={function(){audio.buttonClick();haptic.medium();setScreen("tournament");}}>
+          🏆 TOURNAMENT
+        </button>
         <div style={{display:"flex",gap:10}}>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
@@ -4485,7 +4609,7 @@ export default function Cobra(){
 
           {/* Action buttons */}
           <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
-            {mode==="online"&&!isHost?(
+            {!tournamentData&&(mode==="online"&&!isHost?(
               <div style={{padding:18,fontSize:12,letterSpacing:2,fontFamily:"Cinzel,serif",color:"rgba(255,255,255,0.4)",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center",gap:8,border:"1px solid rgba(255,255,255,0.07)",borderRadius:14}}>
                 <ThinkingDots/> Waiting for host to rematch...
               </div>
@@ -4500,10 +4624,55 @@ export default function Cobra(){
                 }}>
                 🔄 REMATCH
               </button>
-            )}
+            ))}
             <button className="btn_btn_ghost" style={{width:"100%",padding:16,fontSize:12,letterSpacing:2}}
-              onClick={function(){audio.buttonClick();setScores([]);goScreen("home");}}>
-              🏠 BACK TO HOME
+              onClick={function(){
+                audio.buttonClick();
+                // Tournament advancement
+                if(tournamentData){
+                  var td=tournamentData;
+                  var humanName=names[0]||"You";
+                  var humanWon=gameOverData&&gameOverData.winner===0;
+                  if(td.phase==="semi1"){
+                    var semi1Winner=humanWon?humanName:"CPU 1";
+                    var semi2Winner=Math.random()<0.5?"CPU 2":"CPU 3";
+                    var newBracket=[
+                      Object.assign({},td.bracket[0],{winner:semi1Winner}),
+                      Object.assign({},td.bracket[1],{winner:semi2Winner}),
+                      Object.assign({},td.bracket[2],{p1:semi1Winner,p2:semi2Winner})
+                    ];
+                    var newTd=Object.assign({},td,{phase:"final",bracket:newBracket});
+                    if(semi1Winner!==humanName){
+                      // Human lost semi1 — simulate final and show result
+                      var simFinal=Math.random()<0.5?semi1Winner:semi2Winner;
+                      newBracket[2]=Object.assign({},newBracket[2],{winner:simFinal});
+                      setTournamentData(Object.assign({},newTd,{bracket:newBracket,champion:simFinal,phase:"done"}));
+                      setScores([]);setGameOverData(null);
+                      setScreen("tournamentResult");
+                      return;
+                    }
+                    // Human made final — play it
+                    setTournamentData(newTd);
+                    setMode("cpu");
+                    var fNames=["You",semi2Winner,"CPU 2","CPU 3","CPU 4"];
+                    setNames(fNames);setCpuCount(1);setCpuDiff(2);setMyIdx(0);
+                    setRoundRes(null);setRoundEndData(null);setRevealData(null);setGameOverData(null);
+                    deal(Array(2).fill(0),2);
+                    goScreen("game");
+                    return;
+                  }
+                  if(td.phase==="final"){
+                    var finalWinner=humanWon?humanName:(td.bracket[2]?td.bracket[2].p2:"CPU 2");
+                    var finalBracket=[td.bracket[0],td.bracket[1],Object.assign({},td.bracket[2],{winner:finalWinner})];
+                    setTournamentData(Object.assign({},td,{bracket:finalBracket,champion:finalWinner,phase:"done"}));
+                    setScores([]);setGameOverData(null);
+                    setScreen("tournamentResult");
+                    return;
+                  }
+                }
+                setScores([]);goScreen("home");
+              }}>
+              🏠 {tournamentData?"CONTINUE TOURNAMENT":"BACK TO HOME"}
             </button>
           </div>
         </div>
