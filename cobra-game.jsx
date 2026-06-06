@@ -109,12 +109,12 @@ function seqLabel(cards){
 const audio={
   _ctx:null,_master:null,_bgGain:null,_sfxGain:null,
   _muted:false,_musicMuted:false,_bgNodes:[],_ready:false,_arpTimer:null,
-  init(){
+  init(existingCtx){
     if(this._ready)return;
     try{
       try{this._muted=localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){}
       try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
-      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const ctx=existingCtx||new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
@@ -2693,9 +2693,11 @@ export default function Cobra(){
     audioInit.current=true;
     try{
       var ctx=new(window.AudioContext||window.webkitAudioContext)();
-      // iOS silent mode bypass: play a tiny inaudible noise buffer through Web Audio.
-      // This switches iOS audio session from "ambient" (ringer-controlled) to
-      // "playback" (media volume — ignores the silent/ringer switch).
+      // iOS silent mode bypass: play a tiny inaudible noise buffer through the SAME
+      // AudioContext we'll use for the game. This switches the iOS audio session from
+      // "ambient" (ringer-controlled) to "playback" (ignores the silent switch).
+      // Reusing the same ctx is critical — creating a new one after closing this would
+      // revert the session back to ambient.
       var buf=ctx.createBuffer(1,ctx.sampleRate*0.1,ctx.sampleRate);
       var data=buf.getChannelData(0);
       for(var i=0;i<data.length;i++){data[i]=(Math.random()*2-1)*0.0001;}
@@ -2704,9 +2706,7 @@ export default function Cobra(){
       src.connect(ctx.destination);
       src.start(0);
       src.onended=function(){
-        try{ctx.close();}catch(e){}
-        audio.init();
-        if(audio._ctx&&audio._ctx.state!=="running"){audio._ctx.resume().catch(function(){});}
+        audio.init(ctx);
       };
     }catch(e){
       audio.init();
