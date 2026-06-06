@@ -304,6 +304,9 @@ input::placeholder{color:#2a3d28;}
 @keyframes screenOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-30px)}}
 .screen_in{animation:screenIn 0.28s cubic-bezier(.22,1,.36,1) both;}
 @keyframes cardFlip{0%{transform:scaleX(0) translateY(-10px);opacity:0}50%{transform:scaleX(0.5);opacity:0.5}100%{transform:scaleX(1) translateY(0);opacity:1}}
+@keyframes cardDeal{0%{opacity:0;transform:translateY(-40px) translateX(20px) rotate(-8deg) scale(0.7)}60%{transform:translateY(4px) rotate(1deg) scale(1.02)}100%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}}
+@keyframes scorePop{0%{transform:scale(1)}40%{transform:scale(1.35) translateY(-3px)}70%{transform:scale(0.95)}100%{transform:scale(1)}}
+@keyframes toastIn{0%{transform:translateY(-20px) scale(0.85);opacity:0}60%{transform:translateY(4px) scale(1.03)}100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes declarePop{0%{transform:scale(0.85);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
 @keyframes orbFloat{0%,100%{transform:scale(1) translate(0,0)}33%{transform:scale(1.08) translate(8px,-6px)}66%{transform:scale(0.95) translate(-6px,5px)}}
 @keyframes cobraBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}70%{transform:translateY(-4px)}}
@@ -311,9 +314,9 @@ input::placeholder{color:#2a3d28;}
 @keyframes emojiFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}
 @keyframes achievePop{0%{opacity:0;transform:translateX(120px)}15%{opacity:1;transform:translateX(-8px)}85%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(120px)}}
 @keyframes fadeOut{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
-@keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(0.7);opacity:0}}
-@keyframes cardPickup{0%{transform:translateY(-80px) scale(0.7);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
-@keyframes yourTurnGlow{0%{box-shadow:0 0 30px rgba(212,168,67,0.7),0 0 60px rgba(212,168,67,0.35)}100%{box-shadow:0 0 60px rgba(212,168,67,0.95),0 0 100px rgba(212,168,67,0.6)}}
+@keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}20%{transform:translateY(-12px) scale(1.12);opacity:1}100%{transform:translateY(-130px) scale(0.65) rotate(8deg);opacity:0}}
+@keyframes cardPickup{0%{opacity:0;transform:translateY(-60px) rotate(-5deg) scale(0.75)}50%{transform:translateY(5px) rotate(1deg) scale(1.04)}100%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}}
+@keyframes yourTurnGlow{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.5),0 0 40px rgba(212,168,67,0.2),inset 0 0 20px rgba(212,168,67,0.05)}50%{box-shadow:0 0 50px rgba(212,168,67,0.9),0 0 90px rgba(212,168,67,0.5),inset 0 0 30px rgba(212,168,67,0.12)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
 @keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
@@ -4137,7 +4140,7 @@ export default function Cobra(){
             var isDeclarer=i===rd.declarerIdx;
             var isWinner=total===rminT&&rtotals.filter(function(t){return t===rminT;}).length===1;
             return(
-              <div key={i} style={{marginBottom:10,padding:"12px 16px",borderRadius:14,background:isDeclarer&&isWinner?"rgba(212,168,67,0.12)":isDeclarer&&!isWinner?"rgba(185,28,28,0.1)":"rgba(0,0,0,0.35)",border:isDeclarer&&isWinner?"1.5px solid rgba(212,168,67,0.4)":isDeclarer&&!isWinner?"1.5px solid rgba(185,28,28,0.4)":"1px solid rgba(255,255,255,0.08)"}}>
+              <div key={i} style={{marginBottom:10,padding:"12px 16px",borderRadius:14,background:isDeclarer&&isWinner?"rgba(212,168,67,0.12)":isDeclarer&&!isWinner?"rgba(185,28,28,0.1)":"rgba(0,0,0,0.35)",border:isDeclarer&&isWinner?"1.5px solid rgba(212,168,67,0.4)":isDeclarer&&!isWinner?"1.5px solid rgba(185,28,28,0.4)":"1px solid rgba(255,255,255,0.08)",animation:"fadeUp 0.4s cubic-bezier(.22,1,.36,1) both",animationDelay:(i*0.1)+"s"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                   <span style={{fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,color:isDeclarer&&isWinner?"#d4a843":isDeclarer&&!isWinner?"#f87171":"#8aad8a"}}>
                     {isDeclarer?(isWinner?"👑 ":"🐍 "):""}{name.toUpperCase()}{isDeclarer?" (DECLARED)":""}
@@ -4204,7 +4207,7 @@ export default function Cobra(){
                     {r.winner?"+0":r.added>0?"+"+r.added:"+0"}
                     <div style={{fontSize:8,color:"#8aaa8a",fontWeight:400,marginTop:2}}>{r.winner?"won":r.cobra?"cobra":"added"}</div>
                   </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#c8d8c8",animation:"splashPop 0.5s cubic-bezier(.22,1.4,.36,1) both",animationDelay:(i*0.1)+"s"}}>{ns}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#c8d8c8",animation:"scorePop 0.5s cubic-bezier(.22,1,.36,1) both",animationDelay:(i*0.1)+"s"}}>{ns}</div>
                 </div>
               );
             })}
@@ -4448,7 +4451,7 @@ export default function Cobra(){
   const canDeclare=myTotal<=DECLARE_MAX;
 
   return(
-    <div className="feltbg" style={{height:"100vh",maxHeight:"100vh",display:"flex",flexDirection:"column",overflow:"hidden",userSelect:"none"}}>
+    <div className="feltbg screen_in" style={{height:"100vh",maxHeight:"100vh",display:"flex",flexDirection:"column",overflow:"hidden",userSelect:"none"}}>
       <style>{GS}</style>
       <TableParticles/>
       {showTutorial&&<Tutorial onDone={function(){setShowTutorial(false);setTutorialDone(true);try{localStorage.setItem("cobra_tutorial_done","1");}catch(e){}}}/>}
@@ -4654,7 +4657,7 @@ export default function Cobra(){
 
       {/* TOAST */}
       {toast.msg&&(
-        <div style={{position:"fixed",top:"36%",left:"50%",transform:"translate(-50%,-50%)",background:toast.type==="error"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":toast.type==="success"?"linear-gradient(135deg,rgba(3,16,6,0.97),rgba(2,10,4,0.97))":"linear-gradient(135deg,rgba(12,9,2,0.97),rgba(9,7,2,0.97))",color:toast.type==="error"?"#fca5a5":toast.type==="success"?"#86efac":"#d4a843",padding:"13px 28px",borderRadius:14,fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:2.5,border:"1px solid rgba(212,168,67,0.44)",boxShadow:"0 18px 55px rgba(0,0,0,0.88)",zIndex:500,textAlign:"center",maxWidth:"82vw",backdropFilter:"blur(20px)",animation:"slideUp 0.26s cubic-bezier(.22,1,.36,1)"}}>{toast.msg}</div>
+        <div style={{position:"fixed",top:"36%",left:"50%",transform:"translate(-50%,-50%)",background:toast.type==="error"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":toast.type==="success"?"linear-gradient(135deg,rgba(3,16,6,0.97),rgba(2,10,4,0.97))":"linear-gradient(135deg,rgba(12,9,2,0.97),rgba(9,7,2,0.97))",color:toast.type==="error"?"#fca5a5":toast.type==="success"?"#86efac":"#d4a843",padding:"13px 28px",borderRadius:14,fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:2.5,border:"1px solid rgba(212,168,67,0.44)",boxShadow:"0 18px 55px rgba(0,0,0,0.88)",zIndex:500,textAlign:"center",maxWidth:"82vw",backdropFilter:"blur(20px)",animation:"toastIn 0.32s cubic-bezier(.22,1,.36,1) both"}}>{toast.msg}</div>
       )}
 
       {/* MY HAND or SPECTATOR */}
@@ -4718,7 +4721,7 @@ export default function Cobra(){
           {myHand.map(function(card,idx){
             var isPlaying=playingCardIds.includes(card.id);
             return(
-              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":dealAnim?"cardFlip 0.35s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:dealAnim?(idx*0.06)+"s":"0s",display:"inline-block"}}>
+              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":dealAnim?"cardDeal 0.42s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:dealAnim?(idx*0.07)+"s":"0s",display:"inline-block"}}>
                 <Card card={card}
                   selected={!!sel.find(function(c){return c.id===card.id;})}
                   clickable={isMyTurn&&(phase==="play"||phase==="declare")&&!playingCardIds.length}
