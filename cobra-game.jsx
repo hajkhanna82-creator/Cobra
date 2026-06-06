@@ -117,15 +117,18 @@ const audio={
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;this._master.connect(ctx.destination);
-      // iOS silent mode bypass: pipe master output through MediaStream → HTMLAudioElement.
-      // iOS routes HTMLAudioElement through the "playback" session which ignores the ringer switch.
+      // iOS silent mode bypass: attach a hidden <audio> element to the DOM and pipe
+      // Web Audio output through it via MediaStreamDestination. A DOM-attached element
+      // keeps the iOS AVAudioSession in "playback" mode (ignores ringer switch).
       try{
         var streamDest=ctx.createMediaStreamDestination();
         this._master.connect(streamDest);
-        this._htmlAudio=new Audio();
-        this._htmlAudio.srcObject=streamDest.stream;
-        this._htmlAudio.volume=1;
-        this._htmlAudio.play().catch(function(){});
+        var keeper=document.getElementById("_cobra_keeper");
+        if(!keeper){keeper=document.createElement("audio");keeper.id="_cobra_keeper";keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";document.body.appendChild(keeper);}
+        keeper.srcObject=streamDest.stream;
+        keeper.volume=1;
+        this._htmlAudio=keeper;
+        keeper.play().catch(function(){});
       }catch(e){}
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
