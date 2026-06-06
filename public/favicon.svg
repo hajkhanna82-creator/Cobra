@@ -1,6 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-  <rect width="32" height="32" rx="7" fill="#010603"/>
-  <svg x="4" y="4" width="24" height="24" viewBox="0 0 36 36">
-    <path fill="#DD2E44" d="M11.84 7.634c-.719 0-2.295 2.243-3.567 1.029-.44-.419 1.818-1.278 1.727-2.017-.075-.607-2.842-1.52-1.875-2.099.967-.578 2.418.841 3.513.866 2.382.055 4.212-.853 4.238-.866a1.082 1.082 0 0 1 1.464.496c.27.547.051 1.213-.488 1.486-.131.066-2.225 1.105-5.012 1.105z"/><path fill="#77B255" d="M27.818 36c-3.967 0-8.182-2.912-8.182-8.308 0-1.374-.89-1.661-1.637-1.661-.746 0-1.636.287-1.636 1.661 0 5.396-4.216 8.308-8.182 8.308S0 33.23 0 27.692C0 14.4 14.182 12.565 14.182 14.4c0 1.835-7.636-1.107-7.636 12.185 0 2.215.89 2.769 1.636 2.769.747 0 1.637-.287 1.637-1.661 0-5.395 4.215-8.308 8.182-8.308 3.966 0 8.182 2.912 8.182 8.308 0 1.374.89 1.661 1.637 1.661s1.636-.287 1.636-1.661V11.077c0-3.855-3.417-4.431-5.454-4.431 0 0-3.272 1.108-6.545 1.108s-4.364-2.596-4.364-4.431C13.091 1.488 17.455 0 24 0c6.546 0 12 4.451 12 11.077v16.615C36 33.088 31.784 36 27.818 36z"/><circle cx="19" cy="3" r="1" fill="#292F33"/>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0a2a10"/>
+      <stop offset="100%" stop-color="#010603"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0c060"/>
+      <stop offset="50%" stop-color="#d4a843"/>
+      <stop offset="100%" stop-color="#a07020"/>
+    </linearGradient>
+    <linearGradient id="gold2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f5d070"/>
+      <stop offset="100%" stop-color="#c08830"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="90" fill="url(#bg)"/>
+
+  <!-- Cobra hood (spread) -->
+  <ellipse cx="256" cy="200" rx="155" ry="110" fill="url(#gold)" opacity="0.15"/>
+  <path d="M256 110 C160 100 80 150 100 210 C120 265 190 275 256 270 C322 275 392 265 412 210 C432 150 352 100 256 110Z" fill="url(#gold)" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- Hood inner pattern -->
+  <path d="M256 130 C185 122 125 162 142 205 C158 245 205 255 256 253 C307 255 354 245 370 205 C387 162 327 122 256 130Z" fill="#010c05" opacity="0.5"/>
+
+  <!-- Hood scales pattern -->
+  <path d="M220 160 Q256 152 292 160 Q310 180 292 196 Q256 200 220 196 Q202 180 220 160Z" fill="url(#gold)" opacity="0.5"/>
+
+  <!-- Cobra head -->
+  <ellipse cx="256" cy="265" rx="52" ry="44" fill="url(#gold2)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="234" cy="252" rx="10" ry="11" fill="#0a1a08"/>
+  <ellipse cx="278" cy="252" rx="10" ry="11" fill="#0a1a08"/>
+  <circle cx="234" cy="252" r="5" fill="#ff3300"/>
+  <circle cx="278" cy="252" r="5" fill="#ff3300"/>
+  <circle cx="235" cy="251" r="2" fill="#ff6644"/>
+  <circle cx="279" cy="251" r="2" fill="#ff6644"/>
+
+  <!-- Nose/snout -->
+  <ellipse cx="256" cy="278" rx="16" ry="10" fill="#c08030"/>
+
+  <!-- Forked tongue -->
+  <path d="M248 288 L256 305 L264 288" stroke="#cc2200" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M256 305 L248 318 M256 305 L264 318" stroke="#cc2200" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Body coil -->
+  <path d="M256 305 C256 320 230 335 210 350 C185 368 175 395 200 410 C225 425 260 415 270 395 C280 375 265 360 245 358 C228 356 218 368 225 378 C232 388 248 386 252 377" stroke="url(#gold2)" stroke-width="28" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M256 305 C256 320 230 335 210 350 C185 368 175 395 200 410 C225 425 260 415 270 395 C280 375 265 360 245 358 C228 356 218 368 225 378 C232 388 248 386 252 377" stroke="#c08030" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+
+  <!-- COBRA text -->
+  <text x="256" y="480" text-anchor="middle" font-family="Georgia, serif" font-size="62" font-weight="bold" letter-spacing="10" fill="url(#gold)" opacity="0.95">COBRA</text>
 </svg>
