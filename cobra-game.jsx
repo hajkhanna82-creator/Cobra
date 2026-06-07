@@ -2040,7 +2040,17 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
   );
 }
 
-function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme,setCardTheme}){
+function getEloTierStatic(e){
+  if(e>=2000)return{name:"Grandmaster",icon:"👑",color:"#f0c060"};
+  if(e>=1800)return{name:"Master",icon:"🏆",color:"#ff8f00"};
+  if(e>=1600)return{name:"Diamond",icon:"💠",color:"#b39ddb"};
+  if(e>=1400)return{name:"Platinum",icon:"💎",color:"#4dd0e1"};
+  if(e>=1200)return{name:"Gold",icon:"🥇",color:"#ffd700"};
+  if(e>=1000)return{name:"Silver",icon:"🥈",color:"#c0c0c0"};
+  return{name:"Bronze",icon:"🥉",color:"#cd7f32"};
+}
+function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme,setCardTheme,elo,myName}){
+  var localTier=getEloTierStatic(elo||1000);
   const [leaders,setLeaders]=useState(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(false);
@@ -2062,21 +2072,37 @@ function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,music
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>LEADERBOARD</h2>
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#8aaa8a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
         </div>
+        {/* Local ELO rank card */}
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,marginBottom:16,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(212,168,67,0.2)"}}>
+          <span style={{fontSize:24}}>{localTier.icon}</span>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:localTier.color,letterSpacing:1,fontWeight:700}}>{localTier.name}</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.4)"}}>{myName||"You"}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,color:localTier.color}}>{elo||1000}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>ELO</div>
+          </div>
+        </div>
         {loading&&<div style={{textAlign:"center",padding:40}}><ThinkingDots/></div>}
         {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
         {leaders&&leaders.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
         {leaders&&leaders.map(function(row,i){
           var medal=i===0?"👑":i===1?"🥈":i===2?"🥉":""+(i+1);
+          var rowElo=row.elo||1000;
+          var rowTier=getEloTierStatic(rowElo);
           return(
             <div key={row.id||i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",borderRadius:14,marginBottom:8,background:i===0?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.28)",border:i===0?"1.5px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.06)"}}>
               <div style={{fontFamily:"Cinzel,serif",fontSize:i<3?22:14,width:28,textAlign:"center",flexShrink:0,color:i===0?"#d4a843":i===1?"#c0c0c0":i===2?"#cd7f32":"#3a5a3a"}}>{medal}</div>
               <div style={{fontSize:22,flexShrink:0}}>{row.avatar||"😎"}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:i===0?"#d4a843":"#c8d8c8",letterSpacing:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.name}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:rowTier.color,letterSpacing:1}}>{rowTier.icon} {rowTier.name}</div>
               </div>
-              <div style={{textAlign:"right",flexShrink:0}}>
+              <div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
                 <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,color:i===0?"#d4a843":"#4ade80"}}>{row.wins}</div>
                 <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>WINS</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,color:rowTier.color}}>{rowElo} ELO</div>
               </div>
             </div>
           );
@@ -2936,6 +2962,8 @@ export default function Cobra(){
   const [roundStart,setRoundStart]=useState(null);
   const [roundNum,setRoundNum]=useState(1);
   const [gameStats,setGameStats]=useState(function(){try{var s=localStorage.getItem("cobra_stats");return s?JSON.parse(s):{wins:0,cobras:0,rounds:0,streak:0,bestStreak:0};}catch(e){return{wins:0,cobras:0,rounds:0,streak:0,bestStreak:0};}});
+  const [elo,setElo]=useState(function(){try{return parseInt(localStorage.getItem("cobra_elo")||"1000");}catch(e){return 1000;}});
+  const [eloToast,setEloToast]=useState(null); // {delta, rankUp, rankName, rankColor}
   const [showYourTurn,setShowYourTurn]=useState(false);
   const [lastCpuPlay,setLastCpuPlay]=useState(null);
   const [showCpuPlay,setShowCpuPlay]=useState(false);
@@ -3813,6 +3841,8 @@ export default function Cobra(){
       var elapsed=(Date.now()-roundStart)/1000;
       if(elapsed<10)unlockAch("speed_win");
       setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      // ELO: +12 win vs AI, standard formula vs human
+      if(mode==="cpu"){applyEloChange(12);}else{var exp=1/(1+Math.pow(10,(1200-elo)/400));applyEloChange(Math.round(32*(1-exp)));}
       // Confetti
       var conf=[];
       for(var ci=0;ci<22;ci++){
@@ -3826,6 +3856,8 @@ export default function Cobra(){
       setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      // ELO cobra penalty: -5
+      applyEloChange(-5);
     }
     var revealHands=hands.map(function(h){return h.slice();});
     setRevealData({ns:ns,res:res,declarerIdx:H,hands:revealHands});
@@ -3842,6 +3874,31 @@ export default function Cobra(){
     }).catch(function(){
       supabase.from("cobra_scores").upsert({id:myName,name:myName,avatar:myAvatar||"😎",wins:1,updated_at:new Date().toISOString()},{onConflict:"id"}).then(function(){}).catch(function(){});
     });}catch(e){}
+  }
+
+  function getEloTier(e){
+    if(e>=2000)return{name:"Grandmaster",icon:"👑",color:"linear-gradient(135deg,#f0c060,#fff,#f0c060)",min:2000,max:Infinity};
+    if(e>=1800)return{name:"Master",icon:"🏆",color:"#ff8f00",min:1800,max:1999};
+    if(e>=1600)return{name:"Diamond",icon:"💠",color:"#b39ddb",min:1600,max:1799};
+    if(e>=1400)return{name:"Platinum",icon:"💎",color:"#4dd0e1",min:1400,max:1599};
+    if(e>=1200)return{name:"Gold",icon:"🥇",color:"#ffd700",min:1200,max:1399};
+    if(e>=1000)return{name:"Silver",icon:"🥈",color:"#c0c0c0",min:1000,max:1199};
+    return{name:"Bronze",icon:"🥉",color:"#cd7f32",min:0,max:999};
+  }
+
+  function applyEloChange(delta){
+    var capturedPrevTier,capturedNewElo,capturedNewTier;
+    setElo(function(prev){
+      capturedPrevTier=getEloTier(prev);
+      capturedNewElo=Math.max(0,prev+delta);
+      capturedNewTier=getEloTier(capturedNewElo);
+      try{localStorage.setItem("cobra_elo",String(capturedNewElo));}catch(e){}
+      return capturedNewElo;
+    });
+    setTimeout(function(){
+      setEloToast({delta:delta,rankUp:capturedPrevTier&&capturedNewTier&&capturedPrevTier.name!==capturedNewTier.name&&delta>0,rankName:capturedNewTier?capturedNewTier.name:"",rankColor:capturedNewTier?capturedNewTier.color:"#d4a843"});
+      setTimeout(function(){setEloToast(null);},3500);
+    },400);
   }
 
   function syncAchProgress(newStats){
@@ -3882,6 +3939,10 @@ export default function Cobra(){
     if(loser>=0){
       setGameOverData({scores:ns,winner:winnerIdx,loser:loser});
       if(winnerIdx===myIdx)saveLeaderboardWin();
+      // ELO: -8 loss vs AI, standard formula vs human (only if game is over and I'm the loser)
+      if(loser===H){if(mode==="cpu"){applyEloChange(-8);}else{var exp2=1/(1+Math.pow(10,(1200-elo)/400));applyEloChange(Math.round(32*(0-exp2)));}}
+      // ELO: cobra success (+8) when others get cobrad: tracked per-round already via -5 penalty for victim, +8 for success
+
       // Show elimination animation then go to gameOver
       setElimAnim({name:names[loser],idx:loser});
       setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
@@ -4061,7 +4122,18 @@ export default function Cobra(){
         </div>
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
-        {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
+        {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:6}}>Welcome back, {myName} {myAvatar}</p>}
+        {(function(){var tier=getEloTier(elo);var nextMin=tier.max===Infinity?null:tier.max+1;var pct=tier.max===Infinity?100:Math.round(Math.min(100,(elo-tier.min)/(tier.max-tier.min+1)*100));return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:10,gap:4}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"4px 14px"}}>
+            <span style={{fontSize:16}}>{tier.icon}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:11,background:tier.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",fontWeight:700,letterSpacing:1}}>{tier.name}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{elo} ELO</span>
+          </div>
+          {tier.max!==Infinity&&<div style={{width:140,height:4,borderRadius:2,background:"rgba(255,255,255,0.08)",overflow:"hidden"}}>
+            <div style={{height:"100%",width:pct+"%",background:tier.color,borderRadius:2,transition:"width 0.6s ease"}}/>
+          </div>}
+          {tier.max!==Infinity&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>{tier.max+1-elo} ELO TO {getEloTier(tier.max+1).name.toUpperCase()}</div>}
+        </div>);})()}
         <div style={{textAlign:"center",marginBottom:4}}>
         </div>
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}
@@ -4325,6 +4397,16 @@ export default function Cobra(){
         onClose={function(){setActiveScreen(null);setSpinLast(parseInt(lsGet("cobra_spin_last","0")));}}
       />}
       {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/>}
+      {eloToast&&(function(){var t=eloToast;var tier=getEloTier(elo);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:500,animation:"statSlideIn 0.4s both",pointerEvents:"none"}}>
+        {t.rankUp&&<div style={{background:"linear-gradient(135deg,rgba(20,40,20,0.97),rgba(10,20,10,0.97))",border:"2px solid rgba(212,168,67,0.6)",borderRadius:16,padding:"12px 20px",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",marginBottom:8,whiteSpace:"nowrap"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:900,letterSpacing:2,color:"#f0c060",marginBottom:2}}>🎉 RANK UP!</div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:15,color:typeof tier.color==="string"&&!tier.color.includes("gradient")?tier.color:"#f0c060"}}>{tier.icon} You're now {tier.name}!</div>
+        </div>}
+        <div style={{background:"rgba(0,0,0,0.85)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"8px 16px",textAlign:"center",whiteSpace:"nowrap",backdropFilter:"blur(8px)"}}>
+          <span style={{fontFamily:"Cinzel,serif",fontSize:13,fontWeight:700,color:t.delta>=0?"#4ade80":"#f87171"}}>{t.delta>=0?"+":""}{t.delta} ELO</span>
+          <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(255,255,255,0.4)",marginLeft:8}}>({elo} total)</span>
+        </div>
+      </div>);})()}
       {showAvatarPicker&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:250,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={function(){setShowAvatarPicker(false);}}>
           <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(212,168,67,0.35)",borderBottom:"none",borderRadius:"24px 24px 0 0",padding:"20px 20px calc(24px + env(safe-area-inset-bottom))",width:"100%",maxWidth:480,animation:"slideUp 0.35s cubic-bezier(.22,1,.36,1) both"}}>
@@ -4883,6 +4965,12 @@ export default function Cobra(){
             </div>
           )}
           {iWonGame&&isVIP&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",letterSpacing:2,marginTop:4}}>👑 VIP: +150 bonus coins · 2x XP</div>}
+          {/* ELO delta display */}
+          {(function(){var tier=getEloTier(elo);return(<div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"6px 16px",marginTop:8,animation:"statSlideIn 0.4s 0.9s both"}}>
+            <span style={{fontSize:14}}>{tier.icon}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"rgba(255,255,255,0.5)",letterSpacing:1}}>{tier.name}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:13,fontWeight:700,color:iWonGame?"#4ade80":"#f87171",letterSpacing:1}}>{elo} ELO</span>
+          </div>);})()}
         </div>
 
         <div style={{width:"100%",maxWidth:440,padding:"20px 16px calc(24px + env(safe-area-inset-bottom))",display:"flex",flexDirection:"column",gap:14}}>
@@ -5155,7 +5243,7 @@ export default function Cobra(){
 
   // ─── LEADERBOARD ────────────────────────────────────
   if(screen==="leaderboard"){
-    return <LeaderboardScreen goScreen={goScreen} showSettings={showSettings} setShowSettings={setShowSettings} sfxMuted={sfxMuted} musicMuted={musicMuted} sfxToggle={sfxToggle} musToggle={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme}/>;
+    return <LeaderboardScreen goScreen={goScreen} showSettings={showSettings} setShowSettings={setShowSettings} sfxMuted={sfxMuted} musicMuted={musicMuted} sfxToggle={sfxToggle} musToggle={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} elo={elo} myName={myName}/>;
   }
 
   // ─── SPECTATE PROMPT ────────────────────────────────
