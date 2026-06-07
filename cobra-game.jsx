@@ -862,7 +862,11 @@ function PremiumToggle({active,onToggle}){
 }
 
 var _settingsPop=null;
-function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme}){
+var _notifsEnabled=false;
+var _notifToggle=null;
+function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme,notifsEnabled,onToggleNotifs}){
+  var resolvedNotifsEnabled=notifsEnabled!==undefined?notifsEnabled:_notifsEnabled;
+  var resolvedNotifToggle=typeof onToggleNotifs==="function"?onToggleNotifs:(typeof _notifToggle==="function"?_notifToggle:null);
   var onPop=_settingsPop;
   var winRate=gameStats.rounds>0?Math.round(gameStats.wins/gameStats.rounds*100):0;
   var bestStreak=gameStats.bestStreak||0;
@@ -924,23 +928,12 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
           {"Notification" in window && (
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
               <div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:2}}>NOTIFICATIONS</div>
-                <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,marginTop:2}}>Daily bonus reminders</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:2}}>🔔 NOTIFICATIONS</div>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,marginTop:2}}>Daily missions, challenges & streak</div>
               </div>
-              <button onClick={function(){
-                if(Notification.permission==="granted"){
-                  // Can't revoke programmatically, show info
-                  if(typeof onPop==="function")onPop("To disable, use your browser settings","info");
-                } else {
-                  Notification.requestPermission().then(function(p){
-                    if(p==="granted"){
-                      if(typeof onPop==="function")onPop("Notifications enabled!","success");
-                    }
-                  });
-                }
-              }} style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(212,168,67,0.3)",background:Notification.permission==="granted"?"rgba(74,222,128,0.15)":"rgba(212,168,67,0.08)",color:Notification.permission==="granted"?"#4ade80":"#d4a843",fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:2,cursor:"pointer"}}>
-                {Notification.permission==="granted"?"ON":"ENABLE"}
-              </button>
+              <PremiumToggle active={!!resolvedNotifsEnabled} onToggle={function(){
+                if(typeof resolvedNotifToggle==="function")resolvedNotifToggle();
+              }}/>
             </div>
           )}
 
@@ -2286,8 +2279,158 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
   );
 }
 
-function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings,isVIP}){
-  var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
+function EarnSection({addCoins,addGems,pop,dailyStreak,myName,myAvatar}){
+  var today=Math.floor(Date.now()/(1000*60*60*24));
+  var loginStreak=parseInt((function(){try{return localStorage.getItem("cobra_login_streak")||"0";}catch(e){return"0";}})());
+  var rewards=[{coins:100,gems:0},{coins:150,gems:0},{coins:200,gems:1},{coins:250,gems:1},{coins:300,gems:2},{coins:400,gems:2},{coins:500,gems:5}];
+  var nextDay=Math.min(loginStreak%7,6);
+  var nextReward=rewards[nextDay];
+
+  // Ad watches
+  var [adCountdown,setAdCountdown]=useState(null);
+  var adWatchData=(function(){try{var d=JSON.parse(localStorage.getItem("cobra_ad_watches")||"{}");if(d.day!==today)return{day:today,count:0};return d;}catch(e){return{day:today,count:0};}})();
+  var adWatches=adWatchData.count||0;
+  var canWatchAd=adWatches<3;
+
+  // Profile reward
+  var profileClaimed=(function(){try{return localStorage.getItem("cobra_profile_reward_claimed")==="1";}catch(e){return false;}})();
+  var profileComplete=!!(myName&&myAvatar&&myAvatar!=="😎");
+
+  // First win of day
+  var lastWinDay=(function(){try{return parseInt(localStorage.getItem("cobra_last_win_date")||"0");}catch(e){return 0;}})();
+  var firstWinClaimed=lastWinDay===today;
+
+  // Share reward
+  var lastShareDay=(function(){try{return parseInt(localStorage.getItem("cobra_share_day")||"0");}catch(e){return 0;}})();
+  var shareClaimed=lastShareDay===today;
+
+  function watchAd(){
+    if(!canWatchAd)return;
+    var count=0;
+    setAdCountdown(5);
+    var iv=setInterval(function(){
+      count++;
+      if(count>=5){
+        clearInterval(iv);
+        setAdCountdown(null);
+        var newData={day:today,count:adWatches+1};
+        try{localStorage.setItem("cobra_ad_watches",JSON.stringify(newData));}catch(e){}
+        if(addCoins)addCoins(50);
+        if(pop)pop("+50 coins from ad!","success");
+      } else {
+        setAdCountdown(5-count);
+      }
+    },1000);
+  }
+
+  function claimProfile(){
+    if(profileClaimed||!profileComplete)return;
+    try{localStorage.setItem("cobra_profile_reward_claimed","1");}catch(e){}
+    if(addCoins)addCoins(100);
+    if(pop)pop("+100 coins for completing profile!","success");
+  }
+
+  function claimShare(){
+    if(shareClaimed)return;
+    try{
+      if(navigator.share){navigator.share({title:"Play COBRA",text:"Play COBRA - the ultimate card game!",url:window.location.href});}
+    }catch(e){}
+    try{localStorage.setItem("cobra_share_day",String(today));}catch(e){}
+    if(addCoins)addCoins(75);
+    if(pop)pop("+75 coins for sharing!","success");
+  }
+
+  var cardStyle={background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px 16px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12};
+
+  return(
+    <div>
+      {adCountdown!==null&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{background:"#0a1a0a",border:"2px solid rgba(212,168,67,0.4)",borderRadius:20,padding:"32px 40px",textAlign:"center"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:44,fontWeight:900,color:"#f0c060",marginBottom:8}}>{adCountdown}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#8a9a8a",letterSpacing:2}}>WATCHING AD...</div>
+          </div>
+        </div>
+      )}
+      {/* Daily Streak */}
+      <div style={cardStyle}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>📅</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#fbbf24",letterSpacing:1,fontWeight:700}}>Daily Streak Bonus</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.45)"}}>Streak: {loginStreak} days · Next: {nextReward.coins} 🪙{nextReward.gems?" + "+nextReward.gems+" 💎":""}</div>
+          </div>
+        </div>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:1,flexShrink:0}}>AUTO</div>
+      </div>
+      {/* Watch Ad */}
+      <div style={{...cardStyle,border:"1px solid "+(canWatchAd?"rgba(74,222,128,0.25)":"rgba(255,255,255,0.06)")}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>📺</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:canWatchAd?"#4ade80":"#6a9a6a",letterSpacing:1,fontWeight:700}}>Watch Ad</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.45)"}}>{adWatches}/3 today · +50 🪙 each</div>
+          </div>
+        </div>
+        {canWatchAd?(
+          <button onClick={watchAd} style={{background:"linear-gradient(135deg,#166534,#15803d)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1,color:"#4ade80",padding:"8px 14px",cursor:"pointer",fontWeight:700,touchAction:"manipulation",flexShrink:0}}>WATCH</button>
+        ):(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",flexShrink:0}}>✓ DONE</div>
+        )}
+      </div>
+      {/* Complete Profile */}
+      <div style={{...cardStyle,border:"1px solid "+(profileClaimed?"rgba(255,255,255,0.06)":profileComplete?"rgba(212,168,67,0.3)":"rgba(255,255,255,0.08)")}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>👤</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:profileClaimed?"#6a9a6a":profileComplete?"#d4a843":"#8a9a8a",letterSpacing:1,fontWeight:700}}>Complete Profile</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.45)"}}>Set name + avatar · +100 🪙</div>
+          </div>
+        </div>
+        {profileClaimed?(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",flexShrink:0}}>✓ CLAIMED</div>
+        ):profileComplete?(
+          <button onClick={claimProfile} style={{background:"linear-gradient(135deg,#92600a,#d4a843)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1,color:"#010603",padding:"8px 14px",cursor:"pointer",fontWeight:700,touchAction:"manipulation",flexShrink:0}}>CLAIM</button>
+        ):(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6a5a2a",flexShrink:0}}>INCOMPLETE</div>
+        )}
+      </div>
+      {/* First Win of Day */}
+      <div style={{...cardStyle,border:"1px solid "+(firstWinClaimed?"rgba(255,255,255,0.06)":"rgba(96,165,250,0.2)")}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>🏆</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:firstWinClaimed?"#6a9a6a":"#60a5fa",letterSpacing:1,fontWeight:700}}>First Win of Day</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.45)"}}>Win a game today · +150 🪙</div>
+          </div>
+        </div>
+        {firstWinClaimed?(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",flexShrink:0}}>✓ EARNED</div>
+        ):(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#3a6a8a",flexShrink:0}}>PLAY TO EARN</div>
+        )}
+      </div>
+      {/* Share the Game */}
+      <div style={{...cardStyle,border:"1px solid "+(shareClaimed?"rgba(255,255,255,0.06)":"rgba(192,132,252,0.2)")}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:28}}>📤</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:shareClaimed?"#6a9a6a":"#c084fc",letterSpacing:1,fontWeight:700}}>Share the Game</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.45)"}}>Share COBRA once a day · +75 🪙</div>
+          </div>
+        </div>
+        {shareClaimed?(
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",flexShrink:0}}>✓ DONE</div>
+        ):(
+          <button onClick={claimShare} style={{background:"linear-gradient(135deg,#4a1a8a,#7c3aed)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1,color:"#e9d5ff",padding:"8px 14px",cursor:"pointer",fontWeight:700,touchAction:"manipulation",flexShrink:0}}>SHARE</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings,isVIP,addCoins,addGems,pop,dailyStreak,myName}){
+  var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES","EARN"];
   var [cat,setCat]=useState("ALL");
   var [timeLeft,setTimeLeft]=useState("00:00:00");
   var daySeed=Math.floor(Date.now()/(1000*60*60*24));
@@ -2474,6 +2617,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
   var showAvatars=cat==="ALL"||cat==="AVATARS";
   var showBundles=cat==="ALL"||cat==="BUNDLES";
   var showCrates=cat==="ALL"||cat==="CRATES";
+  var showEarn=cat==="EARN";
   var newItems=SHOP_THEMES.filter(function(t){return t.isNew;});
   var featuredItems=SHOP_THEMES.filter(function(t){return t.rarity==="epic"||t.rarity==="legendary";}).slice(0,3);
 
@@ -2741,6 +2885,13 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
               {CRATES.map(function(item){return(<CrateCard key={item.id} item={item}/>);})}
             </div>
+          </div>
+        )}
+
+        {showEarn&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>EARN COINS</SectionHeader>
+            <EarnSection addCoins={addCoins} addGems={addGems} pop={pop} dailyStreak={dailyStreak} myName={myName} myAvatar={myAvatar}/>
           </div>
         )}
 
@@ -3312,6 +3463,87 @@ function ClanScreen({goScreen,myName,myAvatar,elo,coins,onSpendCoins}){
   );
 }
 
+function ReferralScreen({goScreen,myName,addCoins,pop}){
+  var code=useState(function(){
+    try{
+      var c=localStorage.getItem("cobra_referral_code");
+      if(!c){c=(myName||"PLAY").slice(0,4).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase();localStorage.setItem("cobra_referral_code",c);}
+      return c;
+    }catch(e){return "COBRA";}
+  })[0];
+  var [inputCode,setInputCode]=useState("");
+  var [claimMsg,setClaimMsg]=useState("");
+  var referralCount=parseInt((function(){try{return localStorage.getItem("cobra_referral_count")||"0";}catch(e){return"0";}})());
+
+  function handleShare(){
+    try{
+      if(navigator.share){navigator.share({title:"Play COBRA",text:"Join me on COBRA! Use code "+code,url:window.location.href});}
+      else{navigator.clipboard.writeText("Join me on COBRA! Use code "+code+" at "+window.location.href);setClaimMsg("Code copied to clipboard!");}
+    }catch(e){try{navigator.clipboard.writeText(code);}catch(e2){}setClaimMsg("Code copied!");}
+  }
+
+  function handleClaim(){
+    var c=inputCode.trim().toUpperCase();
+    if(!c){setClaimMsg("Enter a code first.");return;}
+    if(c===code){setClaimMsg("You cannot use your own code!");return;}
+    try{
+      if(localStorage.getItem("cobra_used_referral")==="1"){setClaimMsg("You have already used a referral code.");return;}
+      localStorage.setItem("cobra_used_referral","1");
+      addCoins(200);
+      setClaimMsg("\u{1F389} +200 coins added! Thanks for using a referral code!");
+    }catch(e){setClaimMsg("Error claiming code.");}
+  }
+
+  var rewardTable=[
+    {n:1,reward:"200 \u{1FA99} coins"},
+    {n:3,reward:"500 \u{1FA99} + 1 \u{1F48E} gem"},
+    {n:5,reward:"7-day VIP trial"},
+  ];
+
+  return(
+    <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto",minHeight:"100vh"}}>
+      <style>{GS}</style>
+      <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
+        <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>&#8592; BACK</button>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <span style={{fontSize:44}}>🎁</span>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>REFER FRIENDS</h2>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:14,marginTop:4}}>Share COBRA &#8212; earn rewards together</p>
+        </div>
+        <div style={{background:"rgba(212,168,67,0.08)",border:"2px solid rgba(212,168,67,0.4)",borderRadius:18,padding:"20px",marginBottom:16,textAlign:"center"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#8a7a3e",letterSpacing:3,marginBottom:8}}>YOUR REFERRAL CODE</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:34,fontWeight:900,letterSpacing:6,color:"#f0c060",marginBottom:12}}>{code}</div>
+          <button onClick={handleShare} style={{background:"linear-gradient(135deg,#d4a843,#a87020)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:2,color:"#010603",padding:"12px 28px",cursor:"pointer",fontWeight:700,touchAction:"manipulation"}}>📤 SHARE CODE</button>
+        </div>
+        <div style={{background:"rgba(0,0,0,0.25)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px 18px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#a0c0a0",letterSpacing:1}}>👥 INVITED FRIENDS</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,color:"#4ade80"}}>{referralCount}</div>
+        </div>
+        <div style={{marginBottom:16}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6b5a20",letterSpacing:2,marginBottom:8}}>REWARDS</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {rewardTable.map(function(row){return(
+              <div key={row.n} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:referralCount>=row.n?"rgba(74,222,128,0.08)":"rgba(0,0,0,0.2)",border:"1px solid "+(referralCount>=row.n?"rgba(74,222,128,0.3)":"rgba(255,255,255,0.06)"),borderRadius:10}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#a0c0a0",letterSpacing:1}}>{row.n} friend{row.n>1?"s":""}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:referralCount>=row.n?"#4ade80":"#d4a843"}}>{referralCount>=row.n?"✓ ":""}{row.reward}</div>
+              </div>
+            );})}
+          </div>
+        </div>
+        <div style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"16px"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#8a7a3e",letterSpacing:2,marginBottom:10}}>ENTER A CODE</div>
+          <div style={{display:"flex",gap:8}}>
+            <input value={inputCode} onChange={function(e){setInputCode(e.target.value.toUpperCase());}} placeholder="FRIEND'S CODE" maxLength={10}
+              style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"10px 14px",fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",outline:"none",letterSpacing:2}}/>
+            <button onClick={handleClaim} style={{background:"linear-gradient(135deg,#1e3a5f,#1e4080)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:1,color:"#60a5fa",padding:"10px 16px",cursor:"pointer",fontWeight:700,touchAction:"manipulation",whiteSpace:"nowrap"}}>CLAIM</button>
+          </div>
+          {claimMsg&&<div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:claimMsg.includes("\u{1F389}")?"#4ade80":"#f87171",marginTop:8,textAlign:"center"}}>{claimMsg}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FriendsScreen({goScreen,myName,myAvatar,elo}){
   const [tab,setTab]=useState("friends");
   const [searchQuery,setSearchQuery]=useState("");
@@ -3620,11 +3852,14 @@ export default function Cobra(){
   const [dailyLast,setDailyLast]=useState(function(){return parseInt(lsGet("cobra_daily_last","0"));});
   const [dailyStreak,setDailyStreak]=useState(function(){return parseInt(lsGet("cobra_daily_streak","0"));});
   const [spinLast,setSpinLast]=useState(function(){return parseInt(lsGet("cobra_spin_last","0"));});
+  const [seasonEndModal,setSeasonEndModal]=useState(null); // {tier,coins,prevRank}
   const [joiningRoom,setJoiningRoom]=useState(false);
   const [creatingRoom,setCreatingRoom]=useState(false);
   const [startingGame,setStartingGame]=useState(false);
   const [scoreLimit,setScoreLimit]=useState(function(){return parseInt(lsGet("cobra_score_limit","100"));});
   const [connStatus,setConnStatus]=useState(""); // "reconnecting"|"connected"|""
+  const [rejoinData,setRejoinData]=useState(null); // {roomCode,myIdx,names,scores,mode,timestamp}
+  const [notifsEnabled,setNotifsEnabled]=useState(function(){try{return localStorage.getItem("cobra_notifs_enabled")==="1";}catch(e){return false;}});
   const [showSummary,setShowSummary]=useState(false);
   const gameSummaryRef=useRef({declarations:{},cobraHits:{},roundScores:[],rounds:0});
   const chatChannelRef=useRef(null);
@@ -3706,6 +3941,33 @@ export default function Cobra(){
       }
     }catch(e){}
   },[]);
+
+  // Season reset check
+  useEffect(function(){
+    try{
+      var todayMs=Date.now();
+      var todayDay=Math.floor(todayMs/(1000*60*60*24));
+      var seasonStart=parseInt(localStorage.getItem("cobra_season_start_date")||"0");
+      if(!seasonStart){localStorage.setItem("cobra_season_start_date",String(todayDay));return;}
+      if(todayDay-seasonStart>=30){
+        // Season ended
+        var tierRewards={Bronze:100,Silver:200,Gold:400,Platinum:700,Diamond:1000,Master:1500,Grandmaster:2500};
+        var currentElo=parseInt(localStorage.getItem("cobra_elo")||"1000");
+        var tierInfo=getEloTierStatic(currentElo);
+        var reward=tierRewards[tierInfo.name]||100;
+        var newElo=Math.max(800,Math.floor(currentElo*0.6));
+        localStorage.setItem("cobra_season_start_date",String(todayDay));
+        localStorage.setItem("cobra_elo",String(newElo));
+        localStorage.setItem("cobra_prev_season_rank",tierInfo.name);
+        setElo(newElo);
+        setSeasonEndModal({tier:tierInfo,reward:reward});
+        setTimeout(function(){
+          setCoins(function(c){var v=c+reward;try{localStorage.setItem("cobra_coins",String(v));}catch(e){}return v;});
+        },500);
+      }
+    }catch(e){}
+  },[]);
+
   const H=myIdx;
 
   const xpForLevel=function(lvl){return lvl*100;};
@@ -3831,6 +4093,12 @@ export default function Cobra(){
       setNames(room.players.map(function(p){return p.name;}));
       setNPlayers(room.players.length);
       // Another player declared — join the reveal screen
+      // Save reconnection data for non-host players
+      try{
+        var activeGameData={roomCode:room.code,myIdx:myIdx,names:room.players.map(function(p){return p.name;}),scores:gs.scores||[],mode:"online",timestamp:Date.now()};
+        localStorage.setItem("cobra_active_room",room.code);
+        localStorage.setItem("cobra_active_game",JSON.stringify(activeGameData));
+      }catch(e){}
       if(gs.declared){
         var dd=gs.declared;
         setRevealData({ns:dd.ns,res:dd.res,declarerIdx:dd.declarerIdx,hands:dd.hands});
@@ -3875,6 +4143,77 @@ export default function Cobra(){
     function handleInstall(e){e.preventDefault();setInstallPrompt(e);}
     window.addEventListener("beforeinstallprompt",handleInstall);
     return function(){window.removeEventListener("beforeinstallprompt",handleInstall);};
+  },[]);
+
+  // ── Push Notifications helper ────────────────────────
+  function sendNotification(title,body,icon){
+    try{
+      if(!("Notification" in window)||Notification.permission!=="granted")return;
+      new Notification(title,{body:body,icon:icon||"/icons/icon-192.png"});
+    }catch(e){}
+  }
+
+  // Extend scheduleDailyReminder with additional triggers
+  function scheduleNotifTriggers(){
+    try{
+      if(!("Notification" in window)||Notification.permission!=="granted")return;
+      // Idle 24h reminder
+      var idleKey="cobra_last_play_time";
+      var lastPlay=parseInt(localStorage.getItem(idleKey)||"0");
+      var now=Date.now();
+      if(!lastPlay){localStorage.setItem(idleKey,String(now));}
+      var idleMs=24*60*60*1000-(now-lastPlay);
+      if(idleMs<0)idleMs=100;
+      setTimeout(function(){
+        if(document.visibilityState==="hidden"){
+          sendNotification("🐍 Your COBRA streak is at risk!","Play today to keep it","/icons/icon-192.png");
+        }
+      },idleMs);
+      // Daily missions reset at midnight
+      var msUntilMidnight=(function(){var d=new Date();var mn=new Date(d);mn.setHours(24,0,0,0);return mn.getTime()-d.getTime();}());
+      setTimeout(function(){
+        sendNotification("🎯 New missions available!","Come collect your rewards","/icons/icon-192.png");
+      },msUntilMidnight);
+    }catch(e){}
+  }
+
+  // On visibility change, check pending notifications
+  useEffect(function(){
+    function onVisible(){
+      if(document.visibilityState==="visible"){
+        try{
+          var pending=JSON.parse(localStorage.getItem("cobra_notif_schedule")||"[]");
+          var now=Date.now();
+          var remaining=pending.filter(function(n){
+            if(n.at&&n.at<=now){
+              sendNotification(n.title,n.body,n.icon);
+              return false;
+            }
+            return true;
+          });
+          localStorage.setItem("cobra_notif_schedule",JSON.stringify(remaining));
+        }catch(e){}
+      }
+    }
+    document.addEventListener("visibilitychange",onVisible);
+    return function(){document.removeEventListener("visibilitychange",onVisible);};
+  },[]);
+
+  // ── Multiplayer Reconnection check ───────────────────
+  useEffect(function(){
+    try{
+      var raw=localStorage.getItem("cobra_active_game");
+      if(!raw)return;
+      var data=JSON.parse(raw);
+      if(!data||!data.timestamp)return;
+      var age=Date.now()-data.timestamp;
+      if(age>2*60*60*1000){
+        localStorage.removeItem("cobra_active_game");
+        localStorage.removeItem("cobra_active_room");
+        return;
+      }
+      setRejoinData(data);
+    }catch(e){}
   },[]);
 
   // URL room code auto-join
@@ -3939,12 +4278,17 @@ export default function Cobra(){
     return function(){document.removeEventListener("touchstart",initAudio);document.removeEventListener("click",initAudio);};
   },[initAudio]);
 
+  function clearActiveGame(){
+    try{localStorage.removeItem("cobra_active_game");localStorage.removeItem("cobra_active_room");}catch(e){}
+  }
+
   const goScreen=useCallback(function(s){
     audio.init();audio.resume();
     if(s==="home"){
       rtUnsubscribe();
       if(chatChannelRef.current&&supabase){try{supabase.removeChannel(chatChannelRef.current);}catch(e){}chatChannelRef.current=null;}
       setIsSpectator(false);setChatMessages([]);setUnreadChat(0);setChatOpen(false);
+      clearActiveGame();
     }
     setScreen(s);
   },[rtUnsubscribe]);
@@ -3955,6 +4299,8 @@ export default function Cobra(){
     toastT.current=setTimeout(function(){setToast({msg:"",type:"info"});},ms);
   };
   _settingsPop=pop;
+  _notifsEnabled=notifsEnabled;
+  _notifToggle=notifToggle;
 
   // Turn timer
   useEffect(function(){
@@ -4304,9 +4650,15 @@ export default function Cobra(){
         setStartingGame(false);
         roomRef.current=room; // ensure roomRef has started status before any move
         rtBroadcast(room); // push to all players simultaneously
-        setNames(room.players.map(function(p){return p.name;}));setNPlayers(n);
+        var pnames=room.players.map(function(p){return p.name;});
+        setNames(pnames);setNPlayers(n);
         setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
         setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(Array(n).fill(0));
+        try{
+          var activeGame={roomCode:roomCode,myIdx:myIdx,names:pnames,scores:Array(n).fill(0),mode:"online",timestamp:Date.now()};
+          localStorage.setItem("cobra_active_room",roomCode);
+          localStorage.setItem("cobra_active_game",JSON.stringify(activeGame));
+        }catch(e){}
         goScreen("game");
       }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
     }).catch(function(){setStartingGame(false);pop("Connection error — try again","error");});
@@ -4642,7 +4994,12 @@ export default function Cobra(){
     gainXP(25); // participation XP
     gainSeasonXP(15); // season XP for participation
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
-    if(winnerIdx===myIdx){gainXP(50);gainSeasonXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.25);addCoins(vipCoinBonus);}} // win bonus
+    if(winnerIdx===myIdx){gainXP(50);gainSeasonXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.25);addCoins(vipCoinBonus);} // win bonus
+      // First win of day bonus
+      var todayWinDay=Math.floor(Date.now()/(1000*60*60*24));
+      var lastWinDaySaved=parseInt((function(){try{return localStorage.getItem("cobra_last_win_date")||"0";}catch(e){return"0";}})());
+      if(lastWinDaySaved!==todayWinDay){try{localStorage.setItem("cobra_last_win_date",String(todayWinDay));}catch(e){}addCoins(150);pop("+150 coins — First Win of the Day! 🏆","success");}
+    }
     // Unlock streak frames
     var curStreak=gameStats.streak||0;
     if(winnerIdx===myIdx){
@@ -4668,7 +5025,7 @@ export default function Cobra(){
 
       // Show elimination animation then go to gameOver
       setElimAnim({name:names[loser],idx:loser});
-      setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
+      clearActiveGame();setTimeout(function(){setElimAnim(null);setScreen("gameOver");},2500);
     } else {setScreen("roundEnd");}
   }
 
@@ -4682,6 +5039,24 @@ export default function Cobra(){
 
   const sfxToggle=function(){audio.toggleMute();setSfxMuted(function(v){var n=!v;try{localStorage.setItem("cobra_sfx_muted",n?"1":"0");}catch(e){}return n;});};
   const musToggle=function(){audio.toggleMusic();setMusicMuted(function(v){var n=!v;try{localStorage.setItem("cobra_mus_muted",n?"1":"0");}catch(e){}return n;});};
+  const notifToggle=function(){
+    if(!("Notification" in window))return;
+    var enabling=!notifsEnabled;
+    if(enabling){
+      Notification.requestPermission().then(function(p){
+        if(p==="granted"){
+          setNotifsEnabled(true);try{localStorage.setItem("cobra_notifs_enabled","1");}catch(e){}
+          scheduleNotifTriggers();
+          pop("Notifications enabled!","success");
+        } else {
+          pop("Notification permission denied","warning");
+        }
+      });
+    } else {
+      setNotifsEnabled(false);try{localStorage.setItem("cobra_notifs_enabled","0");}catch(e){}
+      pop("Notifications disabled","info");
+    }
+  };
 
   if(showSplash)return(
     <div>
@@ -4909,6 +5284,7 @@ export default function Cobra(){
             👑 VIP MEMBER
           </button>
         )}
+        <button className="btn_btn_ghost" style={{width:"100%",padding:"14px",fontSize:11,letterSpacing:2,marginBottom:10,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80"}} onClick={function(){audio.buttonClick();goScreen("referral");}}>🎁 REFER FRIENDS</button>
         <div style={{display:"flex",gap:10}}>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
@@ -5108,7 +5484,7 @@ export default function Cobra(){
           </div>
         </div>
       )}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       {activeScreen==="profile"&&<ProfileScreen name={myName} avatar={myAvatar} level={playerLevel} xp={playerXP} xpForLevel={xpForLevel} coins={coins} gems={gems} stats={gameStats} isVIP={isVIP} onClose={function(){setActiveScreen(null);}}/>}
       {activeScreen==="battlepass"&&<BattlePassScreen
         bpLevel={bpLevel}
@@ -5206,6 +5582,11 @@ export default function Cobra(){
     </div>
   );
 
+  // ─── REFERRAL ──────────────────────────────────────
+  if(screen==="referral")return(
+    <ReferralScreen goScreen={goScreen} myName={myName} addCoins={addCoins} pop={pop}/>
+  );
+
   // ─── HOW TO PLAY ────────────────────────────────────
   if(screen==="howto")return(
     <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
@@ -5245,7 +5626,7 @@ export default function Cobra(){
           <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:4}} onClick={function(){audio.buttonClick();goScreen("home");}}>GOT IT</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
     </div>
   );
 
@@ -5311,7 +5692,7 @@ export default function Cobra(){
             <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:14}} onClick={function(){audio.buttonClick();haptic.medium();setNames(ln);startCPU();}}>DEAL CARDS</button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       </div>
     );
   }
@@ -5347,7 +5728,7 @@ export default function Cobra(){
           <button className="btn_btn_outline_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5}} disabled={joiningRoom} onClick={function(){audio.buttonClick();joinRoom();}}>{joiningRoom?"JOINING...":"JOIN ROOM"}</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
     </div>
   );
 
@@ -5379,7 +5760,7 @@ export default function Cobra(){
           <button className="btn_btn_green" style={{width:"100%",padding:16,fontSize:14,letterSpacing:2.5}} onClick={joinGlobal}>PLAY NOW</button>
         </div>
       </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
     </div>
   );
 
@@ -5543,7 +5924,7 @@ export default function Cobra(){
       </div>
       {/* Floating emojis in lobby */}
       {emojis.map(function(e){return(<EmojiFloat key={e.id} emoji={e.emoji} x={e.x} y={e.y}/>);})}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
     </div>
   );
 
@@ -5628,7 +6009,7 @@ export default function Cobra(){
               gameSummaryRef.current.rounds=(gameSummaryRef.current.rounds||0)+1;
               setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});
               setRevealData(null);
-              if(loser>=0){var winner=ns.indexOf(Math.min.apply(null,ns));setGameOverData({scores:ns,winner:winner,loser:loser});if(winner===H)saveLeaderboardWin();setScreen("gameOver");}
+              if(loser>=0){var winner=ns.indexOf(Math.min.apply(null,ns));setGameOverData({scores:ns,winner:winner,loser:loser});if(winner===H)saveLeaderboardWin();clearActiveGame();setScreen("gameOver");}
               else setScreen("roundEnd");
             }}>SEE SCORECARD</button>
         </div>
@@ -5711,7 +6092,7 @@ export default function Cobra(){
             </button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       </div>
     );
   }
@@ -5879,7 +6260,7 @@ export default function Cobra(){
             </button>
           </div>
         </div>
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       {showSummary&&<GameSummaryScreen
         data={Object.assign({},gameSummaryRef.current,{winner:gameOverData&&gameOverData.winner,scores:gameOverData&&gameOverData.scores,names:names.slice(0,nPlayers)})}
         names={names.slice(0,nPlayers)}
@@ -6078,6 +6459,11 @@ export default function Cobra(){
           isVIP={isVIP}
           showSettings={showSettings}
           setShowSettings={setShowSettings}
+          addCoins={addCoins}
+          addGems={addGems}
+          pop={pop}
+          dailyStreak={dailyStreak}
+          myName={myName}
         />
         {crateReveal&&(
           <CrateOpenModal
@@ -6466,7 +6852,7 @@ export default function Cobra(){
           </div>
         </>
       )}
-      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}}/>
+      <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       {tutorialStep>=0&&(
         <TutorialCoach
           stepIdx={tutorialStep}
@@ -6482,6 +6868,35 @@ export default function Cobra(){
         />
       )}
       {dailyLoginData&&<DailyLoginModal data={dailyLoginData} onClose={function(){setDailyLoginData(null);}}/>}
+      {/* Multiplayer Reconnection Modal */}
+      {rejoinData&&(
+        <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+          <div style={{background:"linear-gradient(180deg,rgba(5,20,8,0.99),rgba(2,12,5,0.99))",border:"1.5px solid rgba(212,168,67,0.35)",borderRadius:22,padding:"28px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.8)",textAlign:"center"}}>
+            <div style={{fontSize:42,marginBottom:10}}>🔗</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:3,color:"#d4a843",marginBottom:6}}>REJOIN GAME?</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:14,marginBottom:4}}>Room: <b style={{color:"#d4a843"}}>{rejoinData.roomCode}</b></div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"#8aad8a",fontSize:13,marginBottom:20}}>{(rejoinData.names||[]).join(", ")}</div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn_btn_ghost" style={{flex:1,padding:14,fontSize:11,letterSpacing:2}} onClick={function(){
+                clearActiveGame();setRejoinData(null);
+              }}>ABANDON</button>
+              <button className="btn_btn_gold" style={{flex:1,padding:14,fontSize:11,letterSpacing:2}} onClick={function(){
+                var rd=rejoinData;
+                setRejoinData(null);
+                setRoomCode(rd.roomCode);
+                setRoomInput(rd.roomCode);
+                setMyIdx(rd.myIdx||0);
+                if(rd.names)setNames(rd.names);
+                if(rd.scores)setScores(rd.scores);
+                setMode("online");
+                rtSubscribe(rd.roomCode);
+                loadRoom(rd.roomCode).then(function(room){if(room)onRoomUpdate(room);}).catch(function(){});
+                setScreen("setupGlobal");
+              }}>REJOIN</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
