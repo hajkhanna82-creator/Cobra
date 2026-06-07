@@ -477,6 +477,7 @@ const CARD_THEMES={
   storm:{bg:"linear-gradient(148deg,#0a0a1a,#050510,#08081a)",border:"rgba(100,120,255,0.8)",pat:"rgba(120,140,255,0.22)",pat2:"rgba(80,100,220,0.15)"},
   serpent:{bg:"linear-gradient(148deg,#0a1a0a,#051005,#081508)",border:"rgba(40,180,60,0.8)",pat:"rgba(60,200,80,0.22)",pat2:"rgba(40,160,55,0.15)"},
   void:{bg:"linear-gradient(148deg,#080808,#030303,#060606)",border:"rgba(80,80,80,0.6)",pat:"rgba(100,100,100,0.1)",pat2:"rgba(80,80,80,0.08)"},
+  vip_gold:{bg:"linear-gradient(148deg,#1a1000,#0d0800,#151000)",border:"rgba(212,168,67,0.95)",pat:"rgba(255,200,0,0.35)",pat2:"rgba(212,168,0,0.25)"},
 };
 
 const SHOP_THEMES=[
@@ -486,6 +487,7 @@ const SHOP_THEMES=[
   {id:"emerald",name:"Emerald",price:500,currency:"coins",color:"#021a06",desc:"Lush green forest",rarity:"rare"},
   {id:"galaxy",name:"Galaxy",price:1200,currency:"coins",color:"#0a0520",desc:"Cosmic purple depths",rarity:"epic"},
   {id:"gold",name:"Gold Rush",price:1500,currency:"coins",color:"#1a1200",desc:"Pure luxury edition",rarity:"legendary"},
+  {id:"vip_gold",name:"VIP Gold",price:0,currency:"coins",color:"#1a1000",desc:"Exclusive VIP members only ✦",rarity:"legendary",vipOnly:true},
   {id:"vip_royal",name:"Royal VIP",price:0,currency:"coins",color:"#1a0e00",desc:"Exclusive VIP members only",rarity:"legendary",vipOnly:true},
   {id:"vip_crown",name:"Crown Edition",price:0,currency:"coins",color:"#0a0010",desc:"The crown jewel — VIP exclusive",rarity:"legendary",vipOnly:true},
   {id:"neon",name:"Neon Nights",price:1800,currency:"coins",color:"#001a1a",desc:"Electric cyan glow on deep black",rarity:"rare",isNew:true},
@@ -1088,6 +1090,7 @@ function DailyLoginModal({data,onClose}){
           })}
         </div>
         <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:14,padding:"14px",textAlign:"center",marginBottom:18}}>
+          {data.vipBonus&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",letterSpacing:2,marginBottom:8}}>👑 VIP 2x BONUS!</div>}
           <p style={{fontFamily:"Crimson Text,serif",color:"#a09060",fontSize:13,marginBottom:6}}>Today's reward</p>
           <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16}}>
             <span style={{fontFamily:"Cinzel,serif",fontSize:22,color:"#f0c060"}}>🪙 +{data.coins}</span>
@@ -2101,7 +2104,7 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
   );
 }
 
-function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings}){
+function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings,isVIP}){
   var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
   var [cat,setCat]=useState("ALL");
   var [timeLeft,setTimeLeft]=useState("00:00:00");
@@ -2134,8 +2137,10 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     );
   }
 
+  var effectiveUnlockedThemes=isVIP?[...ownedItems,"vip_gold"]:ownedItems;
+
   function ThemeCard({item,compact}){
-    var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+    var owned=item.price===0||effectiveUnlockedThemes.indexOf(item.id)>=0;
     var equipped=cardTheme===item.id;
     var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
     var th=CARD_THEMES[item.id]||CARD_THEMES.classic;
@@ -2144,6 +2149,7 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     return(
       <div style={{borderRadius:20,overflow:"hidden",border:equipped?"2px solid #d4a843":"1.5px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",boxShadow:equipped?"0 0 28px rgba(212,168,67,0.35),inset 0 1px 0 rgba(255,255,255,0.08)":item.rarity==="legendary"?"0 0 20px "+rg+",0 4px 20px rgba(0,0,0,0.5)":"0 4px 20px rgba(0,0,0,0.5)",transition:"all 0.25s",position:"relative"}}>
         {item.isNew&&<div style={{position:"absolute",top:10,left:10,zIndex:10,background:"#22c55e",borderRadius:6,padding:"2px 7px",fontFamily:"Cinzel,serif",fontSize:7,color:"#fff",letterSpacing:1,fontWeight:700}}>NEW</div>}
+        {item.vipOnly&&!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.7)",borderRadius:"inherit",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:20}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2,marginTop:4}}>VIP ONLY</span></div>}
         <div style={{height:compact?80:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:compact?6:10,position:"relative",overflow:"hidden"}}>
           <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 20% 50%,"+th.pat+" 0%,transparent 60%),radial-gradient(circle at 80% 50%,"+th.pat2+" 0%,transparent 60%)"}}/>
           {[0,1,2].map(function(ci){return(
@@ -2709,12 +2715,12 @@ function VIPScreen({onBack,onBuy,isVIP,coins,gems}){
         </div>
         <div style={{background:"rgba(0,0,0,0.3)",border:"1.5px solid rgba(212,168,67,0.25)",borderRadius:20,padding:"20px",marginBottom:20}}>
           {[
-            {icon:"⚡",title:"2x XP Boost",desc:"Double experience on every game"},
-            {icon:"🪙",title:"10% Coin Bonus",desc:"Extra coins on every win"},
-            {icon:"👑",title:"VIP Badge",desc:"Gold crown on your profile and name"},
-            {icon:"🖼️",title:"Animated Frame",desc:"Exclusive gold animated avatar border"},
-            {icon:"🏪",title:"VIP Shop",desc:"Access to exclusive VIP-only items"},
-            {icon:"🎯",title:"Priority Matchmaking",desc:"Get into games faster online"},
+            {icon:"⚡",title:"2x XP Every Game",desc:"Double experience points always"},
+            {icon:"🪙",title:"75% More Coins",desc:"350 coins on win vs 200 for free"},
+            {icon:"🎁",title:"2x Daily Bonus",desc:"Double coins from daily login rewards"},
+            {icon:"👑",title:"Animated Gold Frame",desc:"Spinning gold ring on your avatar"},
+            {icon:"🎨",title:"VIP Gold Card Theme",desc:"Exclusive gold card back — free"},
+            {icon:"🔒",title:"VIP Exclusive Items",desc:"Access locked shop items"},
           ].map(function(b,i){return(
             <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 0",borderBottom:i<5?"1px solid rgba(255,255,255,0.05)":"none"}}>
               <span style={{fontSize:22,width:32,textAlign:"center"}}>{b.icon}</span>
@@ -2927,9 +2933,11 @@ export default function Cobra(){
       var reward=rewards[day];
       localStorage.setItem("cobra_last_login",today.toString());
       localStorage.setItem("cobra_login_streak",newStreak.toString());
-      setCoins(function(c){var n=c+reward.coins;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
-      if(reward.gems>0)setGems(function(g){var n=g+reward.gems;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
-      setTimeout(function(){setDailyLoginData({day:day,coins:reward.coins,gems:reward.gems,streak:newStreak});},2800);
+      var loginCoins=isVIP?reward.coins*2:reward.coins;
+      var loginGems=isVIP?Math.ceil(reward.gems*1.5):reward.gems;
+      setCoins(function(c){var n=c+loginCoins;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
+      if(loginGems>0)setGems(function(g){var n=g+loginGems;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
+      setTimeout(function(){setDailyLoginData({day:day,coins:loginCoins,gems:loginGems,streak:newStreak,vipBonus:isVIP});},2800);
       scheduleDailyReminder();
       if("Notification" in window&&Notification.permission==="default"){
         Notification.requestPermission();
@@ -3727,7 +3735,7 @@ export default function Cobra(){
     // XP rewards for local player
     gainXP(25); // participation XP
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
-    if(winnerIdx===myIdx){gainXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.1);addCoins(vipCoinBonus);}} // win bonus
+    if(winnerIdx===myIdx){gainXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.25);addCoins(vipCoinBonus);}} // win bonus
     // Unlock streak frames
     var curStreak=gameStats.streak||0;
     if(winnerIdx===myIdx){
@@ -3985,9 +3993,11 @@ export default function Cobra(){
           <div style={{borderRadius:20,overflow:"hidden",border:"1px solid rgba(212,168,67,0.18)",background:"linear-gradient(170deg,#0c1e0c,#060e06,#010603)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
             {/* Player header */}
             <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:12}}>
-              <div onClick={function(){audio.buttonClick();setShowAvatarPicker(true);}} style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",padding:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)",cursor:"pointer",position:"relative"}}>
-                <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"#0a140a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{myAvatar||"🐍"}</div>
-                <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,borderRadius:"50%",background:"#d4a843",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8}}>✏️</div>
+              <div onClick={function(){audio.buttonClick();setShowAvatarPicker(true);}} style={{width:42,height:42,borderRadius:"50%",background:isVIP?"none":"linear-gradient(135deg,#d4a843,#a87020)",padding:isVIP?0:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)",cursor:"pointer",position:"relative"}}>
+                {isVIP&&<div style={{position:"absolute",inset:-3,borderRadius:"50%",background:"linear-gradient(135deg,#f0c060,#d4a843,#f0c060,#a87020)",animation:"tileSpinWheel 3s linear infinite",zIndex:0}}/>}
+                {isVIP&&<div style={{position:"absolute",inset:-1,borderRadius:"50%",background:"#010603",zIndex:1}}/>}
+                <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"#0a140a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,position:"relative",zIndex:2}}>{myAvatar||"🐍"}</div>
+                <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,borderRadius:"50%",background:"#d4a843",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,zIndex:3}}>✏️</div>
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
@@ -4713,7 +4723,7 @@ export default function Cobra(){
       setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},4000);},100);
     }
     var xpEarned=iWonGame?(isVIP?300:150):(isVIP?100:50);
-    var coinsEarned=iWonGame?(isVIP?220:200):(isVIP?55:50);
+    var coinsEarned=iWonGame?(isVIP?350:200):(isVIP?80:50);
     var winnerAvatar=gameOverData.winner===H?myAvatar:"🤖";
     var sortedPlayers=[...Array(nPlayers).keys()].sort(function(a,b){return gameOverData.scores[a]-gameOverData.scores[b];});
     var rankMedals=["🥇","🥈","🥉","4️⃣"];
@@ -4744,6 +4754,7 @@ export default function Cobra(){
               </div>
             </div>
           )}
+          {iWonGame&&isVIP&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",letterSpacing:2,marginTop:4}}>👑 VIP: +150 bonus coins · 2x XP</div>}
         </div>
 
         <div style={{width:"100%",maxWidth:440,padding:"20px 16px calc(24px + env(safe-area-inset-bottom))",display:"flex",flexDirection:"column",gap:14}}>
@@ -4906,6 +4917,7 @@ export default function Cobra(){
           sfxToggle={sfxToggle}
           musToggle={musToggle}
           gameStats={gameStats}
+          isVIP={isVIP}
           showSettings={showSettings}
           setShowSettings={setShowSettings}
         />
