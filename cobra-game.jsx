@@ -486,6 +486,8 @@ const SHOP_THEMES=[
   {id:"emerald",name:"Emerald",price:500,currency:"coins",color:"#021a06",desc:"Lush green forest",rarity:"rare"},
   {id:"galaxy",name:"Galaxy",price:1200,currency:"coins",color:"#0a0520",desc:"Cosmic purple depths",rarity:"epic"},
   {id:"gold",name:"Gold Rush",price:1500,currency:"coins",color:"#1a1200",desc:"Pure luxury edition",rarity:"legendary"},
+  {id:"vip_royal",name:"Royal VIP",price:0,currency:"coins",color:"#1a0e00",desc:"Exclusive VIP members only",rarity:"legendary",vipOnly:true},
+  {id:"vip_crown",name:"Crown Edition",price:0,currency:"coins",color:"#0a0010",desc:"The crown jewel — VIP exclusive",rarity:"legendary",vipOnly:true},
   {id:"neon",name:"Neon Nights",price:1800,currency:"coins",color:"#001a1a",desc:"Electric cyan glow on deep black",rarity:"rare",isNew:true},
   {id:"royal",name:"Royal Flush",price:2400,currency:"coins",color:"#0d0020",desc:"Deep purple with gold filigree",rarity:"epic",isNew:true},
   {id:"inferno",name:"Inferno",price:2200,currency:"coins",color:"#1a0500",desc:"Blazing orange and red flames",rarity:"rare"},
@@ -1121,7 +1123,7 @@ function SplashScreen({onDone}){
   );
 }
 
-function ProfileScreen({name,avatar,level,xp,xpForLevel,coins,gems,stats,onClose}){
+function ProfileScreen({name,avatar,level,xp,xpForLevel,coins,gems,stats,onClose,isVIP}){
   var pct=Math.min(100,xpForLevel(level)>0?Math.round(xp/xpForLevel(level)*100):100);
   var winRate=stats&&stats.rounds>0?Math.round(stats.wins/stats.rounds*100):0;
   return(
@@ -1147,7 +1149,7 @@ function ProfileScreen({name,avatar,level,xp,xpForLevel,coins,gems,stats,onClose
               {level}
             </div>
           </div>
-          <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:700,letterSpacing:2,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{name||"Player"}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:700,letterSpacing:2,background:"linear-gradient(135deg,#f4cc52,#d4a843)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",display:"flex",alignItems:"center",justifyContent:"center"}}>{name||"Player"}{isVIP&&<VIPBadge/>}</div>
           <div style={{fontFamily:"Crimson Text,serif",color:"rgba(212,168,67,0.5)",fontSize:13,marginTop:2,letterSpacing:3}}>LEVEL {level} COBRA CHAMPION</div>
         </div>
         {/* XP bar */}
@@ -2828,6 +2830,7 @@ export default function Cobra(){
   const [isSpectator,setIsSpectator]=useState(false);
   const [coins,setCoins]=useState(function(){try{return parseInt(localStorage.getItem("cobra_coins")||"500");}catch(e){return 500;}});
   const [gems,setGems]=useState(function(){try{return parseInt(localStorage.getItem("cobra_gems")||"10");}catch(e){return 10;}});
+  const [isVIP,setIsVIP]=useState(function(){try{return localStorage.getItem("cobra_vip")==="1";}catch(e){return false;}});
   const [playerXP,setPlayerXP]=useState(function(){try{return parseInt(localStorage.getItem("cobra_xp")||"0");}catch(e){return 0;}});
   const [playerLevel,setPlayerLevel]=useState(function(){try{return parseInt(localStorage.getItem("cobra_level")||"1");}catch(e){return 1;}});
   const [activeScreen,setActiveScreen]=useState(null);
@@ -3013,7 +3016,8 @@ export default function Cobra(){
   };
 
   const gainXP=function(amount){
-    var curXP=parseInt(lsGet("cobra_xp","0"))+amount;
+    var actualAmount=isVIP?amount*2:amount;
+    var curXP=parseInt(lsGet("cobra_xp","0"))+actualAmount;
     var curLvl=parseInt(lsGet("cobra_level","1"));
     var bonusCoins=0;
     while(curLvl<100&&curXP>=curLvl*100){curXP-=curLvl*100;curLvl++;bonusCoins+=100;}
@@ -3723,7 +3727,7 @@ export default function Cobra(){
     // XP rewards for local player
     gainXP(25); // participation XP
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
-    if(winnerIdx===myIdx)gainXP(50); // win bonus
+    if(winnerIdx===myIdx){gainXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.1);addCoins(vipCoinBonus);}} // win bonus
     // Unlock streak frames
     var curStreak=gameStats.streak||0;
     if(winnerIdx===myIdx){
@@ -3922,6 +3926,11 @@ export default function Cobra(){
         <h1 style={{fontFamily:"Cinzel,serif",fontSize:58,fontWeight:900,letterSpacing:10,margin:"4px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
         {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
+        <div style={{textAlign:"center",marginBottom:4}}>
+          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{display:"inline-flex",alignItems:"center",gap:6,background:isVIP?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,"+(isVIP?"0.5":"0.2")+")",borderRadius:20,padding:"6px 14px",fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2,cursor:"pointer",marginBottom:12}}>
+            👑 {isVIP?"VIP MEMBER":"GET VIP"}
+          </button>
+        </div>
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}
           onClick={function(){audio.init();audio.resume();}}>
           <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>v2.0 PREMIUM</span>
@@ -3977,7 +3986,7 @@ export default function Cobra(){
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                   <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1,fontWeight:700}}>LEVEL {playerLevel}</span>
                   <span style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(255,255,255,0.2)"}}>·</span>
-                  <span style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>{myName||"Player"}</span>
+                  <span style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>{myName||"Player"}</span>{isVIP&&<VIPBadge/>}
                 </div>
                 <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
                   <div style={{height:"100%",width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 4px rgba(212,168,67,0.4)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
@@ -4111,7 +4120,7 @@ export default function Cobra(){
         </div>
       )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
-      {activeScreen==="profile"&&<ProfileScreen name={myName} avatar={myAvatar} level={playerLevel} xp={playerXP} xpForLevel={xpForLevel} coins={coins} gems={gems} stats={gameStats} onClose={function(){setActiveScreen(null);}}/>}
+      {activeScreen==="profile"&&<ProfileScreen name={myName} avatar={myAvatar} level={playerLevel} xp={playerXP} xpForLevel={xpForLevel} coins={coins} gems={gems} stats={gameStats} isVIP={isVIP} onClose={function(){setActiveScreen(null);}}/>}
       {activeScreen==="battlepass"&&<BattlePassScreen
         bpLevel={bpLevel}
         bpPremium={bpPremium}
@@ -4696,8 +4705,8 @@ export default function Cobra(){
       var wConf=[];for(var wci=0;wci<50;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24","#c084fc"][Math.floor(Math.random()*7)],size:Math.random()*9+4,delay:Math.random()*1.0,dur:Math.random()*1.5+1.4});}
       setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},4000);},100);
     }
-    var xpEarned=iWonGame?150:50;
-    var coinsEarned=iWonGame?200:50;
+    var xpEarned=iWonGame?(isVIP?300:150):(isVIP?100:50);
+    var coinsEarned=iWonGame?(isVIP?220:200):(isVIP?55:50);
     var winnerAvatar=gameOverData.winner===H?myAvatar:"🤖";
     var sortedPlayers=[...Array(nPlayers).keys()].sort(function(a,b){return gameOverData.scores[a]-gameOverData.scores[b];});
     var rankMedals=["🥇","🥈","🥉","4️⃣"];
@@ -4850,6 +4859,25 @@ export default function Cobra(){
       />}
       </div>
     );
+  }
+
+  // ─── VIP ─────────────────────────────────────────────
+  if(screen==="vip"){
+    return <VIPScreen
+      isVIP={isVIP}
+      coins={coins}
+      gems={gems}
+      onBack={function(){setScreen("home");}}
+      onBuy={function(price){
+        if(gems<price){pop("Not enough gems","error");return;}
+        setGems(function(g){var n=g-price;try{localStorage.setItem("cobra_gems",n);}catch(e){}return n;});
+        setIsVIP(true);
+        try{localStorage.setItem("cobra_vip","1");}catch(e){}
+        audio.win&&audio.win();haptic.success();
+        pop("Welcome to VIP! 👑","success");
+        setTimeout(function(){setScreen("home");},1500);
+      }}
+    />;
   }
 
   // ─── SHOP ────────────────────────────────────────────
