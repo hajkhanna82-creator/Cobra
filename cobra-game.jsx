@@ -4952,20 +4952,34 @@ export default function Cobra(){
         </div>
         <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"8px 18px calc(32px + env(safe-area-inset-bottom))"}}>
           <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>CARD THEMES</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:20}}>
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
             {vipThemes.map(function(theme){
               var owned=vipUnlockedThemes.includes(theme.id);
               var active=cardTheme===theme.id;
               var th=CARD_THEMES[theme.id]||CARD_THEMES.classic;
               return(
-                <div key={theme.id} style={{position:"relative",background:th.bg,border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(212,168,67,0.15)",borderRadius:14,padding:"14px 12px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.6}}
+                <div key={theme.id} style={{position:"relative",borderRadius:16,overflow:"hidden",border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1.5px solid rgba(212,168,67,0.15)",boxShadow:active?"0 0 22px rgba(212,168,67,0.35)":"0 4px 16px rgba(0,0,0,0.5)",cursor:isVIP?"pointer":"default"}}
                   onClick={function(){if(!isVIP)return;setCardTheme(active?"classic":theme.id);try{localStorage.setItem("cobra_card_theme",active?"classic":theme.id);}catch(e){}audio.buttonClick();}}>
-                  {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",borderRadius:"inherit",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:18}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:3}}>VIP ONLY</span></div>}
-                  <div style={{width:32,height:32,borderRadius:8,background:th.bg,marginBottom:8,border:"1px solid "+(th.border||"rgba(212,168,67,0.3)")}}/>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:2}}>{theme.name}</div>
-                  <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:11}}>{theme.desc}</div>
-                  {active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>✓ ACTIVE</div>}
-                  {owned&&!active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:4}}>OWNED · TAP TO EQUIP</div>}
+                  {/* card fan preview */}
+                  <div style={{height:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:0,position:"relative"}}>
+                    <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 40%,"+(th.pat||"rgba(255,255,255,0.05)")+" 0%,transparent 60%),radial-gradient(circle at 70% 60%,"+(th.pat2||"rgba(255,255,255,0.03)")+" 0%,transparent 60%)"}}/>
+                    {[{s:"♠",v:"A"},{s:"♥",v:"K"},{s:"♣",v:"Q"},{s:"♦",v:"J"}].map(function(c,ci){return(
+                      <div key={ci} style={{transform:"rotate("+(ci*8-12)+"deg) translateX("+(ci*6-9)+"px) translateY("+(Math.abs(ci-1.5)*3)+"px)",zIndex:ci,position:"relative"}}>
+                        <Card card={{suit:c.s,value:c.v}} faceDown={false} size="xs" theme={theme.id}/>
+                      </div>
+                    );})}
+                    {active&&<div style={{position:"absolute",top:8,right:10,background:"rgba(0,0,0,0.7)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:2}}>✓ ACTIVE</div>}
+                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><span style={{fontSize:22}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>VIP ONLY</span></div>}
+                  </div>
+                  <div style={{padding:"10px 14px",background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <div>
+                      <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",fontWeight:700}}>{theme.name}</div>
+                      <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,marginTop:1}}>{theme.desc}</div>
+                    </div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:active?"#4ade80":isVIP?"#d4a843":"#555",letterSpacing:1,flexShrink:0,marginLeft:8}}>
+                      {active?"TAP TO UNEQUIP":isVIP?"TAP TO EQUIP":"🔒 LOCKED"}
+                    </div>
+                  </div>
                 </div>
               );
             })}
