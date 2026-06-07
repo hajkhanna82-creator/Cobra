@@ -1725,7 +1725,7 @@ function AchievementsScreen({goScreen,gameStats,achProgress,claimedAchs,onClaim,
   );
 }
 
-function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMissions,onClaimMission,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,cardTheme,setCardTheme}){
+function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMissions,onClaimMission,missionStreak,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,cardTheme,setCardTheme}){
   const [tab,setTab]=useState("daily");
   var missions=tab==="daily"?dailyMissions:weeklyMissions;
   var now=Date.now();
@@ -1740,6 +1740,7 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
     if(!m)return 0;
     if(m.stat==="wins")return Math.min(m.goal,gameStats.wins||0);
     if(m.stat==="rounds")return Math.min(m.goal,gameStats.rounds||0);
+    if(m.stat==="cobras")return Math.min(m.goal,gameStats.cobras||0);
     if(m.stat==="bestStreak")return Math.min(m.goal,gameStats.bestStreak||0);
     return Math.min(m.goal,achProgress[m.stat]||0);
   }
@@ -1754,6 +1755,16 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:20,letterSpacing:4,margin:"0 0 6px"}}>MISSIONS</h2>
           <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#7a9a7a",letterSpacing:2}}>RESETS IN {hLeft}h {mLeft}m</div>
         </div>
+        <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:12,padding:"12px 16px",marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:24}}>🔥</span>
+          <div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060",letterSpacing:2}}>MISSION STREAK</div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a8a",fontSize:13}}>Complete all dailies to keep your streak!</div>
+          </div>
+          <div style={{marginLeft:"auto",fontFamily:"Cinzel,serif",fontSize:22,color:"#f0c060",fontWeight:900}}>
+            {missionStreak} <span style={{fontSize:12}}>days</span>
+          </div>
+        </div>
         <div style={{display:"flex",gap:6,background:"rgba(255,255,255,0.05)",borderRadius:12,padding:4,marginBottom:12,border:"1px solid rgba(255,255,255,0.08)"}}>
           {[["daily","📅 DAILY"],["weekly","📆 WEEKLY"]].map(function(t){var a=tab===t[0];return(
             <button key={t[0]} onClick={function(){audio.buttonClick();setTab(t[0]);}} style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:1.5,border:"none",borderRadius:9,cursor:"pointer",background:a?"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))":"transparent",color:a?"#f0c060":"#8aaa8a",transition:"all 0.2s",touchAction:"manipulation",fontWeight:a?"700":"400"}}>{t[1]}</button>
@@ -1766,6 +1777,8 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
           var prog=getMProg(m);
           var done=prog>=m.goal;
           var pct=Math.min(100,Math.round(prog/m.goal*100));
+          var diff=m.reward.gems>0||m.reward.coins>=300?"HARD":m.reward.coins>=150?"MED":"EASY";
+          var diffColor=diff==="HARD"?"#f87171":diff==="MED"?"#f0c060":"#4ade80";
           return(
             <div key={i} style={{marginBottom:12,borderRadius:16,padding:"16px",background:m.claimed?"rgba(74,222,128,0.05)":done?"rgba(212,168,67,0.08)":"rgba(0,0,0,0.3)",border:m.claimed?"1.5px solid rgba(74,222,128,0.2)":done?"1.5px solid rgba(212,168,67,0.35)":"1px solid rgba(255,255,255,0.08)"}}>
               <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
@@ -1773,7 +1786,10 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
                   {m.claimed?"✅":m.icon}
                 </div>
                 <div style={{flex:1}}>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:m.claimed?"#4ade80":done?"#f0c060":"#c8d8c8",fontWeight:700,marginBottom:2}}>{m.desc}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:m.claimed?"#4ade80":done?"#f0c060":"#c8d8c8",fontWeight:700}}>{m.desc}</div>
+                    <span style={{fontFamily:"Cinzel,serif",fontSize:7,color:diffColor,border:"1px solid "+diffColor+"55",borderRadius:4,padding:"1px 5px",letterSpacing:1,flexShrink:0}}>{diff}</span>
+                  </div>
                   <div style={{display:"flex",gap:8}}>
                     {m.reward.xp>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#60a5fa"}}>⭐{m.reward.xp} XP</span>}
                     {m.reward.coins>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#f0c060"}}>🪙{m.reward.coins}</span>}
@@ -1785,8 +1801,8 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
                 )}
                 {m.claimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4ade80"}}>✓</div>}
               </div>
-              <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
-                <div style={{height:"100%",width:pct+"%",background:m.claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#c49030,#f0c060)":"linear-gradient(90deg,#1a4a1a,#2a8a2a)",borderRadius:2,transition:"width 0.5s"}}/>
+              <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)",overflow:"hidden",marginBottom:4}}>
+                <div style={{height:"100%",width:pct+"%",background:m.claimed?"linear-gradient(90deg,#4ade80,#22c55e)":done?"linear-gradient(90deg,#d4a843,#f0c060)":"linear-gradient(90deg,#d4a843,#f0c060)",opacity:done||m.claimed?1:0.4,borderRadius:3,transition:"width 0.5s"}}/>
               </div>
               <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#6a9a6a",letterSpacing:1}}>{prog}/{m.goal}</div>
             </div>
