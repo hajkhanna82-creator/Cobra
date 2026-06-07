@@ -3,6 +3,20 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        toplevel: false,
+        hoist_vars: false,
+        hoist_funs: false,
+        inline: 1,
+      },
+      mangle: {
+        toplevel: false,
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
