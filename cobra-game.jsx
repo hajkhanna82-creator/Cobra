@@ -126,21 +126,16 @@ function _bufToWav(buf){
   var off=44;for(var i=0;i<n;i++)for(var c=0;c<nc;c++){var s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
   return new Blob([out],{type:"audio/wav"});
 }
-// Pre-create a small pool of Audio elements per sound key to avoid creation overhead
-var _audioPool={};
+// One template Audio element per blob URL; clone it each play to avoid seek glitches on iOS
+var _audioTemplates={};
 function _playBlob(url,vol){
   try{
-    if(!_audioPool[url])_audioPool[url]=[];
-    var pool=_audioPool[url];
-    // Find an element that's free (ended or never started)
-    var el=null;
-    for(var i=0;i<pool.length;i++){if(pool[i].paused||pool[i].ended){el=pool[i];break;}}
-    if(!el){
-      if(pool.length>=3)el=pool[0]; // max 3 per sound, reuse oldest
-      else{el=new Audio(url);el.setAttribute("playsinline","");pool.push(el);}
+    if(!_audioTemplates[url]){
+      var t=new Audio(url);t.setAttribute("playsinline","");t.load();
+      _audioTemplates[url]=t;
     }
+    var el=_audioTemplates[url].cloneNode();
     el.volume=vol||1;
-    el.currentTime=0;
     el.play().catch(function(){});
   }catch(e){}
 }
@@ -171,28 +166,7 @@ const audio={
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
-      if(this._isIOS){
-        // Route bg music (only thing going through _master on iOS) via stream audio element
-        // so it bypasses the silent switch too
-        try{
-          var streamDest=ctx.createMediaStreamDestination();
-          this._master.connect(streamDest);
-          var bgKeeper=document.getElementById("_cobra_bgkeeper");
-          if(!bgKeeper){
-            bgKeeper=document.createElement("audio");
-            bgKeeper.id="_cobra_bgkeeper";
-            bgKeeper.setAttribute("playsinline","");
-            bgKeeper.setAttribute("webkit-playsinline","");
-            bgKeeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
-            document.body.appendChild(bgKeeper);
-          }
-          bgKeeper.srcObject=streamDest.stream;
-          bgKeeper.volume=1;
-          bgKeeper.play().catch(function(){});
-        }catch(e){this._master.connect(ctx.destination);}
-      }else{
-        this._master.connect(ctx.destination);
-      }
+      this._master.connect(ctx.destination);
       this._ready=true;
       if(this._isIOS)this._prerenderIOS();
       var self=this;
@@ -227,6 +201,18 @@ const audio={
       var j=jobs[k];
       _render(j[0],sr,j[1]).then(function(url){if(url)self._blobs[k]=url;});
     });
+    // Pre-render 16s music loop at lower sample rate to keep size manageable
+    var msr=22050,mdur=16;
+    _render(mdur,msr,function(c,o){
+      var lp=c.createBiquadFilter();lp.type="lowpass";lp.frequency.value=600;lp.connect(o);
+      var mg=c.createGain();mg.gain.setValueAtTime(0,0);mg.gain.linearRampToValueAtTime(0.4,3);mg.connect(lp);
+      [[55,"sine",0.08],[82.4,"triangle",0.055],[110,"sine",0.04],[130.8,"triangle",0.03],[164.8,"sine",0.025]].forEach(function(cfg){
+        var osc=c.createOscillator(),g=c.createGain();osc.type=cfg[1];osc.frequency.value=cfg[0];g.gain.value=cfg[2];osc.connect(g);g.connect(mg);osc.start(0);osc.stop(mdur);
+      });
+      var arpNotes=[220,261.6,329.6,392,440,329.6,246.9,293.7,349.2,415.3,493.9,415.3];
+      var ao=c.createOscillator(),ag=c.createGain();ao.type="sine";ag.gain.value=0.018;ao.connect(ag);ag.connect(mg);ao.start(0);ao.stop(mdur);
+      for(var t=0,i=0;t<mdur;t+=1.8,i++)ao.frequency.setValueAtTime(arpNotes[i%arpNotes.length],t);
+    }).then(function(url){if(url)self._blobs.music=url;});
   },
   _playIOS(name,vol){
     if(this._blobs[name])_playBlob(this._blobs[name],vol||0.9);
@@ -244,6 +230,20 @@ const audio={
   },
   _startBg(){
     if(!this._ctx||this._musicMuted)return;
+    if(this._isIOS){
+      var self=this;
+      var tryPlay=function(){
+        if(!self._blobs.music){setTimeout(tryPlay,200);return;}
+        if(!self._musicEl){
+          self._musicEl=new Audio(self._blobs.music);
+          self._musicEl.setAttribute("playsinline","");
+          self._musicEl.loop=true;self._musicEl.volume=0.22;
+        }
+        self._musicEl.play().catch(function(){});
+      };
+      tryPlay();
+      return;
+    }
     const ctx=this._ctx;
     this._bgNodes.forEach(n=>{try{n.stop();}catch(e){}});this._bgNodes=[];
     if(this._arpTimer){clearInterval(this._arpTimer);this._arpTimer=null;}
@@ -391,6 +391,11 @@ const audio={
   toggleMute(){this._muted=!this._muted;if(this._master&&this._ctx)this._master.gain.linearRampToValueAtTime(this._muted?0:0.7,this._ctx.currentTime+0.1);},
   toggleMusic(){
     this._musicMuted=!this._musicMuted;
+    if(this._isIOS){
+      if(this._musicEl){if(this._musicMuted)this._musicEl.pause();else this._musicEl.play().catch(function(){});}
+      else if(!this._musicMuted)this._startBg();
+      return;
+    }
     if(this._bgGain&&this._ctx){
       if(this._musicMuted){
         if(this._arpTimer){clearInterval(this._arpTimer);this._arpTimer=null;}
