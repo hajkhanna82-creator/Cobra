@@ -428,6 +428,7 @@ const GS=`
 html,body{background:#010603;height:100%;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;}
 html{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
 @media(max-width:375px){html{font-size:14px;}}
+@media(max-width:350px){.card-lg{width:44px!important;height:62px!important;font-size:11px!important;}.card-md{width:36px!important;height:52px!important;font-size:10px!important;}.card-sm{width:28px!important;height:40px!important;font-size:9px!important;}}
 @media(min-width:428px){html{font-size:17px;}}
 ::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-thumb{background:#1a2e1a;border-radius:4px}
@@ -1260,7 +1261,7 @@ function DailyLoginModal({data,onClose}){
 
 function SplashScreen({onDone}){
   useEffect(function(){
-    var t=setTimeout(onDone,2200);
+    var t=setTimeout(onDone,1500);
     return function(){clearTimeout(t);};
   },[]);
   return(
@@ -3605,6 +3606,12 @@ export default function Cobra(){
   const [claimedAchs,setClaimedAchs]=useState(function(){try{var v=localStorage.getItem("cobra_claimed_achs");return v?JSON.parse(v):[];}catch(e){return[];}});
   const [achProgress,setAchProgress]=useState(function(){try{var v=localStorage.getItem("cobra_ach_progress");return v?JSON.parse(v):{};;}catch(e){return{};}});
   const [dailyMissions,setDailyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_daily_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
+  const [shakeHand,setShakeHand]=useState(false);
+  const [quickMatchOpen,setQuickMatchOpen]=useState(false);
+  const [quickMatchStatus,setQuickMatchStatus]=useState("finding"); // "finding"|"notfound"|"unavailable"
+  const quickMatchRowRef=useRef(null);
+  const quickMatchTimerRef=useRef(null);
+  const quickMatchPollRef=useRef(null);
   const [weeklyMissions,setWeeklyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_weekly_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
   const [equippedTitle,setEquippedTitle]=useState(function(){try{return localStorage.getItem("cobra_title")||"";}catch(e){return"";}});
   const [equippedFrame,setEquippedFrame]=useState(function(){try{return localStorage.getItem("cobra_frame")||"none";}catch(e){return"none";}});
@@ -4146,6 +4153,59 @@ export default function Cobra(){
     setTimeout(function(){audio.shuffle_sfx();},100);
   }
 
+  function cancelQuickMatch(){
+    clearTimeout(quickMatchTimerRef.current);
+    clearInterval(quickMatchPollRef.current);
+    var rowId=quickMatchRowRef.current;
+    if(rowId){try{supabase.from("cobra_matchmaking").delete().eq("id",rowId).then(function(){}).catch(function(){});}catch(e){}}
+    quickMatchRowRef.current=null;
+    setQuickMatchOpen(false);
+    setQuickMatchStatus("finding");
+  }
+
+  function startQuickMatch(){
+    if(!myName.trim()){pop("Enter your name first","warning");return;}
+    setQuickMatchOpen(true);setQuickMatchStatus("finding");
+    quickMatchRowRef.current=null;
+    var pName=myName.trim();
+    var rowData={player_name:pName,avatar:myAvatar,status:"waiting",created_at:new Date().toISOString()};
+    (async function(){
+      try{
+        var ins=await supabase.from("cobra_matchmaking").insert([rowData]).select();
+        if(!ins||ins.error){setQuickMatchStatus("unavailable");clearTimeout(quickMatchTimerRef.current);clearInterval(quickMatchPollRef.current);return;}
+        var myRow=ins.data&&ins.data[0];
+        if(!myRow){setQuickMatchStatus("unavailable");return;}
+        quickMatchRowRef.current=myRow.id;
+        var cutoff=new Date(Date.now()-30000).toISOString();
+        quickMatchTimerRef.current=setTimeout(function(){
+          clearInterval(quickMatchPollRef.current);
+          try{supabase.from("cobra_matchmaking").delete().eq("id",myRow.id).then(function(){}).catch(function(){});}catch(e){}
+          quickMatchRowRef.current=null;
+          setQuickMatchStatus("notfound");
+        },20000);
+        quickMatchPollRef.current=setInterval(async function(){
+          try{
+            var cutoff2=new Date(Date.now()-30000).toISOString();
+            var res=await supabase.from("cobra_matchmaking").select("*").eq("status","waiting").neq("player_name",pName).gte("created_at",cutoff2).limit(1);
+            if(res&&res.data&&res.data.length>0){
+              clearTimeout(quickMatchTimerRef.current);clearInterval(quickMatchPollRef.current);
+              var opponent=res.data[0];
+              var code=[pName,opponent.player_name].sort().join("_").replace(/[^a-zA-Z0-9]/g,"").slice(0,6).toUpperCase();
+              try{await supabase.from("cobra_matchmaking").delete().in("id",[myRow.id,opponent.id]);}catch(e){}
+              quickMatchRowRef.current=null;
+              setQuickMatchOpen(false);setQuickMatchStatus("finding");
+              var ns=[pName,opponent.player_name];
+              setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);
+              gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
+              deal(Array(2).fill(0),2);goScreen("game");
+              pop("Matched with "+opponent.player_name+"!","success");
+            }
+          }catch(e){}
+        },2000);
+      }catch(e){setQuickMatchStatus("unavailable");}
+    })();
+  }
+
   function startCPU(){
     var n=1+cpuCount,ns=names.slice(0,n),s=Array(n).fill(0);
     gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
@@ -4319,7 +4379,7 @@ export default function Cobra(){
 
   function doPlay(){
     if(!sel.length){pop("Select cards to play","warning");return;}
-    if(!isValidSeq(sel)){pop("Not a valid sequence","error");haptic.error();return;}
+    if(!isValidSeq(sel)){pop("Invalid play — must be a sequence or single card","error");haptic.error();try{audio._tone(200,"sine",0.3,0.1);}catch(e){}setShakeHand(true);setTimeout(function(){setShakeHand(false);},500);return;}
     audio.init();audio.resume();audio.cardPlay();haptic.cardPlay();
     setPrevHand([...hands[H]]);
     setPlayingCardIds(sel.map(function(c){return c.id;}));
@@ -4831,6 +4891,10 @@ export default function Cobra(){
             </button>
           );})}
         </div>
+        <button className="btn_btn_blue" style={{width:"100%",padding:"14px 20px",fontSize:13,letterSpacing:3,marginBottom:10,background:"linear-gradient(135deg,#1e3a5f,#1e4080)",boxShadow:"0 4px 20px rgba(30,64,128,0.5)"}}
+          onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();startQuickMatch();}}>
+          ⚡ QUICK MATCH
+        </button>
         <button className="btn_btn_gold" style={{width:"100%",padding:"14px 20px",fontSize:12,letterSpacing:3,marginBottom:10}}
           onClick={function(){audio.buttonClick();haptic.medium();setScreen("tournament");}}>
           🏆 TOURNAMENT
@@ -4969,8 +5033,10 @@ export default function Cobra(){
             onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
           <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(212,168,67,0.25)",color:"#d4a843"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("shop");}}>🛒 SHOP</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(96,165,250,0.3)",color:"#60a5fa"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS</button>
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(96,165,250,0.3)",color:"#60a5fa",position:"relative"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS
+            {(function(){var dm2=dailyMissions;var hasIncomplete=dm2&&dm2.missions&&dm2.missions.some(function(m){return!m.claimed;});return hasIncomplete?<span style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#ef4444",borderRadius:"50%",border:"1.5px solid rgba(0,0,0,0.5)"}}/>:null;})()}
+          </button>
           <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(192,132,252,0.3)",color:"#c084fc"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
           <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80"}}
@@ -5012,6 +5078,34 @@ export default function Cobra(){
             }} style={{background:"rgba(0,0,0,0.25)",border:"1.5px solid rgba(0,0,0,0.3)",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,color:"#120c00",padding:"8px 14px",cursor:"pointer",flexShrink:0,touchAction:"manipulation",fontWeight:700}}>INSTALL</button>
           )}
           <button onClick={function(){setInstallDismissed(true);try{localStorage.setItem("cobra_install_dismissed","1");}catch(e){};}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#120c00",flexShrink:0,touchAction:"manipulation",padding:4}}>✕</button>
+        </div>
+      )}
+      {quickMatchOpen&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"linear-gradient(170deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(96,165,250,0.35)",borderRadius:20,padding:"32px 24px",width:"100%",maxWidth:360,textAlign:"center",animation:"slideUp 0.35s cubic-bezier(.22,1,.36,1) both"}}>
+            {quickMatchStatus==="finding"&&(<>
+              <div style={{fontSize:44,marginBottom:12,animation:"float 2s ease-in-out infinite"}}>⚡</div>
+              <h2 style={{fontFamily:"Cinzel,serif",fontSize:18,letterSpacing:3,color:"#60a5fa",marginBottom:8}}>FINDING OPPONENT</h2>
+              <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:14,marginBottom:24}}>Searching for a worthy challenger...</p>
+              <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:24}}>
+                {[0,1,2].map(function(i){return(<div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#60a5fa",animation:"thinkDot 1.2s ease-in-out infinite",animationDelay:(i*0.2)+"s"}}/>);})}
+              </div>
+              <button className="btn_btn_ghost" style={{width:"100%",padding:14,fontSize:12,letterSpacing:2}} onClick={function(){cancelQuickMatch();}}>✕ CANCEL</button>
+            </>)}
+            {quickMatchStatus==="notfound"&&(<>
+              <div style={{fontSize:44,marginBottom:12}}>😔</div>
+              <h2 style={{fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:3,color:"#f87171",marginBottom:8}}>NO OPPONENTS FOUND</h2>
+              <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:14,marginBottom:24}}>No one is waiting right now — try again!</p>
+              <button className="btn_btn_blue" style={{width:"100%",padding:14,fontSize:12,letterSpacing:2,marginBottom:10}} onClick={function(){setQuickMatchStatus("finding");startQuickMatch();}}>TRY AGAIN</button>
+              <button className="btn_btn_ghost" style={{width:"100%",padding:14,fontSize:12,letterSpacing:2}} onClick={function(){setQuickMatchOpen(false);setQuickMatchStatus("finding");}}>CLOSE</button>
+            </>)}
+            {quickMatchStatus==="unavailable"&&(<>
+              <div style={{fontSize:44,marginBottom:12}}>⚠️</div>
+              <h2 style={{fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:3,color:"#f0c060",marginBottom:8}}>MATCHMAKING UNAVAILABLE</h2>
+              <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:14,marginBottom:24}}>Could not connect to matchmaking service.</p>
+              <button className="btn_btn_ghost" style={{width:"100%",padding:14,fontSize:12,letterSpacing:2}} onClick={function(){setQuickMatchOpen(false);setQuickMatchStatus("finding");}}>CLOSE</button>
+            </>)}
+          </div>
         </div>
       )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
@@ -5499,6 +5593,27 @@ export default function Cobra(){
               </div>
             );
           })}
+          <div style={{display:"flex",gap:10,marginTop:8}}>
+            <button className="btn_btn_ghost" style={{flex:1,padding:14,fontSize:11,letterSpacing:2}}
+              onClick={function(){
+                audio.buttonClick();haptic.medium();
+                gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
+                setRevealData(null);setRoundEndData(null);setScores([]);setGameOverData(null);
+                if(mode==="cpu"){startCPU();}
+                else{deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}
+              }}>🔄 REMATCH</button>
+            <button className="btn_btn_green" style={{flex:1,padding:14,fontSize:10,letterSpacing:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}
+              onClick={function(){
+                audio.buttonClick();haptic.medium();
+                gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
+                setRevealData(null);setRoundEndData(null);setScores([]);setGameOverData(null);
+                if(mode==="cpu"){startCPU();}
+                else{deal(Array(nPlayers).fill(0),nPlayers);setScreen("game");}
+              }}>
+              <span>▶ PLAY AGAIN</span>
+              <span style={{fontSize:8,fontFamily:"Crimson Text,serif",textTransform:"none",letterSpacing:0,opacity:0.8}}>+2x XP this round!</span>
+            </button>
+          </div>
           <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:13,letterSpacing:3,marginTop:8}}
             onClick={function(){
               audio.buttonClick();haptic.medium();
@@ -6294,7 +6409,7 @@ export default function Cobra(){
             </div>
           </div>
         </div>
-        <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108}}>
+        <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108,flexWrap:"wrap",maxWidth:"100%",animation:shakeHand?"shake 0.5s ease-in-out":"none"}}>
           {myHand.map(function(card,idx){
             var isPlaying=playingCardIds.includes(card.id);
             var total=myHand.length;
