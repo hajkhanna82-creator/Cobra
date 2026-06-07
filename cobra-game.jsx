@@ -2909,6 +2909,201 @@ function VIPScreen({onBack,onBuy,isVIP,coins,gems}){
   );
 }
 
+function FriendsScreen({goScreen,myName,myAvatar,elo}){
+  const [tab,setTab]=useState("friends");
+  const [searchQuery,setSearchQuery]=useState("");
+  const [searchResults,setSearchResults]=useState([]);
+  const [searching,setSearching]=useState(false);
+  const [friends,setFriends]=useState(function(){try{var v=localStorage.getItem("cobra_friends");return v?JSON.parse(v):[];}catch(e){return[];}});
+  const [requests,setRequests]=useState(function(){try{var v=localStorage.getItem("cobra_friend_requests");return v?JSON.parse(v):[];}catch(e){return[];}});
+  const [onlineNames,setOnlineNames]=useState([]);
+
+  // Try to load online status from Supabase
+  useEffect(function(){
+    (async function(){
+      try{
+        var res=await supabase.from("cobra_online").select("name");
+        if(!res.error&&res.data){setOnlineNames(res.data.map(function(r){return r.name;}));}
+      }catch(e){}
+    })();
+  },[]);
+
+  function saveFriends(arr){
+    setFriends(arr);
+    try{localStorage.setItem("cobra_friends",JSON.stringify(arr));}catch(e){}
+  }
+
+  async function doSearch(){
+    if(!searchQuery.trim())return;
+    setSearching(true);
+    try{
+      var res=await supabase.from("cobra_scores").select("*").ilike("name","%"+searchQuery.trim()+"%").limit(10);
+      if(!res.error&&res.data){setSearchResults(res.data);}
+      else{setSearchResults([]);}
+    }catch(e){setSearchResults([]);}
+    setSearching(false);
+  }
+
+  function addFriend(player){
+    var already=friends.some(function(f){return f.name===player.name;});
+    if(already)return;
+    var newFriends=[...friends,{name:player.name,avatar:player.avatar||"😎",elo:player.elo||1000}];
+    saveFriends(newFriends);
+    try{
+      var sent=JSON.parse(localStorage.getItem("cobra_pending_sent")||"[]");
+      if(!sent.includes(player.name)){sent.push(player.name);localStorage.setItem("cobra_pending_sent",JSON.stringify(sent));}
+    }catch(e){}
+  }
+
+  function removeFriend(name){
+    saveFriends(friends.filter(function(f){return f.name!==name;}));
+  }
+
+  function acceptRequest(req){
+    var newFriends=[...friends,{name:req.name,avatar:req.avatar||"😎",elo:req.elo||1000}];
+    saveFriends(newFriends);
+    var newReq=requests.filter(function(r){return r.name!==req.name;});
+    setRequests(newReq);
+    try{localStorage.setItem("cobra_friend_requests",JSON.stringify(newReq));}catch(e){}
+  }
+
+  function declineRequest(req){
+    var newReq=requests.filter(function(r){return r.name!==req.name;});
+    setRequests(newReq);
+    try{localStorage.setItem("cobra_friend_requests",JSON.stringify(newReq));}catch(e){}
+  }
+
+  var tabStyle=function(t){return{fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,padding:"10px 0",cursor:"pointer",background:"none",border:"none",borderBottom:tab===t?"2px solid #f0c060":"2px solid transparent",color:tab===t?"#f0c060":"#6a8a6e",flex:1,touchAction:"manipulation"};};
+
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:32,marginBottom:4}}>👥</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:20,letterSpacing:4,margin:0}}>FRIENDS</h2>
+          <p style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:13,margin:"4px 0 0"}}>Connect & challenge your friends</p>
+        </div>
+        <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.08)",marginBottom:0}}>
+          <button style={tabStyle("friends")} onClick={function(){setTab("friends");}}>FRIENDS{friends.length>0?" ("+friends.length+")":""}</button>
+          <button style={tabStyle("search")} onClick={function(){setTab("search");}}>SEARCH</button>
+          <button style={tabStyle("requests")} onClick={function(){setTab("requests");}}>REQUESTS{requests.length>0?" ("+requests.length+")":""}</button>
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 18px calc(32px + env(safe-area-inset-bottom))"}}>
+
+        {/* FRIENDS TAB */}
+        {tab==="friends"&&(
+          <div>
+            {friends.length===0&&(
+              <div style={{textAlign:"center",padding:"48px 0",color:"#4a6a4e",fontFamily:"Crimson Text,serif",fontSize:15}}>
+                <div style={{fontSize:40,marginBottom:12}}>👥</div>
+                <div>No friends yet.</div>
+                <div style={{marginTop:6,fontSize:13}}>Search for players to add them.</div>
+              </div>
+            )}
+            {friends.map(function(f){
+              var tier=getEloTierStatic(f.elo||1000);
+              var isOnline=onlineNames.includes(f.name);
+              return(
+                <div key={f.name} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:14,marginBottom:8,background:"rgba(0,0,0,0.28)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                  <div style={{position:"relative",flexShrink:0}}>
+                    <div style={{fontSize:28}}>{f.avatar||"😎"}</div>
+                    {isOnline&&<div style={{position:"absolute",bottom:0,right:0,width:10,height:10,background:"#4ade80",borderRadius:"50%",border:"1.5px solid #010603"}}></div>}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#e8f0e8",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:tier.color}}>{tier.icon} {tier.name} · {f.elo||1000}</div>
+                  </div>
+                  <div style={{display:"flex",gap:6,flexShrink:0}}>
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(74,222,128,0.35)",color:"#4ade80"}}
+                      onClick={function(){goScreen("multiplayer");}}>⚔️ CHALLENGE</button>
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(255,80,80,0.3)",color:"#f87171"}}
+                      onClick={function(){removeFriend(f.name);}}>✕</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* SEARCH TAB */}
+        {tab==="search"&&(
+          <div>
+            <div style={{display:"flex",gap:8,marginBottom:16}}>
+              <input
+                value={searchQuery}
+                onChange={function(e){setSearchQuery(e.target.value);}}
+                onKeyDown={function(e){if(e.key==="Enter")doSearch();}}
+                placeholder="Search by username..."
+                style={{flex:1,background:"rgba(0,0,0,0.35)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"11px 14px",fontFamily:"Crimson Text,serif",fontSize:14,color:"#e8f0e8",outline:"none"}}
+              />
+              <button className="btn_btn_ghost" style={{fontSize:11,padding:"11px 16px",letterSpacing:1,border:"1.5px solid rgba(240,192,96,0.4)",color:"#f0c060",flexShrink:0}}
+                onClick={doSearch} disabled={searching}>{searching?"...":"SEARCH"}</button>
+            </div>
+            {searchResults.length===0&&!searching&&searchQuery&&(
+              <div style={{textAlign:"center",padding:"32px 0",color:"#4a6a4e",fontFamily:"Crimson Text,serif",fontSize:14}}>No players found.</div>
+            )}
+            {searchResults.map(function(player){
+              var tier=getEloTierStatic(player.elo||1000);
+              var isFriend=friends.some(function(f){return f.name===player.name;});
+              var isMe=player.name===myName;
+              return(
+                <div key={player.id||player.name} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:14,marginBottom:8,background:"rgba(0,0,0,0.28)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                  <div style={{fontSize:28,flexShrink:0}}>{player.avatar||"😎"}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#e8f0e8",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{player.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:tier.color}}>{tier.icon} {tier.name} · {player.elo||1000}</div>
+                  </div>
+                  {!isMe&&(
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 12px",letterSpacing:1,border:isFriend?"1.5px solid rgba(74,222,128,0.35)":"1.5px solid rgba(240,192,96,0.4)",color:isFriend?"#4ade80":"#f0c060",flexShrink:0}}
+                      onClick={function(){if(!isFriend)addFriend(player);}}>
+                      {isFriend?"✓ ADDED":"+ ADD"}
+                    </button>
+                  )}
+                  {isMe&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6a8a6e",letterSpacing:1}}>YOU</div>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* REQUESTS TAB */}
+        {tab==="requests"&&(
+          <div>
+            {requests.length===0&&(
+              <div style={{textAlign:"center",padding:"48px 0",color:"#4a6a4e",fontFamily:"Crimson Text,serif",fontSize:15}}>
+                <div style={{fontSize:40,marginBottom:12}}>📭</div>
+                <div>No pending friend requests.</div>
+              </div>
+            )}
+            {requests.map(function(req){
+              var tier=getEloTierStatic(req.elo||1000);
+              return(
+                <div key={req.name} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:14,marginBottom:8,background:"rgba(0,0,0,0.28)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                  <div style={{fontSize:28,flexShrink:0}}>{req.avatar||"😎"}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#e8f0e8",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{req.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:tier.color}}>{tier.icon} {tier.name}</div>
+                  </div>
+                  <div style={{display:"flex",gap:6,flexShrink:0}}>
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(74,222,128,0.35)",color:"#4ade80"}}
+                      onClick={function(){acceptRequest(req);}}>ACCEPT</button>
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(255,80,80,0.3)",color:"#f87171"}}
+                      onClick={function(){declineRequest(req);}}>DECLINE</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 export default function Cobra(){
   const [showSplash,setShowSplash]=useState(true);
   const [screen,setScreen]=useState("home");
@@ -4310,6 +4505,8 @@ export default function Cobra(){
             onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS</button>
           <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(192,132,252,0.3)",color:"#c084fc"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80",gridColumn:"1/-1"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("friends");}}>👥 FRIENDS</button>
         </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
@@ -5186,6 +5383,11 @@ export default function Cobra(){
         </div>
       </div>
     );
+  }
+
+  // ─── FRIENDS ─────────────────────────────────────────
+  if(screen==="friends"){
+    return <FriendsScreen goScreen={goScreen} myName={myName} myAvatar={myAvatar} elo={elo}/>;
   }
 
   // ─── VIP ─────────────────────────────────────────────
