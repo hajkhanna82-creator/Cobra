@@ -126,25 +126,35 @@ const audio={
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
       var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
-      this._master.connect(ctx.destination);
       if(isIOS){
-        // Play a real audio file to claim iOS AVAudioSession "playback" category.
-        // This makes ctx.destination also bypass the ringer/silent switch.
+        var self=this;
         try{
-          var silentEl=document.getElementById("_cobra_silent");
-          if(!silentEl){
-            silentEl=document.createElement("audio");
-            silentEl.id="_cobra_silent";
-            silentEl.src="/silent.mp3";
-            silentEl.loop=true;
-            silentEl.volume=0.001;
-            silentEl.setAttribute("playsinline","");
-            silentEl.setAttribute("webkit-playsinline","");
-            silentEl.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
-            document.body.appendChild(silentEl);
+          // Route Web Audio through MediaStreamDestination → <audio> element.
+          // The <audio> element uses iOS "playback" category, bypassing silent switch.
+          var streamDest=ctx.createMediaStreamDestination();
+          self._master.connect(streamDest);
+          var keeper=document.getElementById("_cobra_keeper");
+          if(!keeper){
+            keeper=document.createElement("audio");
+            keeper.id="_cobra_keeper";
+            keeper.setAttribute("playsinline","");
+            keeper.setAttribute("webkit-playsinline","");
+            keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
+            document.body.appendChild(keeper);
           }
-          silentEl.play().catch(function(){});
-        }catch(e){}
+          keeper.srcObject=streamDest.stream;
+          keeper.volume=1;
+          self._htmlAudio=keeper;
+          keeper.play().catch(function(){
+            // Stream failed — fall back to ctx.destination (works on non-silent)
+            try{self._master.disconnect(streamDest);}catch(e2){}
+            self._master.connect(ctx.destination);
+          });
+        }catch(e){
+          self._master.connect(ctx.destination);
+        }
+      }else{
+        this._master.connect(ctx.destination);
       }
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
