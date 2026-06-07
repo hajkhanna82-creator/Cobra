@@ -3688,6 +3688,7 @@ export default function Cobra(){
         setRewardPopup({coins:m.reward.coins||0,gems:m.reward.gems||0,label:"Mission Complete! 🎯"});
         audio.achievement();
       }}
+      missionStreak={parseInt(localStorage.getItem("cobra_mission_streak")||"0")}
       showSettings={showSettings}
       setShowSettings={setShowSettings}
       sfxMuted={sfxMuted}
