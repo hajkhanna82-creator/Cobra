@@ -4963,9 +4963,9 @@ export default function Cobra(){
                   {/* card fan preview */}
                   <div style={{height:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:0,position:"relative"}}>
                     <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 40%,"+(th.pat||"rgba(255,255,255,0.05)")+" 0%,transparent 60%),radial-gradient(circle at 70% 60%,"+(th.pat2||"rgba(255,255,255,0.03)")+" 0%,transparent 60%)"}}/>
-                    {[{s:"♠",v:"A"},{s:"♥",v:"K"},{s:"♣",v:"Q"},{s:"♦",v:"J"}].map(function(c,ci){return(
+                    {[0,1,2,3].map(function(ci){return(
                       <div key={ci} style={{transform:"rotate("+(ci*8-12)+"deg) translateX("+(ci*6-9)+"px) translateY("+(Math.abs(ci-1.5)*3)+"px)",zIndex:ci,position:"relative"}}>
-                        <Card card={{suit:c.s,value:c.v}} faceDown={false} size="xs" theme={theme.id}/>
+                        <Card card={{suit:"♠",value:"A"}} faceDown={true} size="xs" theme={theme.id}/>
                       </div>
                     );})}
                     {active&&<div style={{position:"absolute",top:8,right:10,background:"rgba(0,0,0,0.7)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:2}}>✓ ACTIVE</div>}
