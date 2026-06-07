@@ -127,13 +127,37 @@ const audio={
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
       var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
       if(isIOS){
-        // iOS: route through MediaStreamDestination → DOM audio element to bypass ringer switch.
-        // Don't connect to ctx.destination or sound plays twice.
+        // Step 1: play a real audio file to claim iOS AVAudioSession "playback" category
+        // This is the ONLY reliable way to bypass the silent/ringer switch on iOS web.
+        try{
+          var silentEl=document.getElementById("_cobra_silent");
+          if(!silentEl){
+            silentEl=document.createElement("audio");
+            silentEl.id="_cobra_silent";
+            silentEl.src="/silent.mp3";
+            silentEl.loop=true;
+            silentEl.volume=0.001;
+            silentEl.setAttribute("playsinline","");
+            silentEl.setAttribute("webkit-playsinline","");
+            silentEl.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
+            document.body.appendChild(silentEl);
+          }
+          silentEl.play().catch(function(){});
+        }catch(e){}
+        // Step 2: route Web Audio through MediaStreamDestination → audio element
+        // so it shares the same playback session
         try{
           var streamDest=ctx.createMediaStreamDestination();
           this._master.connect(streamDest);
           var keeper=document.getElementById("_cobra_keeper");
-          if(!keeper){keeper=document.createElement("audio");keeper.id="_cobra_keeper";keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";document.body.appendChild(keeper);}
+          if(!keeper){
+            keeper=document.createElement("audio");
+            keeper.id="_cobra_keeper";
+            keeper.setAttribute("playsinline","");
+            keeper.setAttribute("webkit-playsinline","");
+            keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
+            document.body.appendChild(keeper);
+          }
           keeper.srcObject=streamDest.stream;
           keeper.volume=1;
           this._htmlAudio=keeper;
