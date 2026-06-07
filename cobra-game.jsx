@@ -2628,6 +2628,67 @@ function TournamentResultScreen({data,onClaim,playerName}){
   );
 }
 
+function GameSummaryScreen({data,names,onClose}){
+  if(!data)return null;
+  var declarations=data.declarations||{};
+  var cobraHits=data.cobraHits||{};
+  var roundScores=data.roundScores||[];
+  var rounds=data.rounds||0;
+  var winner=data.winner;
+  var scores=data.scores;
+  var allNames=names||[];
+
+  var mvp=typeof winner==="number"&&allNames[winner]?allNames[winner]:(scores?allNames[scores.indexOf(Math.min.apply(null,scores))]:"Unknown")||"Unknown";
+  var topDeclarer=Object.keys(declarations).sort(function(a,b){return (declarations[b]||0)-(declarations[a]||0);})[0]||"-";
+  var topCobra=Object.keys(cobraHits).sort(function(a,b){return (cobraHits[b]||0)-(cobraHits[a]||0);})[0]||"-";
+
+  var stats=[
+    {icon:"🏆",label:"Champion",value:mvp},
+    {icon:"📢",label:"Most Declarations",value:topDeclarer+(declarations[topDeclarer]?" ("+declarations[topDeclarer]+"x)":"")},
+    {icon:"🐍",label:"Most Cobras",value:topCobra+(cobraHits[topCobra]?" ("+cobraHits[topCobra]+"x)":"")},
+    {icon:"🔄",label:"Total Rounds",value:rounds},
+  ];
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(170deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(212,168,67,0.35)",borderBottom:"none",borderRadius:"24px 24px 0 0",padding:"0 0 calc(28px + env(safe-area-inset-bottom))",width:"100%",maxWidth:480,animation:"slideUp 0.38s cubic-bezier(.22,1,.36,1) both",maxHeight:"85vh",overflowY:"auto"}}>
+        <div style={{display:"flex",justifyContent:"center",padding:"12px 0 4px"}}>
+          <div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/>
+        </div>
+        <div style={{padding:"16px 24px 0"}}>
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <div style={{fontSize:36,marginBottom:6}}>📊</div>
+            <h2 style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,color:"#f0c060",letterSpacing:4,marginBottom:4}}>GAME SUMMARY</h2>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+            {stats.map(function(s,i){return(
+              <div key={i} style={{background:"rgba(0,0,0,0.3)",border:"1px solid rgba(212,168,67,0.15)",borderRadius:12,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:22,marginBottom:4}}>{s.icon}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a9a8a",letterSpacing:2,marginBottom:4}}>{s.label.toUpperCase()}</div>
+                <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#f0c060",fontWeight:700}}>{s.value}</div>
+              </div>
+            );})}
+          </div>
+          <div style={{background:"rgba(0,0,0,0.25)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"16px",marginBottom:16}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:3,marginBottom:12,textAlign:"center"}}>FINAL SCORES</div>
+            {allNames.map(function(name,i){
+              var s=scores?scores[i]:0;
+              var isWinner=scores&&s===Math.min.apply(null,scores);
+              return(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:i<allNames.length-1?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                  <span style={{fontFamily:"Crimson Text,serif",fontSize:14,color:isWinner?"#f0c060":"#8a9a8a"}}>{isWinner?"👑 ":""}{name}</span>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:13,color:isWinner?"#f0c060":"#6a8a6e",fontWeight:isWinner?900:400}}>{s} pts</span>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={onClose} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#d4a843,#a87020)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:13,fontWeight:700,color:"#010603",letterSpacing:3,cursor:"pointer",marginBottom:8}}>CLOSE</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Cobra(){
   const [showSplash,setShowSplash]=useState(true);
   const [screen,setScreen]=useState("home");
@@ -2734,6 +2795,8 @@ export default function Cobra(){
   const [startingGame,setStartingGame]=useState(false);
   const [scoreLimit,setScoreLimit]=useState(function(){return parseInt(lsGet("cobra_score_limit","100"));});
   const [connStatus,setConnStatus]=useState(""); // "reconnecting"|"connected"|""
+  const [showSummary,setShowSummary]=useState(false);
+  const gameSummaryRef=useRef({declarations:{},cobraHits:{},roundScores:[],rounds:0});
   const chatChannelRef=useRef(null);
   const chatScrollRef=useRef(null);
   const prevPlayersCount=useRef(0);
@@ -3250,6 +3313,7 @@ export default function Cobra(){
 
   function startCPU(){
     var n=1+cpuCount,ns=names.slice(0,n),s=Array(n).fill(0);
+    gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
     setMode("cpu");setNPlayers(n);setNames(ns);setMyIdx(0);
     deal(s,n);goScreen("game");
     if(!tutorialDone)setShowTutorial(true);
@@ -3537,6 +3601,7 @@ export default function Cobra(){
     var myTotal=ht(hands[H]);
     if(myTotal>DECLARE_MAX){pop("Need total 30 or under to declare (yours: "+myTotal+")","error");haptic.error();return;}
     audio.init();audio.resume();audio.declare();haptic.declare();haptic.heavy();
+    gameSummaryRef.current.declarations[names[H]]=(gameSummaryRef.current.declarations[names[H]]||0)+1;
     var totals=hands.map(function(h){return ht(h);});
     var minT=Math.min.apply(null,totals);
     var iWin=myTotal===minT&&totals.filter(function(t){return t===minT;}).length===1;
@@ -3559,6 +3624,7 @@ export default function Cobra(){
     } else {
       var pen=COBRA_PEN+myTotal;ns[H]+=pen;
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?pen:0,cobra:i===H,winner:false};});
+      gameSummaryRef.current.cobraHits[names[H]]=(gameSummaryRef.current.cobraHits[names[H]]||0)+1;
       setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
@@ -4470,6 +4536,7 @@ export default function Cobra(){
               setFlashScores(ns.map(function(s,i){return s!==(scores[i]||0);}));
               setTimeout(function(){setFlashScores([]);},1200);
               setRoundEndData(ned);setScores(ns);setRoundRes(resWS);
+              gameSummaryRef.current.rounds=(gameSummaryRef.current.rounds||0)+1;
               setHands([]);setDeck([]);setMyPlayed([]);setSel([]);setOpenPile({cards:[],owner:-1});
               setRevealData(null);
               if(loser>=0){var winner=ns.indexOf(Math.min.apply(null,ns));setGameOverData({scores:ns,winner:winner,loser:loser});if(winner===H)saveLeaderboardWin();setScreen("gameOver");}
@@ -4652,6 +4719,8 @@ export default function Cobra(){
               <button className="btn_btn_gold" style={{width:"100%",padding:18,fontSize:14,letterSpacing:2.5,borderRadius:14}}
                 onClick={function(){
                   audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
+                  gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
+                  setShowSummary(false);
                   setGameOverData(null);
                   if(mode==="cpu"){startCPU();}
                   else if(mode==="online"){startOnlineGame();}
@@ -4709,9 +4778,17 @@ export default function Cobra(){
               }}>
               🏠 {tournamentData?"CONTINUE TOURNAMENT":"BACK TO HOME"}
             </button>
+            <button onClick={function(){setShowSummary(true);}} style={{width:"100%",padding:"12px",background:"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:3,cursor:"pointer",marginTop:4}}>
+              📊 GAME SUMMARY
+            </button>
           </div>
         </div>
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
+      {showSummary&&<GameSummaryScreen
+        data={Object.assign({},gameSummaryRef.current,{winner:gameOverData&&gameOverData.winner,scores:gameOverData&&gameOverData.scores,names:names.slice(0,nPlayers)})}
+        names={names.slice(0,nPlayers)}
+        onClose={function(){setShowSummary(false);}}
+      />}
       </div>
     );
   }
