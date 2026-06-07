@@ -2689,6 +2689,65 @@ function GameSummaryScreen({data,names,onClose}){
   );
 }
 
+function VIPBadge(){
+  return <span style={{display:"inline-flex",alignItems:"center",background:"linear-gradient(135deg,#d4a843,#f0c060)",borderRadius:6,padding:"1px 6px",fontFamily:"Cinzel,serif",fontSize:7,fontWeight:900,color:"#010603",letterSpacing:1,marginLeft:4}}>VIP</span>;
+}
+
+function VIPScreen({onBack,onBuy,isVIP,coins,gems}){
+  var PRICE_GEMS=50;
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"32px 20px",minHeight:"100vh",overflowY:"auto"}}>
+      <style>{GS}</style>
+      <div style={{maxWidth:400,width:"100%"}}>
+        <button onClick={onBack} style={{background:"none",border:"none",color:"#d4a843",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,cursor:"pointer",marginBottom:20}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{fontSize:56,marginBottom:8}}>👑</div>
+          <h1 style={{fontFamily:"Cinzel,serif",fontSize:28,fontWeight:900,background:"linear-gradient(135deg,#f7df80,#d4a843,#a87020)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:6,marginBottom:6}}>VIP MEMBER</h1>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7e",fontSize:15}}>Unlock the full COBRA experience</p>
+        </div>
+        <div style={{background:"rgba(0,0,0,0.3)",border:"1.5px solid rgba(212,168,67,0.25)",borderRadius:20,padding:"20px",marginBottom:20}}>
+          {[
+            {icon:"⚡",title:"2x XP Boost",desc:"Double experience on every game"},
+            {icon:"🪙",title:"10% Coin Bonus",desc:"Extra coins on every win"},
+            {icon:"👑",title:"VIP Badge",desc:"Gold crown on your profile and name"},
+            {icon:"🖼️",title:"Animated Frame",desc:"Exclusive gold animated avatar border"},
+            {icon:"🏪",title:"VIP Shop",desc:"Access to exclusive VIP-only items"},
+            {icon:"🎯",title:"Priority Matchmaking",desc:"Get into games faster online"},
+          ].map(function(b,i){return(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 0",borderBottom:i<5?"1px solid rgba(255,255,255,0.05)":"none"}}>
+              <span style={{fontSize:22,width:32,textAlign:"center"}}>{b.icon}</span>
+              <div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060",letterSpacing:1,marginBottom:2}}>{b.title}</div>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:13}}>{b.desc}</div>
+              </div>
+              <span style={{marginLeft:"auto",color:"#4ade80",fontSize:16}}>✓</span>
+            </div>
+          );})}
+        </div>
+        {isVIP?(
+          <div style={{textAlign:"center",padding:"20px",background:"rgba(212,168,67,0.1)",border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:16}}>
+            <div style={{fontSize:32,marginBottom:8}}>👑</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#f0c060",letterSpacing:3}}>YOU ARE VIP</div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"#7a9a7e",fontSize:13,marginTop:4}}>Enjoy your premium benefits!</div>
+          </div>
+        ):(
+          <div>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#8a9a8a",letterSpacing:2,marginBottom:4}}>ONE-TIME PURCHASE</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:36,color:"#60c8f0",fontWeight:900}}>💎 {PRICE_GEMS}</div>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:13}}>You have: 💎{gems}</div>
+            </div>
+            <button onClick={function(){onBuy(PRICE_GEMS);}} disabled={gems<PRICE_GEMS}
+              style={{width:"100%",padding:"16px",background:gems>=PRICE_GEMS?"linear-gradient(135deg,#d4a843,#f0c060,#a87020)":"rgba(255,255,255,0.05)",border:gems>=PRICE_GEMS?"none":"1px solid rgba(255,255,255,0.1)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:15,fontWeight:900,color:gems>=PRICE_GEMS?"#010603":"#4a5a4a",letterSpacing:3,cursor:gems>=PRICE_GEMS?"pointer":"not-allowed",boxShadow:gems>=PRICE_GEMS?"0 4px 24px rgba(212,168,67,0.4)":"none"}}>
+              \U0001f451 BECOME VIP
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Cobra(){
   const [showSplash,setShowSplash]=useState(true);
   const [screen,setScreen]=useState("home");
