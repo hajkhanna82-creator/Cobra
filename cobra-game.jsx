@@ -4961,15 +4961,14 @@ export default function Cobra(){
                 <div key={theme.id} style={{position:"relative",borderRadius:16,overflow:"hidden",border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1.5px solid rgba(212,168,67,0.15)",boxShadow:active?"0 0 22px rgba(212,168,67,0.35)":"0 4px 16px rgba(0,0,0,0.5)",cursor:isVIP?"pointer":"default"}}
                   onClick={function(){if(!isVIP)return;setCardTheme(active?"classic":theme.id);try{localStorage.setItem("cobra_card_theme",active?"classic":theme.id);}catch(e){}audio.buttonClick();}}>
                   {/* card fan preview */}
-                  <div style={{height:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:0,position:"relative"}}>
-                    <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 40%,"+(th.pat||"rgba(255,255,255,0.05)")+" 0%,transparent 60%),radial-gradient(circle at 70% 60%,"+(th.pat2||"rgba(255,255,255,0.03)")+" 0%,transparent 60%)"}}/>
+                  <div style={{height:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
                     {[0,1,2,3].map(function(ci){return(
-                      <div key={ci} style={{transform:"rotate("+(ci*7-10.5)+"deg)",position:"relative",margin:"0 4px"}}>
+                      <div key={ci} style={{transform:"rotate("+(ci*7-10.5)+"deg)",margin:"0 5px",flexShrink:0}}>
                         <Card card={{suit:"♠",value:"A"}} faceDown={true} size="xs" theme={theme.id}/>
                       </div>
                     );})}
                     {active&&<div style={{position:"absolute",top:8,right:10,background:"rgba(0,0,0,0.7)",borderRadius:6,padding:"3px 8px",fontFamily:"Cinzel,serif",fontSize:7,color:"#f0c060",letterSpacing:2}}>✓ ACTIVE</div>}
-                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><span style={{fontSize:22}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>VIP ONLY</span></div>}
+                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,pointerEvents:"none"}}><span style={{fontSize:22}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:2}}>VIP ONLY</span></div>}
                   </div>
                   <div style={{padding:"10px 14px",background:"rgba(0,0,0,0.35)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div>
