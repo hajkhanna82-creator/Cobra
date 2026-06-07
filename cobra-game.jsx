@@ -5231,6 +5231,7 @@ export default function Cobra(){
             <div style={{height:"100%",width:pct+"%",background:tier.color,borderRadius:2,transition:"width 0.6s ease"}}/>
           </div>}
           {tier.max!==Infinity&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>{tier.max+1-elo} ELO TO {getEloTier(tier.max+1).name.toUpperCase()}</div>}
+          {(function(){try{var sd=parseInt(localStorage.getItem("cobra_season_start_date")||"0");if(!sd)return null;var daysLeft=30-(Math.floor(Date.now()/(1000*60*60*24))-sd);return(<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1,marginTop:2}}>Season ends in {Math.max(0,daysLeft)} day{daysLeft!==1?"s":""}</div>);}catch(e){return null;}})()}
         </div>);})()}
         <div style={{textAlign:"center",marginBottom:4}}>
         </div>
@@ -5544,7 +5545,23 @@ export default function Cobra(){
         }}
         onClose={function(){setActiveScreen(null);setSpinLast(parseInt(lsGet("cobra_spin_last","0")));}}
       />}
-      {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/>}
+      {seasonEndModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+          <div style={{background:"linear-gradient(170deg,#0a1a0a,#060e06)",border:"2px solid rgba(212,168,67,0.5)",borderRadius:20,padding:"32px 28px",maxWidth:360,width:"100%",textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:8}}>{seasonEndModal.tier.icon}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:14,color:"rgba(255,255,255,0.4)",letterSpacing:3,marginBottom:4}}>SEASON ENDED</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:26,fontWeight:900,letterSpacing:3,background:seasonEndModal.tier.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:12}}>{seasonEndModal.tier.name}</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:15,color:"#8a9a8a",marginBottom:20}}>Final rank this season. New season has begun!</div>
+            <div style={{background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.3)",borderRadius:12,padding:"14px",marginBottom:20}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#8a7a3e",letterSpacing:2,marginBottom:4}}>SEASON REWARD</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:28,fontWeight:900,color:"#f0c060"}}>+{seasonEndModal.reward} 🪙</div>
+            </div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(255,255,255,0.35)",marginBottom:20}}>ELO reset for new season (kept 60%, min 800)</div>
+            <button onClick={function(){setSeasonEndModal(null);}} style={{background:"linear-gradient(135deg,#d4a843,#a87020)",border:"none",borderRadius:12,fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:2,color:"#010603",padding:"14px 32px",cursor:"pointer",fontWeight:700,touchAction:"manipulation",width:"100%"}}>CLAIM & CONTINUE</button>
+          </div>
+        </div>
+      )}
+      {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/> }
       {eloToast&&(function(){var t=eloToast;var tier=getEloTier(elo);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:500,animation:"statSlideIn 0.4s both",pointerEvents:"none"}}>
         {t.rankUp&&<div style={{background:"linear-gradient(135deg,rgba(20,40,20,0.97),rgba(10,20,10,0.97))",border:"2px solid rgba(212,168,67,0.6)",borderRadius:16,padding:"12px 20px",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",marginBottom:8,whiteSpace:"nowrap"}}>
           <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:900,letterSpacing:2,color:"#f0c060",marginBottom:2}}>🎉 RANK UP!</div>
