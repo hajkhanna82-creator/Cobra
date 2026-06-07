@@ -126,9 +126,10 @@ const audio={
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
       var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+      this._master.connect(ctx.destination);
       if(isIOS){
-        // Step 1: play a real audio file to claim iOS AVAudioSession "playback" category
-        // This is the ONLY reliable way to bypass the silent/ringer switch on iOS web.
+        // Play a real audio file to claim iOS AVAudioSession "playback" category.
+        // This makes ctx.destination also bypass the ringer/silent switch.
         try{
           var silentEl=document.getElementById("_cobra_silent");
           if(!silentEl){
@@ -144,27 +145,6 @@ const audio={
           }
           silentEl.play().catch(function(){});
         }catch(e){}
-        // Step 2: route Web Audio through MediaStreamDestination → audio element
-        // so it shares the same playback session
-        try{
-          var streamDest=ctx.createMediaStreamDestination();
-          this._master.connect(streamDest);
-          var keeper=document.getElementById("_cobra_keeper");
-          if(!keeper){
-            keeper=document.createElement("audio");
-            keeper.id="_cobra_keeper";
-            keeper.setAttribute("playsinline","");
-            keeper.setAttribute("webkit-playsinline","");
-            keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
-            document.body.appendChild(keeper);
-          }
-          keeper.srcObject=streamDest.stream;
-          keeper.volume=1;
-          this._htmlAudio=keeper;
-          keeper.play().catch(function(){});
-        }catch(e){this._master.connect(ctx.destination);}
-      }else{
-        this._master.connect(ctx.destination);
       }
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
