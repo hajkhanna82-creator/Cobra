@@ -3090,6 +3090,227 @@ function SeasonPassScreen({goScreen,isVIP,coins,gems,seasonXP,seasonTier,claimed
   );
 }
 
+// ─── CLAN SCREEN ────────────────────────────────────────────────────────────
+var SAMPLE_CLANS=[
+  {name:"Serpent Kings",tag:"SKG",icon:"🐍",members:12,elo:18450},
+  {name:"Shadow Reapers",tag:"SHR",icon:"💀",members:9,elo:14200},
+  {name:"Storm Eagles",tag:"STE",icon:"🦅",members:15,elo:21600},
+  {name:"Dragon Fire",tag:"DRF",icon:"🐉",members:7,elo:10800},
+  {name:"Moon Warriors",tag:"MNW",icon:"🌙",members:11,elo:16350},
+  {name:"Thunder Blades",tag:"THB",icon:"⚔️",members:8,elo:12100},
+];
+var TOP_CLANS=[
+  {name:"Storm Eagles",tag:"STE",icon:"🦅",members:15,elo:21600},
+  {name:"Serpent Kings",tag:"SKG",icon:"🐍",members:12,elo:18450},
+  {name:"Moon Warriors",tag:"MNW",icon:"🌙",members:11,elo:16350},
+  {name:"Shadow Reapers",tag:"SHR",icon:"💀",members:9,elo:14200},
+  {name:"Thunder Blades",tag:"THB",icon:"⚔️",members:8,elo:12100},
+  {name:"Dragon Fire",tag:"DRF",icon:"🐉",members:7,elo:10800},
+  {name:"Iron Cobras",tag:"IRC",icon:"⚡",members:14,elo:9750},
+  {name:"Crimson Hawks",tag:"CRH",icon:"🎯",members:6,elo:8400},
+  {name:"Ocean Tide",tag:"OCT",icon:"🌊",members:10,elo:7200},
+  {name:"Bone Archers",tag:"BOA",icon:"🏹",members:5,elo:5600},
+];
+var CLAN_ICONS=["🐍","⚔️","🔥","💀","👑","🌙","⚡","🎯","🦅","🌊","🐉","🏹"];
+var MOCK_MEMBERS=[
+  {name:"VenomStrike",avatar:"😤",elo:1850,role:"Officer"},
+  {name:"NightBlade",avatar:"😈",elo:1620,role:"Member"},
+  {name:"CrimsonAce",avatar:"🤠",elo:1490,role:"Member"},
+  {name:"SilverFang",avatar:"😎",elo:1380,role:"Member"},
+  {name:"DarkPhoenix",avatar:"🦊",elo:1250,role:"Member"},
+];
+
+function ClanScreen({goScreen,myName,myAvatar,elo,coins,onSpendCoins}){
+  var storedClan=null;
+  try{var sc=localStorage.getItem("cobra_clan");if(sc&&sc!=="null")storedClan=JSON.parse(sc);}catch(e){}
+  var [clan,setClan]=useState(storedClan);
+  var [tab,setTab]=useState(storedClan?"myclan":"browse");
+  var [clanName,setClanName]=useState("");
+  var [clanTag,setClanTag]=useState("");
+  var [clanIcon,setClanIcon]=useState("🐍");
+  var [leaveConfirm,setLeaveConfirm]=useState(false);
+
+  function saveClan(c){
+    setClan(c);
+    try{localStorage.setItem("cobra_clan",c?JSON.stringify(c):"null");}catch(e){}
+  }
+
+  function joinClan(c){
+    var newClan={name:c.name,tag:c.tag,icon:c.icon,role:"Member"};
+    saveClan(newClan);
+    setTab("myclan");
+  }
+
+  function createClan(){
+    var trimName=clanName.trim();
+    var trimTag=clanTag.trim().toUpperCase();
+    if(!trimName||trimName.length<2)return;
+    if(!trimTag||trimTag.length!==3)return;
+    if(coins<500)return;
+    onSpendCoins(500);
+    var newClan={name:trimName,tag:trimTag,icon:clanIcon,role:"Leader"};
+    saveClan(newClan);
+    setTab("myclan");
+  }
+
+  function leaveClan(){
+    saveClan(null);
+    setLeaveConfirm(false);
+    setTab("browse");
+  }
+
+  var tabStyle=function(t){return{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,padding:"10px 0",cursor:"pointer",background:"none",border:"none",borderBottom:tab===t?"2px solid #ef4444":"2px solid transparent",color:tab===t?"#ef4444":"#6a8a6e",flex:1,touchAction:"manipulation"};};
+
+  var playerElo=elo||1000;
+  var allMembers=[{name:myName||"You",avatar:myAvatar||"😎",elo:playerElo,role:clan?clan.role:"Member"},...MOCK_MEMBERS];
+  var totalElo=allMembers.reduce(function(s,m){return s+m.elo;},0);
+  var clanRank=clan?(function(){var idx=TOP_CLANS.findIndex(function(c){return c.tag===clan.tag;});return idx>=0?idx+1:Math.floor(Math.random()*5)+6;})():"-";
+  var weeklyXP=340;
+  var weeklyXPGoal=1000;
+
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+      <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+        <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){goScreen("home");}}>← BACK</button>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:32,marginBottom:4}}>⚔️</div>
+          <h2 style={{fontFamily:"Cinzel,serif",color:"#ef4444",fontSize:20,letterSpacing:4,margin:0}}>CLANS</h2>
+          <p style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:13,margin:"4px 0 0"}}>Fight together, rise together</p>
+        </div>
+        <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.08)",marginBottom:0}}>
+          {clan&&<button style={tabStyle("myclan")} onClick={function(){setTab("myclan");}}>MY CLAN</button>}
+          {!clan&&<button style={tabStyle("browse")} onClick={function(){setTab("browse");}}>BROWSE</button>}
+          {!clan&&<button style={tabStyle("create")} onClick={function(){setTab("create");}}>CREATE</button>}
+          <button style={tabStyle("leaderboard")} onClick={function(){setTab("leaderboard");}}>TOP CLANS</button>
+        </div>
+      </div>
+
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 18px calc(32px + env(safe-area-inset-bottom))"}}>
+
+        {tab==="myclan"&&clan&&(
+          <div>
+            <div style={{textAlign:"center",padding:"20px 0 16px",background:"rgba(239,68,68,0.08)",borderRadius:16,border:"1px solid rgba(239,68,68,0.2)",marginBottom:14}}>
+              <div style={{fontSize:52,marginBottom:6}}>{clan.icon}</div>
+              <div style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:18,letterSpacing:3}}>{clan.name}</div>
+              <div style={{fontFamily:"Cinzel,serif",color:"#ef4444",fontSize:12,letterSpacing:4,marginTop:2}}>[{clan.tag}]</div>
+              <div style={{display:"inline-block",marginTop:8,padding:"4px 14px",borderRadius:20,background:clan.role==="Leader"?"rgba(239,68,68,0.25)":"rgba(249,115,22,0.2)",border:clan.role==="Leader"?"1px solid rgba(239,68,68,0.5)":"1px solid rgba(249,115,22,0.4)",fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:clan.role==="Leader"?"#ef4444":"#f97316"}}>{clan.role==="Leader"?"👑 LEADER":"⚔️ MEMBER"}</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+              {[["MEMBERS",allMembers.length,"👥"],["TOTAL ELO",totalElo.toLocaleString(),"🏆"],["RANK","#"+clanRank,"🎖️"]].map(function(s){return(
+                <div key={s[0]} style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"12px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,0.06)"}}>
+                  <div style={{fontSize:18,marginBottom:2}}>{s[2]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:13,fontWeight:700}}>{s[1]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",color:"#4a6a5e",fontSize:9,letterSpacing:1.5,marginTop:2}}>{s[0]}</div>
+                </div>
+              );})}
+            </div>
+            <div style={{background:"rgba(0,0,0,0.28)",borderRadius:14,padding:"14px 16px",marginBottom:14,border:"1px solid rgba(249,115,22,0.15)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f97316",letterSpacing:2}}>WEEKLY CLAN XP</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060"}}>{weeklyXP}/{weeklyXPGoal}</span>
+              </div>
+              <div style={{height:8,background:"rgba(255,255,255,0.08)",borderRadius:4,overflow:"hidden"}}>
+                <div style={{height:"100%",width:(weeklyXP/weeklyXPGoal*100)+"%",background:"linear-gradient(90deg,#ef4444,#f97316)",borderRadius:4}}/>
+              </div>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,marginTop:6}}>Resets Monday — earn XP by playing ranked matches</div>
+            </div>
+            <div style={{marginBottom:14}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#6a8a6e",letterSpacing:2,marginBottom:8}}>MEMBERS ({allMembers.length})</div>
+              {allMembers.map(function(m,i){return(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,marginBottom:6,background:"rgba(0,0,0,0.25)",border:"1px solid rgba(255,255,255,0.05)"}}>
+                  <div style={{fontSize:22,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(239,68,68,0.12)",borderRadius:"50%"}}>{m.avatar}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"Cinzel,serif",color:"#e8d5a0",fontSize:13}}>{m.name}{i===0?" (You)":""}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12}}>{m.role}</div>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:13}}>{m.elo}</div>
+                </div>
+              );})}
+            </div>
+            <div style={{background:"rgba(0,0,0,0.2)",borderRadius:14,padding:"20px",textAlign:"center",border:"1px solid rgba(255,255,255,0.04)",marginBottom:14}}>
+              <div style={{fontSize:28,marginBottom:6,opacity:0.4}}>💬</div>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#4a5a4e",fontSize:14}}>Clan chat coming soon 🔒</div>
+            </div>
+            {!leaveConfirm?(
+              <button className="btn_btn_ghost" style={{width:"100%",padding:"14px",fontSize:11,letterSpacing:2,color:"#ef4444",border:"1.5px solid rgba(239,68,68,0.35)"}} onClick={function(){setLeaveConfirm(true);}}>🚪 LEAVE CLAN</button>
+            ):(
+              <div style={{background:"rgba(239,68,68,0.08)",borderRadius:14,padding:"16px",textAlign:"center",border:"1px solid rgba(239,68,68,0.3)"}}>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#e8d5a0",fontSize:15,marginBottom:12}}>Are you sure you want to leave {clan.name}?</div>
+                <div style={{display:"flex",gap:10}}>
+                  <button className="btn_btn_ghost" style={{flex:1,padding:"12px",fontSize:11,color:"#8a9a7a"}} onClick={function(){setLeaveConfirm(false);}}>CANCEL</button>
+                  <button className="btn_btn_ghost" style={{flex:1,padding:"12px",fontSize:11,color:"#ef4444",border:"1.5px solid rgba(239,68,68,0.5)"}} onClick={leaveClan}>CONFIRM LEAVE</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab==="browse"&&!clan&&(
+          <div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:14,marginBottom:14}}>Join an existing clan to earn rewards together.</div>
+            {SAMPLE_CLANS.map(function(c){return(
+              <div key={c.tag} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:14,marginBottom:10,background:"rgba(0,0,0,0.28)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                <div style={{fontSize:32,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(239,68,68,0.1)",borderRadius:12}}>{c.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:13}}>{c.name} <span style={{color:"#ef4444",fontSize:11}}>[{c.tag}]</span></div>
+                  <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12}}>{c.members} members · {c.elo.toLocaleString()} ELO</div>
+                </div>
+                <button className="btn_btn_ghost" style={{padding:"8px 14px",fontSize:10,letterSpacing:2,color:"#ef4444",border:"1.5px solid rgba(239,68,68,0.4)"}} onClick={function(){joinClan(c);}}>JOIN</button>
+              </div>
+            );})}
+          </div>
+        )}
+
+        {tab==="create"&&!clan&&(
+          <div>
+            <div style={{background:"rgba(239,68,68,0.08)",borderRadius:14,padding:"14px 16px",marginBottom:18,border:"1px solid rgba(239,68,68,0.2)"}}>
+              <div style={{fontFamily:"Cinzel,serif",color:"#ef4444",fontSize:11,letterSpacing:2,marginBottom:4}}>COST: 500 COINS</div>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:13}}>You currently have {(coins||0).toLocaleString()} coins.{coins<500?" Not enough coins to create a clan.":""}</div>
+            </div>
+            <div style={{marginBottom:14}}>
+              <label style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"#6a8a6e",display:"block",marginBottom:6}}>CLAN NAME</label>
+              <input value={clanName} onChange={function(e){setClanName(e.target.value);}} maxLength={24} placeholder="Enter clan name..." style={{width:"100%",background:"rgba(0,0,0,0.35)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"12px 14px",color:"#e8d5a0",fontFamily:"Crimson Text,serif",fontSize:15,boxSizing:"border-box"}}/>
+            </div>
+            <div style={{marginBottom:18}}>
+              <label style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"#6a8a6e",display:"block",marginBottom:6}}>CLAN TAG (3 LETTERS)</label>
+              <input value={clanTag} onChange={function(e){setClanTag(e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,3));}} maxLength={3} placeholder="TAG" style={{width:"100%",background:"rgba(0,0,0,0.35)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"12px 14px",color:"#ef4444",fontFamily:"Cinzel,serif",fontSize:15,letterSpacing:4,boxSizing:"border-box"}}/>
+            </div>
+            <div style={{marginBottom:22}}>
+              <label style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"#6a8a6e",display:"block",marginBottom:10}}>CLAN ICON</label>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
+                {CLAN_ICONS.map(function(ic){return(
+                  <button key={ic} onClick={function(){setClanIcon(ic);}} style={{fontSize:24,padding:"10px",borderRadius:10,border:clanIcon===ic?"2px solid #ef4444":"2px solid rgba(255,255,255,0.08)",background:clanIcon===ic?"rgba(239,68,68,0.15)":"rgba(0,0,0,0.2)",cursor:"pointer",touchAction:"manipulation"}}>{ic}</button>
+                );})}
+              </div>
+            </div>
+            <button className="btn_btn_ghost" style={{width:"100%",padding:"16px",fontSize:12,letterSpacing:3,color:coins>=500?"#ef4444":"#4a5a4e",border:coins>=500?"1.5px solid rgba(239,68,68,0.5)":"1.5px solid rgba(255,255,255,0.06)",cursor:coins>=500?"pointer":"not-allowed"}} onClick={function(){if(coins>=500&&clanName.trim().length>=2&&clanTag.length===3)createClan();}}>⚔️ CREATE CLAN (500 🪙)</button>
+          </div>
+        )}
+
+        {tab==="leaderboard"&&(
+          <div>
+            <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:14,marginBottom:14}}>Top 10 clans ranked by total ELO.</div>
+            {TOP_CLANS.map(function(c,i){
+              var isPlayer=clan&&clan.tag===c.tag;
+              return(
+                <div key={c.tag} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:14,marginBottom:8,background:isPlayer?"rgba(239,68,68,0.1)":"rgba(0,0,0,0.28)",border:isPlayer?"1px solid rgba(239,68,68,0.35)":"1px solid rgba(255,255,255,0.06)"}}>
+                  <div style={{fontFamily:"Cinzel,serif",color:i<3?"#f0c060":"#4a6a5e",fontSize:14,width:24,textAlign:"center"}}>{i===0?"🥇":i===1?"🥈":i===2?"🥉":"#"+(i+1)}</div>
+                  <div style={{fontSize:24}}>{c.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"Cinzel,serif",color:isPlayer?"#ef4444":"#e8d5a0",fontSize:13}}>{c.name} <span style={{fontSize:10,opacity:0.7}}>[{c.tag}]</span>{isPlayer&&<span style={{marginLeft:6,fontSize:10,color:"#ef4444"}}>← YOU</span>}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12}}>{c.members} members</div>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:13}}>{c.elo.toLocaleString()}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FriendsScreen({goScreen,myName,myAvatar,elo}){
   const [tab,setTab]=useState("friends");
   const [searchQuery,setSearchQuery]=useState("");
@@ -4758,6 +4979,15 @@ export default function Cobra(){
             onClick={function(){audio.buttonClick();haptic.light();goScreen("season");}}>🎫 SEASON PASS
             {(function(){var hasUnclaimed=SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;});return hasUnclaimed?(<span style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#ef4444",borderRadius:"50%",border:"1.5px solid rgba(0,0,0,0.5)"}}/>):null;})()}
           </button>
+          {(function(){
+            var clanData=null;
+            try{var _sc=localStorage.getItem("cobra_clan");if(_sc&&_sc!=="null")clanData=JSON.parse(_sc);}catch(e){}
+            return(
+              <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(239,68,68,0.4)",color:"#ef4444",position:"relative"}}
+                onClick={function(){audio.buttonClick();haptic.light();goScreen("clan");}}>⚔️ CLAN{clanData?<span style={{marginLeft:4,fontSize:9,color:"#f97316"}}>[{clanData.tag}]</span>:null}
+              </button>
+            );
+          })()}
         </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
@@ -5640,6 +5870,20 @@ export default function Cobra(){
   // ─── FRIENDS ─────────────────────────────────────────
   if(screen==="friends"){
     return <FriendsScreen goScreen={goScreen} myName={myName} myAvatar={myAvatar} elo={elo}/>;
+  }
+
+  // ─── CLAN ────────────────────────────────────────────
+  if(screen==="clan"){
+    return <ClanScreen
+      goScreen={goScreen}
+      myName={myName}
+      myAvatar={myAvatar}
+      elo={elo}
+      coins={coins}
+      onSpendCoins={function(amount){
+        setCoins(function(c){var n=c-amount;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});
+      }}
+    />;
   }
 
   // ─── SEASON PASS ─────────────────────────────────────
