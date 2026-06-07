@@ -4964,7 +4964,7 @@ export default function Cobra(){
                   <div style={{height:110,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:0,position:"relative"}}>
                     <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 40%,"+(th.pat||"rgba(255,255,255,0.05)")+" 0%,transparent 60%),radial-gradient(circle at 70% 60%,"+(th.pat2||"rgba(255,255,255,0.03)")+" 0%,transparent 60%)"}}/>
                     {[0,1,2,3].map(function(ci){return(
-                      <div key={ci} style={{transform:"rotate("+(ci*8-12)+"deg) translateX("+(ci*6-9)+"px) translateY("+(Math.abs(ci-1.5)*3)+"px)",zIndex:ci,position:"relative"}}>
+                      <div key={ci} style={{transform:"rotate("+(ci*8-12)+"deg) translateX("+(ci*18-27)+"px)",zIndex:3-ci,position:"relative"}}>
                         <Card card={{suit:"♠",value:"A"}} faceDown={true} size="xs" theme={theme.id}/>
                       </div>
                     );})}
