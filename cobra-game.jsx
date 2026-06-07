@@ -2135,7 +2135,7 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
 }
 
 function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings,isVIP}){
-  var CATS=["👑 VIP","ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
+  var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
   var [cat,setCat]=useState("ALL");
   var [timeLeft,setTimeLeft]=useState("00:00:00");
   var daySeed=Math.floor(Date.now()/(1000*60*60*24));
@@ -2317,12 +2317,11 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     );
   }
 
-  var showVIP=cat==="👑 VIP"||cat==="ALL";
-  var showFeatured=(cat==="ALL"||cat==="FEATURED")&&cat!=="👑 VIP";
-  var showThemes=(cat==="ALL"||cat==="THEMES")&&cat!=="👑 VIP";
-  var showAvatars=(cat==="ALL"||cat==="AVATARS")&&cat!=="👑 VIP";
-  var showBundles=(cat==="ALL"||cat==="BUNDLES")&&cat!=="👑 VIP";
-  var showCrates=(cat==="ALL"||cat==="CRATES")&&cat!=="👑 VIP";
+  var showFeatured=cat==="ALL"||cat==="FEATURED";
+  var showThemes=cat==="ALL"||cat==="THEMES";
+  var showAvatars=cat==="ALL"||cat==="AVATARS";
+  var showBundles=cat==="ALL"||cat==="BUNDLES";
+  var showCrates=cat==="ALL"||cat==="CRATES";
   var newItems=SHOP_THEMES.filter(function(t){return t.isNew;});
   var featuredItems=SHOP_THEMES.filter(function(t){return t.rarity==="epic"||t.rarity==="legendary";}).slice(0,3);
 
@@ -2402,76 +2401,17 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
       {/* SCROLLABLE CONTENT */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 16px calc(32px + env(safe-area-inset-bottom))"}}>
 
-        {/* VIP EXCLUSIVE SECTION */}
-        {showVIP&&(
-          <div style={{marginBottom:24}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-              <div style={{height:1,flex:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.4))"}}/>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:3,display:"flex",alignItems:"center",gap:6}}>
-                <span>👑</span> VIP EXCLUSIVE <span>👑</span>
-              </div>
-              <div style={{height:1,flex:1,background:"linear-gradient(90deg,rgba(212,168,67,0.4),transparent)"}}/>
-            </div>
-            {!isVIP&&(
-              <div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05))",border:"1.5px solid rgba(212,168,67,0.3)",borderRadius:16,padding:"16px",textAlign:"center",marginBottom:16}}>
-                <div style={{fontSize:28,marginBottom:6}}>👑</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:2,marginBottom:4}}>UNLOCK ALL VIP ITEMS</div>
-                <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a8a",fontSize:13,marginBottom:12}}>8 exclusive themes · 10 avatars · 4 legendary titles</div>
-                <button onClick={function(){audio.buttonClick();goScreen("vip");}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#d4a843,#f0c060)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:11,fontWeight:900,color:"#010603",letterSpacing:2,cursor:"pointer"}}>GET VIP — 💎50</button>
-              </div>
-            )}
-            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>CARD THEMES</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
-              {SHOP_THEMES.filter(function(t){return t.vipOnly;}).map(function(theme){
-                var owned=effectiveUnlockedThemes.includes(theme.id);
-                var active=cardTheme===theme.id;
-                var th=CARD_THEMES[theme.id]||CARD_THEMES.classic;
-                return(
-                  <div key={theme.id} style={{position:"relative",background:owned?theme.color:"rgba(0,0,0,0.4)",border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(212,168,67,0.15)",borderRadius:14,padding:"14px 12px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.7}}
-                    onClick={function(){if(!isVIP)return;if(owned){onEquipTheme(theme.id);}else{onBuy(theme);}}}>
-                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:"inherit",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:18}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:3}}>VIP ONLY</span></div>}
-                    <div style={{width:32,height:32,borderRadius:8,background:th.bg||theme.color,marginBottom:8,border:"1px solid "+(th.border||"rgba(212,168,67,0.3)")}}/>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:2}}>{theme.name}</div>
-                    <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:11}}>{theme.desc}</div>
-                    {active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>✓ ACTIVE</div>}
-                    {owned&&!active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:4}}>OWNED</div>}
-                    {!owned&&isVIP&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>FREE WITH VIP</div>}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>EXCLUSIVE AVATARS</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
-              {SHOP_AVATARS.filter(function(a){return a.vipOnly;}).map(function(av){
-                var owned=isVIP||effectiveUnlockedAvatars.includes(av.id);
-                var active=myAvatar===av.id;
-                return(
-                  <div key={av.id} style={{position:"relative",width:52,height:52,borderRadius:12,background:active?"rgba(212,168,67,0.2)":"rgba(0,0,0,0.3)",border:active?"2px solid #f0c060":"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.6}}
-                    onClick={function(){if(!isVIP)return;onEquipAvatar(av.id);}}>
-                    {av.id}
-                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:12}}>👑</span></div>}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>LEGENDARY TITLES</div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {TITLES.filter(function(t){return t.vipOnly;}).map(function(title){
-                var active=myAvatar===title.id;
-                return(
-                  <div key={title.id} style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",border:active?"1.5px solid rgba(212,168,67,0.5)":"1px solid rgba(212,168,67,0.15)",borderRadius:12,padding:"12px 14px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.7}}>
-                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2}}>👑 VIP ONLY</span></div>}
-                    <div>
-                      <span style={{fontFamily:"Cinzel,serif",fontSize:12,background:title.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",fontWeight:900}}>{title.name}</span>
-                      <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#8a7a3e",letterSpacing:2,marginTop:2}}>LEGENDARY · FREE WITH VIP</div>
-                    </div>
-                    {active&&<span style={{color:"#4ade80",fontSize:14}}>✓</span>}
-                  </div>
-                );
-              })}
+        {/* VIP EXCLUSIVE BUTTON */}
+        <button onClick={function(){audio.buttonClick();goScreen("vip_shop");}} style={{width:"100%",marginBottom:16,padding:"16px",background:"linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05))",border:"1.5px solid rgba(212,168,67,0.45)",borderRadius:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",touchAction:"manipulation"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:22}}>👑</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:2,fontWeight:900}}>VIP EXCLUSIVE</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"#8a9a7a",marginTop:1}}>Themes · Avatars · Titles</div>
             </div>
           </div>
-        )}
+          <span style={{fontFamily:"Cinzel,serif",fontSize:18,color:"#f0c060"}}>›</span>
+        </button>
 
         {/* FEATURED CAROUSEL */}
         {showFeatured&&(
@@ -4982,6 +4922,86 @@ export default function Cobra(){
         names={names.slice(0,nPlayers)}
         onClose={function(){setShowSummary(false);}}
       />}
+      </div>
+    );
+  }
+
+  // ─── VIP SHOP ────────────────────────────────────────
+  if(screen==="vip_shop"){
+    var vipThemes=SHOP_THEMES.filter(function(t){return t.vipOnly;});
+    var vipAvatarList=SHOP_AVATARS.filter(function(a){return a.vipOnly;});
+    var vipTitleList=TITLES.filter(function(t){return t.vipOnly;});
+    var vipUnlockedThemes=isVIP?SHOP_THEMES.filter(function(t){return t.vipOnly;}).map(function(t){return t.id;}):[];
+    var vipUnlockedAvatars=isVIP?SHOP_AVATARS.filter(function(a){return a.vipOnly;}).map(function(a){return a.id;}):[];
+    return(
+      <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
+        <style>{GS}</style>
+        <div style={{flexShrink:0,padding:"calc(16px + env(safe-area-inset-top)) 18px 0"}}>
+          <button className="btn_btn_ghost" style={{marginBottom:12,padding:"10px 16px",fontSize:11}} onClick={function(){audio.buttonClick();goScreen("shop");}}>← BACK</button>
+          <div style={{textAlign:"center",marginBottom:16}}>
+            <div style={{fontSize:32,marginBottom:4}}>👑</div>
+            <h2 style={{fontFamily:"Cinzel,serif",color:"#f0c060",fontSize:20,letterSpacing:4,margin:0}}>VIP EXCLUSIVE</h2>
+            <p style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:13,margin:"4px 0 0"}}>Premium items only for VIP members</p>
+          </div>
+          {!isVIP&&(
+            <div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.04))",border:"1.5px solid rgba(212,168,67,0.35)",borderRadius:14,padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#c0a850",fontSize:13}}>Unlock everything with VIP</div>
+              <button onClick={function(){audio.buttonClick();goScreen("vip");}} style={{padding:"8px 16px",background:"linear-gradient(135deg,#d4a843,#f0c060)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:10,fontWeight:900,color:"#010603",letterSpacing:1.5,cursor:"pointer",flexShrink:0}}>GET VIP 💎50</button>
+            </div>
+          )}
+        </div>
+        <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"8px 18px calc(32px + env(safe-area-inset-bottom))"}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>CARD THEMES</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:20}}>
+            {vipThemes.map(function(theme){
+              var owned=vipUnlockedThemes.includes(theme.id);
+              var active=cardTheme===theme.id;
+              var th=CARD_THEMES[theme.id]||CARD_THEMES.classic;
+              return(
+                <div key={theme.id} style={{position:"relative",background:th.bg,border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(212,168,67,0.15)",borderRadius:14,padding:"14px 12px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.6}}
+                  onClick={function(){if(!isVIP)return;setCardTheme(active?"classic":theme.id);try{localStorage.setItem("cobra_card_theme",active?"classic":theme.id);}catch(e){}audio.buttonClick();}}>
+                  {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.55)",borderRadius:"inherit",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:18}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:3}}>VIP ONLY</span></div>}
+                  <div style={{width:32,height:32,borderRadius:8,background:th.bg,marginBottom:8,border:"1px solid "+(th.border||"rgba(212,168,67,0.3)")}}/>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:2}}>{theme.name}</div>
+                  <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:11}}>{theme.desc}</div>
+                  {active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>✓ ACTIVE</div>}
+                  {owned&&!active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:4}}>OWNED · TAP TO EQUIP</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>EXCLUSIVE AVATARS</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:20}}>
+            {vipAvatarList.map(function(av){
+              var active=myAvatar===av.id;
+              return(
+                <div key={av.id} style={{position:"relative",width:56,height:56,borderRadius:14,background:active?"rgba(212,168,67,0.2)":"rgba(0,0,0,0.3)",border:active?"2px solid #f0c060":"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.5}}
+                  onClick={function(){if(!isVIP)return;setMyAvatar(active?"😎":av.id);try{localStorage.setItem("cobra_player_avatar",active?"😎":av.id);}catch(e){}audio.buttonClick();}}>
+                  {av.id}
+                  {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:13}}>👑</span></div>}
+                  {active&&<div style={{position:"absolute",bottom:2,right:2,width:14,height:14,background:"#4ade80",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#000"}}>✓</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>LEGENDARY TITLES</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {vipTitleList.map(function(title){
+              var eq=equippedTitle===title.id;
+              return(
+                <div key={title.id} style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",border:eq?"1.5px solid rgba(212,168,67,0.5)":"1px solid rgba(212,168,67,0.15)",borderRadius:12,padding:"14px 16px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.6}}
+                  onClick={function(){if(!isVIP)return;var next=eq?"":title.id;setEquippedTitle(next);try{localStorage.setItem("cobra_title",next);}catch(e){}audio.buttonClick();}}>
+                  {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2}}>👑 VIP ONLY</span></div>}
+                  <div>
+                    <span style={{fontFamily:"Cinzel,serif",fontSize:13,background:title.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",fontWeight:900}}>{title.name}</span>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#8a7a3e",letterSpacing:2,marginTop:2}}>LEGENDARY · FREE WITH VIP</div>
+                  </div>
+                  {eq&&<span style={{color:"#4ade80",fontSize:16}}>✓</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   }
