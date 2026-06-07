@@ -601,6 +601,50 @@ const SHOP_THEMES=[
   {id:"void",name:"Void",price:3500,currency:"coins",color:"#050505",desc:"Pure darkness, absolute black",rarity:"legendary",isNew:true},
 ];
 
+// ─── SEASON PASS ─────────────────────────────────────────
+const SEASON_PASS={
+  season:1,
+  name:"Serpent's Rise",
+  durationDays:30,
+  xpPerTier:100,
+  totalTiers:30,
+  tiers:[
+    // Tiers 1-10
+    {tier:1, free:{type:"coins",amount:50,label:"50 Coins",icon:"🪙"}, vip:{type:"gems",amount:2,label:"2 Gems",icon:"💎"}},
+    {tier:2, free:{type:"coins",amount:75,label:"75 Coins",icon:"🪙"}, vip:{type:"avatar",id:"🐍",label:"Serpent Avatar",icon:"🐍"}},
+    {tier:3, free:{type:"coins",amount:100,label:"100 Coins",icon:"🪙"}, vip:{type:"gems",amount:3,label:"3 Gems",icon:"💎"}},
+    {tier:4, free:{type:"coins",amount:75,label:"75 Coins",icon:"🪙"}, vip:{type:"gems",amount:2,label:"2 Gems",icon:"💎"}},
+    {tier:5, free:{type:"coins",amount:125,label:"125 Coins",icon:"🪙"}, vip:{type:"avatar",id:"🦎",label:"Lizard Avatar",icon:"🦎"}},
+    {tier:6, free:{type:"coins",amount:100,label:"100 Coins",icon:"🪙"}, vip:{type:"gems",amount:4,label:"4 Gems",icon:"💎"}},
+    {tier:7, free:{type:"coins",amount:100,label:"100 Coins",icon:"🪙"}, vip:{type:"gems",amount:3,label:"3 Gems",icon:"💎"}},
+    {tier:8, free:{type:"coins",amount:150,label:"150 Coins",icon:"🪙"}, vip:{type:"avatar",id:"🌿",label:"Venom Avatar",icon:"🌿"}},
+    {tier:9, free:{type:"coins",amount:125,label:"125 Coins",icon:"🪙"}, vip:{type:"gems",amount:5,label:"5 Gems",icon:"💎"}},
+    {tier:10, free:{type:"coins",amount:150,label:"150 Coins",icon:"🪙"}, vip:{type:"gems",amount:4,label:"4 Gems",icon:"💎"}},
+    // Tiers 11-20
+    {tier:11, free:{type:"coins",amount:200,label:"200 Coins",icon:"🪙"}, vip:{type:"theme",id:"serpent",label:"Serpent Theme",icon:"🎨"}},
+    {tier:12, free:{type:"coins",amount:250,label:"250 Coins",icon:"🪙"}, vip:{type:"gems",amount:5,label:"5 Gems",icon:"💎"}},
+    {tier:13, free:{type:"frame",id:"serpent_frame",label:"Serpent Frame",icon:"🖼️"}, vip:{type:"gems",amount:6,label:"6 Gems",icon:"💎"}},
+    {tier:14, free:{type:"coins",amount:300,label:"300 Coins",icon:"🪙"}, vip:{type:"theme",id:"void",label:"Void Theme",icon:"🎨"}},
+    {tier:15, free:{type:"coins",amount:250,label:"250 Coins",icon:"🪙"}, vip:{type:"gems",amount:7,label:"7 Gems",icon:"💎"}},
+    {tier:16, free:{type:"frame",id:"gold_frame",label:"Gold Frame",icon:"🖼️"}, vip:{type:"gems",amount:8,label:"8 Gems",icon:"💎"}},
+    {tier:17, free:{type:"coins",amount:350,label:"350 Coins",icon:"🪙"}, vip:{type:"theme",id:"galaxy",label:"Galaxy Theme",icon:"🎨"}},
+    {tier:18, free:{type:"coins",amount:300,label:"300 Coins",icon:"🪙"}, vip:{type:"gems",amount:8,label:"8 Gems",icon:"💎"}},
+    {tier:19, free:{type:"frame",id:"purple_frame",label:"Viper Frame",icon:"🖼️"}, vip:{type:"gems",amount:10,label:"10 Gems",icon:"💎"}},
+    {tier:20, free:{type:"coins",amount:400,label:"400 Coins",icon:"🪙"}, vip:{type:"gems",amount:10,label:"10 Gems",icon:"💎"}},
+    // Tiers 21-30
+    {tier:21, free:{type:"avatar",id:"🐲",label:"Dragon Avatar",icon:"🐲"}, vip:{type:"coins",amount:500,label:"500 Coins",icon:"🪙"}},
+    {tier:22, free:{type:"coins",amount:400,label:"400 Coins",icon:"🪙"}, vip:{type:"gems",amount:12,label:"12 Gems",icon:"💎"}},
+    {tier:23, free:{type:"avatar",id:"👁️",label:"Viper Eye Avatar",icon:"👁️"}, vip:{type:"coins",amount:600,label:"600 Coins",icon:"🪙"}},
+    {tier:24, free:{type:"coins",amount:450,label:"450 Coins",icon:"🪙"}, vip:{type:"gems",amount:15,label:"15 Gems",icon:"💎"}},
+    {tier:25, free:{type:"title",id:"sp_serpent",label:"Title: Serpent",icon:"🏷️"}, vip:{type:"coins",amount:800,label:"800 Coins",icon:"🪙"}},
+    {tier:26, free:{type:"avatar",id:"🌑",label:"Shadow Avatar",icon:"🌑"}, vip:{type:"gems",amount:18,label:"18 Gems",icon:"💎"}},
+    {tier:27, free:{type:"coins",amount:500,label:"500 Coins",icon:"🪙"}, vip:{type:"coins",amount:1000,label:"1000 Coins",icon:"🪙"}},
+    {tier:28, free:{type:"title",id:"sp_apex",label:"Title: Apex",icon:"🏷️"}, vip:{type:"gems",amount:20,label:"20 Gems",icon:"💎"}},
+    {tier:29, free:{type:"avatar",id:"🐍",label:"Cobra King Avatar",icon:"🐍"}, vip:{type:"coins",amount:1500,label:"1500 Coins",icon:"🪙"}},
+    {tier:30, free:{type:"title",id:"sp_rise",label:"Title: Serpent's Rise",icon:"🏆"}, vip:{type:"gems",amount:25,label:"25 Gems + 2000 Coins",icon:"💎",bonusCoins:2000}},
+  ]
+};
+
 const BUNDLES=[
   {id:"bundle_darkness",name:"Darkness Pack",desc:"Midnight + Crimson themes",icon:"🌙",items:["midnight","crimson"],price:3200,currency:"coins",originalPrice:4800,rarity:"rare"},
   {id:"bundle_nature",name:"Nature Pack",desc:"Classic + Emerald themes",icon:"🌿",items:["classic","emerald"],price:2800,currency:"coins",originalPrice:4200,rarity:"rare"},
@@ -2909,6 +2953,143 @@ function VIPScreen({onBack,onBuy,isVIP,coins,gems}){
   );
 }
 
+function SeasonPassScreen({goScreen,isVIP,coins,gems,seasonXP,seasonTier,claimedTiers,onClaim,onGetVIP}){
+  var SP=SEASON_PASS;
+  var now=Date.now();
+  var seasonStart=parseInt(function(){try{return localStorage.getItem("cobra_season_start")||"0";}catch(e){return "0";}}());
+  if(!seasonStart){seasonStart=now;try{localStorage.setItem("cobra_season_start",String(now));}catch(e){}}
+  var seasonEnd=new Date(seasonStart+SP.durationDays*24*3600*1000);
+  var daysLeft=Math.max(0,Math.ceil((seasonEnd.getTime()-now)/86400000));
+  var endStr=seasonEnd.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+
+  var currentTierIdx=seasonTier; // 0-based index of highest unlocked tier (0 = none unlocked)
+  var xpInCurrentTier=seasonXP-(currentTierIdx*SP.xpPerTier);
+  var xpNeeded=SP.xpPerTier;
+
+  var hasUnclaimed=SP.tiers.some(function(t){
+    return t.tier<=currentTierIdx&&claimedTiers.indexOf(t.tier)<0;
+  });
+
+  function claimTier(tier,reward,isVipReward){
+    if(claimedTiers.indexOf(tier+(isVipReward?"_vip":""))>=0)return;
+    onClaim(tier,reward,isVipReward);
+  }
+
+  return(
+    <div className="feltbg" style={{display:"flex",flexDirection:"column",minHeight:"100vh",overflowY:"auto"}}>
+      <style>{GS}</style>
+      {/* Header */}
+      <div style={{background:"linear-gradient(180deg,rgba(60,10,100,0.98),rgba(40,5,70,0.99))",padding:"calc(20px + env(safe-area-inset-top)) 20px 24px",borderBottom:"1px solid rgba(124,58,237,0.4)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(124,58,237,0.3),transparent 70%)",pointerEvents:"none"}}/>
+        <button onClick={function(){goScreen("home");}} style={{background:"none",border:"none",color:"#c4b5fd",fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,cursor:"pointer",marginBottom:16,position:"relative",zIndex:1}}>← BACK</button>
+        <div style={{textAlign:"center",position:"relative",zIndex:1}}>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:4,color:"#a78bfa",marginBottom:4}}>SEASON 1</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:26,fontWeight:900,background:"linear-gradient(135deg,#f0c060,#c084fc,#7c3aed)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:4,marginBottom:6}}>Serpent's Rise</div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"rgba(196,181,253,0.7)"}}>Ends {endStr} · {daysLeft} days left</div>
+        </div>
+        {/* XP Progress */}
+        <div style={{marginTop:18,position:"relative",zIndex:1}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"#a78bfa"}}>TIER {currentTierIdx}/{SP.totalTiers}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#c4b5fd"}}>{Math.min(xpInCurrentTier,xpNeeded)} / {xpNeeded} XP</span>
+          </div>
+          <div style={{height:8,background:"rgba(124,58,237,0.2)",borderRadius:4,overflow:"hidden",border:"1px solid rgba(124,58,237,0.3)"}}>
+            <div style={{height:"100%",width:(Math.min(xpInCurrentTier,xpNeeded)/xpNeeded*100)+"%",background:"linear-gradient(90deg,#7c3aed,#c084fc)",borderRadius:4,transition:"width 0.5s ease"}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* VIP Banner */}
+      <div style={{margin:"16px 16px 0",borderRadius:14,overflow:"hidden"}}>
+        {isVIP?(
+          <div style={{background:"linear-gradient(135deg,rgba(124,58,237,0.25),rgba(192,132,252,0.15))",border:"1.5px solid rgba(124,58,237,0.5)",borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>👑</span>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#c084fc",letterSpacing:2}}>VIP ACTIVE</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#a78bfa"}}>All VIP rewards unlocked · 2x Season XP</div>
+            </div>
+            <span style={{marginLeft:"auto",color:"#4ade80",fontSize:18}}>✓</span>
+          </div>
+        ):(
+          <div style={{background:"linear-gradient(135deg,rgba(30,5,50,0.9),rgba(20,3,35,0.95))",border:"1.5px solid rgba(124,58,237,0.4)",borderRadius:14,padding:"12px 16px",display:"flex",alignItems:"center",gap:10,cursor:"pointer"}} onClick={onGetVIP}>
+            <span style={{fontSize:20}}>🔒</span>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#c084fc",letterSpacing:2}}>UNLOCK VIP REWARDS</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#7a6a9a"}}>Double XP + exclusive tier rewards</div>
+            </div>
+            <div style={{background:"linear-gradient(135deg,#7c3aed,#c084fc)",borderRadius:10,padding:"8px 14px",flexShrink:0}}>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#fff",letterSpacing:1}}>GET VIP 💎50</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Reward Track */}
+      <div style={{padding:"16px 0 24px"}}>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:3,color:"#7c3aed",padding:"0 16px 12px"}}>REWARD TRACK</div>
+        <div style={{overflowX:"auto",paddingBottom:8}}>
+          <div style={{display:"flex",gap:10,padding:"0 16px",width:"max-content"}}>
+            {SP.tiers.map(function(t){
+              var unlocked=t.tier<=currentTierIdx;
+              var freeClaimed=claimedTiers.indexOf(t.tier)>=0;
+              var vipClaimed=claimedTiers.indexOf(t.tier+"_vip")>=0;
+              var isCurrent=t.tier===currentTierIdx+1;
+              return(
+                <div key={t.tier} style={{width:100,flexShrink:0,background:unlocked?"rgba(124,58,237,0.15)":isCurrent?"rgba(80,20,150,0.2)":"rgba(0,0,0,0.3)",border:unlocked?"1.5px solid rgba(124,58,237,0.5)":isCurrent?"1.5px solid rgba(124,58,237,0.3)":"1px solid rgba(124,58,237,0.1)",borderRadius:14,padding:"10px 8px",textAlign:"center",opacity:!unlocked&&!isCurrent?0.45:1,boxShadow:isCurrent?"0 0 16px rgba(124,58,237,0.4)":"none",transition:"all 0.3s"}}>
+                  {/* Tier number */}
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,letterSpacing:2,color:unlocked?"#c084fc":"#7c3aed",marginBottom:6}}>TIER {t.tier}</div>
+
+                  {/* Free reward */}
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,color:"#8a8a9a",marginBottom:4}}>FREE</div>
+                    <div style={{fontSize:20,marginBottom:2}}>{t.free.icon}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"#e8f0e8",lineHeight:1.2,marginBottom:6}}>{t.free.label}</div>
+                    {unlocked&&!freeClaimed&&(
+                      <button onClick={function(){claimTier(t.tier,t.free,false);}} style={{width:"100%",padding:"5px 0",background:"linear-gradient(135deg,#7c3aed,#a855f7)",border:"none",borderRadius:8,fontFamily:"Cinzel,serif",fontSize:9,color:"#fff",letterSpacing:1,cursor:"pointer"}}>CLAIM</button>
+                    )}
+                    {freeClaimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#4ade80"}}>✓</div>}
+                    {!unlocked&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a3a6a"}}>🔒</div>}
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{height:1,background:"rgba(124,58,237,0.3)",margin:"0 0 8px"}}/>
+
+                  {/* VIP reward */}
+                  <div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:3,marginBottom:4}}>
+                      <span style={{fontSize:9}}>👑</span>
+                      <span style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,color:"#d4a843"}}>VIP</span>
+                    </div>
+                    <div style={{fontSize:16,marginBottom:2}}>{t.vip.icon}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"#d4a843",lineHeight:1.2,marginBottom:6}}>{t.vip.label}</div>
+                    {unlocked&&isVIP&&!vipClaimed&&(
+                      <button onClick={function(){claimTier(t.tier,t.vip,true);}} style={{width:"100%",padding:"5px 0",background:"linear-gradient(135deg,#a87020,#d4a843)",border:"none",borderRadius:8,fontFamily:"Cinzel,serif",fontSize:9,color:"#010603",letterSpacing:1,cursor:"pointer",fontWeight:700}}>CLAIM</button>
+                    )}
+                    {vipClaimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#4ade80"}}>✓</div>}
+                    {(!unlocked||!isVIP)&&!vipClaimed&&<div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4a3a2a"}}>{isVIP?"🔒":"👑"}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* XP Sources info */}
+      <div style={{margin:"0 16px 24px",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(124,58,237,0.2)",borderRadius:14,padding:"16px"}}>
+        <div style={{fontFamily:"Cinzel,serif",fontSize:10,letterSpacing:2,color:"#7c3aed",marginBottom:12}}>HOW TO EARN XP</div>
+        {[["🏆","Win a round","+50 XP"],["🃏","Play any round","+15 XP"],["🐍","Cobra declaration","+30 XP"],["👑","VIP bonus","2× XP"]].map(function(row,i){return(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none"}}>
+            <span style={{fontSize:16,width:24}}>{row[0]}</span>
+            <span style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#c4b5fd",flex:1}}>{row[1]}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#a78bfa",fontWeight:700}}>{row[2]}</span>
+          </div>
+        )})}
+      </div>
+    </div>
+  );
+}
+
 function FriendsScreen({goScreen,myName,myAvatar,elo}){
   const [tab,setTab]=useState("friends");
   const [searchQuery,setSearchQuery]=useState("");
@@ -3188,6 +3369,9 @@ export default function Cobra(){
   const [gems,setGems]=useState(function(){try{return parseInt(localStorage.getItem("cobra_gems")||"10");}catch(e){return 10;}});
   const [isVIP,setIsVIP]=useState(function(){try{return localStorage.getItem("cobra_vip")==="1";}catch(e){return false;}});
   const [playerXP,setPlayerXP]=useState(function(){try{return parseInt(localStorage.getItem("cobra_xp")||"0");}catch(e){return 0;}});
+  const [seasonXP,setSeasonXP]=useState(function(){try{return parseInt(localStorage.getItem("cobra_season_xp")||"0");}catch(e){return 0;}});
+  const [seasonTier,setSeasonTier]=useState(function(){try{return parseInt(localStorage.getItem("cobra_season_tier")||"0");}catch(e){return 0;}});
+  const [seasonClaimed,setSeasonClaimed]=useState(function(){try{return JSON.parse(localStorage.getItem("cobra_season_claimed")||"[]");}catch(e){return[];}});
   const [playerLevel,setPlayerLevel]=useState(function(){try{return parseInt(localStorage.getItem("cobra_level")||"1");}catch(e){return 1;}});
   const [activeScreen,setActiveScreen]=useState(null);
   const [rewardPopup,setRewardPopup]=useState(null);
@@ -3382,6 +3566,15 @@ export default function Cobra(){
     try{localStorage.setItem("cobra_xp",String(curXP));localStorage.setItem("cobra_level",String(curLvl));}catch(e){}
     setPlayerXP(curXP);setPlayerLevel(curLvl);
     if(bonusCoins>0)addCoins(bonusCoins);
+  };
+
+  const gainSeasonXP=function(amount){
+    var actualAmount=isVIP?amount*2:amount;
+    var curXP=parseInt(function(){try{return localStorage.getItem("cobra_season_xp")||"0";}catch(e){return "0";}}())+actualAmount;
+    var curTier=parseInt(function(){try{return localStorage.getItem("cobra_season_tier")||"0";}catch(e){return "0";}}());
+    while(curTier<SEASON_PASS.totalTiers&&curXP>=(curTier+1)*SEASON_PASS.xpPerTier){curTier++;}
+    try{localStorage.setItem("cobra_season_xp",String(curXP));localStorage.setItem("cobra_season_tier",String(curTier));}catch(e){}
+    setSeasonXP(curXP);setSeasonTier(curTier);
   };
 
   // ── Supabase Realtime ────────────────────────────────
@@ -4051,6 +4244,7 @@ export default function Cobra(){
       setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      gainSeasonXP(30); // cobra declaration bonus XP
       // ELO cobra penalty: -5
       applyEloChange(-5);
     }
@@ -4113,8 +4307,9 @@ export default function Cobra(){
   function finishRound(ns,res){
     // XP rewards for local player
     gainXP(25); // participation XP
+    gainSeasonXP(15); // season XP for participation
     var winnerIdx=ns.indexOf(Math.min.apply(null,ns));
-    if(winnerIdx===myIdx){gainXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.25);addCoins(vipCoinBonus);}} // win bonus
+    if(winnerIdx===myIdx){gainXP(50);gainSeasonXP(50);if(isVIP){var vipCoinBonus=Math.round(200*0.25);addCoins(vipCoinBonus);}} // win bonus
     // Unlock streak frames
     var curStreak=gameStats.streak||0;
     if(winnerIdx===myIdx){
@@ -4505,8 +4700,12 @@ export default function Cobra(){
             onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS</button>
           <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(192,132,252,0.3)",color:"#c084fc"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80",gridColumn:"1/-1"}}
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80"}}
             onClick={function(){audio.buttonClick();haptic.light();goScreen("friends");}}>👥 FRIENDS</button>
+          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(124,58,237,0.45)",color:"#c084fc",position:"relative"}}
+            onClick={function(){audio.buttonClick();haptic.light();goScreen("season");}}>🎫 SEASON PASS
+            {(function(){var hasUnclaimed=SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;});return hasUnclaimed?(<span style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#ef4444",borderRadius:"50%",border:"1.5px solid rgba(0,0,0,0.5)"}}/>):null;})()}
+          </button>
         </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
@@ -5388,6 +5587,42 @@ export default function Cobra(){
   // ─── FRIENDS ─────────────────────────────────────────
   if(screen==="friends"){
     return <FriendsScreen goScreen={goScreen} myName={myName} myAvatar={myAvatar} elo={elo}/>;
+  }
+
+  // ─── SEASON PASS ─────────────────────────────────────
+  if(screen==="season"){
+    return <SeasonPassScreen
+      goScreen={goScreen}
+      isVIP={isVIP}
+      coins={coins}
+      gems={gems}
+      seasonXP={seasonXP}
+      seasonTier={seasonTier}
+      claimedTiers={seasonClaimed}
+      onClaim={function(tier,reward,isVipReward){
+        var key=tier+(isVipReward?"_vip":"");
+        if(seasonClaimed.indexOf(key)>=0)return;
+        var newClaimed=[...seasonClaimed,key];
+        setSeasonClaimed(newClaimed);
+        try{localStorage.setItem("cobra_season_claimed",JSON.stringify(newClaimed));}catch(e){}
+        if(reward.type==="coins")addCoins(reward.amount);
+        if(reward.type==="gems")addGems(reward.amount);
+        if(reward.bonusCoins)addCoins(reward.bonusCoins);
+        if(reward.type==="avatar"){
+          var avId="av_"+reward.id;
+          setOwnedItems(function(prev){if(prev.indexOf(avId)>=0)return prev;var n=[...prev,avId];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+        }
+        if(reward.type==="theme"){
+          setOwnedItems(function(prev){if(prev.indexOf(reward.id)>=0)return prev;var n=[...prev,reward.id];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+        }
+        if(reward.type==="title"){
+          setOwnedItems(function(prev){if(prev.indexOf("title_"+reward.id)>=0)return prev;var n=[...prev,"title_"+reward.id];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+        }
+        pop("Reward claimed! "+reward.icon,"success");
+        audio.purchase&&audio.purchase();
+      }}
+      onGetVIP={function(){setScreen("vip");}}
+    />;
   }
 
   // ─── VIP ─────────────────────────────────────────────
