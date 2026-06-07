@@ -3927,9 +3927,6 @@ export default function Cobra(){
         <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#6a9a6e",fontSize:15,letterSpacing:4,marginTop:4,marginBottom:myName?2:10}}>the card game</p>
         {myName&&<p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a6a2e",fontSize:15,marginBottom:10}}>Welcome back, {myName} {myAvatar}</p>}
         <div style={{textAlign:"center",marginBottom:4}}>
-          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{display:"inline-flex",alignItems:"center",gap:6,background:isVIP?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.1))":"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,"+(isVIP?"0.5":"0.2")+")",borderRadius:20,padding:"6px 14px",fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2,cursor:"pointer",marginBottom:12}}>
-            👑 {isVIP?"VIP MEMBER":"GET VIP"}
-          </button>
         </div>
         <div style={{display:"inline-block",background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:20,padding:"3px 12px",marginBottom:6}}
           onClick={function(){audio.init();audio.resume();}}>
@@ -3967,6 +3964,16 @@ export default function Cobra(){
           onClick={function(){audio.buttonClick();haptic.medium();setScreen("tournament");}}>
           🏆 TOURNAMENT
         </button>
+        {!isVIP&&(
+          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.08))",border:"1.5px solid rgba(212,168,67,0.45)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 0 20px rgba(212,168,67,0.15)"}}>
+            👑 GET VIP
+          </button>
+        )}
+        {isVIP&&(
+          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{width:"100%",padding:"12px 20px",background:"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))",border:"1.5px solid rgba(212,168,67,0.6)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            👑 VIP MEMBER
+          </button>
+        )}
         <div style={{display:"flex",gap:10}}>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
           <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
