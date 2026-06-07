@@ -1849,10 +1849,10 @@ function MissionsScreen({goScreen,gameStats,achProgress,dailyMissions,weeklyMiss
   );
 }
 
-function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,equippedFrame,unlockedTitles,unlockedFrames,onEquipTitle,onEquipFrame,onEquipAvatar,onEquipTheme,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,setCardTheme}){
+function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,equippedFrame,unlockedTitles,unlockedFrames,onEquipTitle,onEquipFrame,onEquipAvatar,onEquipTheme,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,setCardTheme,isVIP}){
   const [tab,setTab]=useState("avatars");
-  var ownedAvatars=SHOP_AVATARS.filter(function(a){return a.price===0||ownedItems.indexOf("av_"+a.id)>=0;});
-  var ownedThemes=SHOP_THEMES.filter(function(t){return t.price===0||ownedItems.indexOf(t.id)>=0;});
+  var ownedAvatars=SHOP_AVATARS.filter(function(a){return (a.price===0&&!a.vipOnly)||ownedItems.indexOf("av_"+a.id)>=0||(a.vipOnly&&isVIP);});
+  var ownedThemes=SHOP_THEMES.filter(function(t){return (t.price===0&&!t.vipOnly)||ownedItems.indexOf(t.id)>=0||(t.vipOnly&&isVIP);});
   var TXT="#e8f0e8";var TXT2="#c0d8c0";var DIM="rgba(255,255,255,0.45)";
   return(
     <div className="feltbg" style={{display:"flex",flexDirection:"column",height:"100%",maxHeight:"100vh",overflow:"hidden"}}>
@@ -1878,7 +1878,7 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
             <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{ownedAvatars.length}/{SHOP_AVATARS.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
               {SHOP_AVATARS.map(function(item){
-                var owned=item.price===0||ownedItems.indexOf("av_"+item.id)>=0;
+                var owned=(item.price===0&&!item.vipOnly)||ownedItems.indexOf("av_"+item.id)>=0||(item.vipOnly&&isVIP);
                 var eq=myAvatar===item.id;
                 return(<div key={item.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipAvatar&&onEquipAvatar(eq?"😎":item.id);}} style={{borderRadius:14,padding:"14px 6px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.15)",background:eq?"rgba(212,168,67,0.18)":"rgba(255,255,255,0.06)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",transition:"all 0.15s",boxShadow:eq?"0 0 18px rgba(212,168,67,0.4)":"none"}}>
                   <div style={{fontSize:28}}>{item.id}</div>
@@ -1894,9 +1894,9 @@ function CollectionScreen({goScreen,ownedItems,myAvatar,cardTheme,equippedTitle,
             <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:TXT2,letterSpacing:2,marginBottom:12}}>{ownedThemes.length}/{SHOP_THEMES.length} COLLECTED · TAP TO EQUIP/UNEQUIP</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {SHOP_THEMES.map(function(item){
-                var owned=item.price===0||ownedItems.indexOf(item.id)>=0;
+                var owned=(item.price===0&&!item.vipOnly)||ownedItems.indexOf(item.id)>=0||(item.vipOnly&&isVIP);
                 var eq=cardTheme===item.id;
-                var th=CARD_THEMES[item.id];
+                var th=CARD_THEMES[item.id]||CARD_THEMES.classic;
                 return(<div key={item.id} onClick={function(){if(!owned)return;audio.buttonClick();onEquipTheme&&onEquipTheme(eq?"classic":item.id);}} style={{borderRadius:14,overflow:"hidden",border:eq?"2px solid #f0c060":"1.5px solid rgba(255,255,255,0.15)",opacity:owned?1:0.4,cursor:owned?"pointer":"default",boxShadow:eq?"0 0 22px rgba(212,168,67,0.4)":"none",transition:"all 0.15s"}}>
                   <div style={{height:64,background:th.bg,display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
                     {[0,1,2].map(function(ci){return(<div key={ci} style={{transform:"rotate("+(ci-1)*6+"deg) translateY("+(ci===1?-4:2)+"px)"}}><Card card={{suit:"♠",value:"A"}} faceDown size="xs" theme={item.id}/></div>);})}
@@ -3965,6 +3965,7 @@ export default function Cobra(){
       musToggle={musToggle}
       gameStats={gameStats}
       setCardTheme={setCardTheme}
+      isVIP={isVIP}
     />;
   }
 
