@@ -114,51 +114,51 @@ function seqLabel(cards){
   return"Sequence";
 }
 
+// Encode an AudioBuffer to a WAV Blob so it can be played via <audio> (bypasses iOS silent switch)
+function _bufToWav(buf){
+  var sr=buf.sampleRate,n=buf.length,nc=buf.numberOfChannels;
+  var out=new ArrayBuffer(44+n*nc*2);var v=new DataView(out);
+  var ws=function(o,s){for(var i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,"RIFF");v.setUint32(4,36+n*nc*2,true);ws(8,"WAVE");ws(12,"fmt ");
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nc,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*nc*2,true);
+  v.setUint16(32,nc*2,true);v.setUint16(34,16,true);ws(36,"data");v.setUint32(40,n*nc*2,true);
+  var off=44;for(var i=0;i<n;i++)for(var c=0;c<nc;c++){var s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
+  return new Blob([out],{type:"audio/wav"});
+}
+function _playBlob(url,vol){
+  try{var a=new Audio(url);a.volume=vol||1;a.play().catch(function(){});}catch(e){}
+}
+// Pre-render a sound builder fn in an OfflineAudioContext and return a blob URL promise
+function _render(dur,sr,builder){
+  return new Promise(function(res){
+    try{
+      var oc=new OfflineAudioContext(1,Math.ceil((sr||44100)*dur),sr||44100);
+      var out=oc.createGain();out.gain.value=1;out.connect(oc.destination);
+      builder(oc,out);
+      oc.startRendering().then(function(b){res(URL.createObjectURL(_bufToWav(b)));}).catch(function(){res(null);});
+    }catch(e){res(null);}
+  });
+}
+
 const audio={
   _ctx:null,_master:null,_bgGain:null,_sfxGain:null,
   _muted:false,_musicMuted:false,_bgNodes:[],_ready:false,_arpTimer:null,
+  _isIOS:false,_blobs:{},
   init(){
     if(this._ready)return;
     try{
       try{this._muted=localStorage.getItem("cobra_sfx_muted")==="1";}catch(e){}
       try{this._musicMuted=localStorage.getItem("cobra_mus_muted")==="1";}catch(e){}
+      this._isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
-      var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
-      if(isIOS){
-        var self=this;
-        try{
-          // Route Web Audio through MediaStreamDestination → <audio> element.
-          // The <audio> element uses iOS "playback" category, bypassing silent switch.
-          var streamDest=ctx.createMediaStreamDestination();
-          self._master.connect(streamDest);
-          var keeper=document.getElementById("_cobra_keeper");
-          if(!keeper){
-            keeper=document.createElement("audio");
-            keeper.id="_cobra_keeper";
-            keeper.setAttribute("playsinline","");
-            keeper.setAttribute("webkit-playsinline","");
-            keeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
-            document.body.appendChild(keeper);
-          }
-          keeper.srcObject=streamDest.stream;
-          keeper.volume=1;
-          self._htmlAudio=keeper;
-          keeper.play().catch(function(){
-            // Stream failed — fall back to ctx.destination (works on non-silent)
-            try{self._master.disconnect(streamDest);}catch(e2){}
-            self._master.connect(ctx.destination);
-          });
-        }catch(e){
-          self._master.connect(ctx.destination);
-        }
-      }else{
-        this._master.connect(ctx.destination);
-      }
+      this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
       this._ready=true;
+      if(this._isIOS)this._prerenderIOS();
       var self=this;
       ctx.addEventListener("statechange",function(){
         if(ctx.state==="running"&&!self._musicMuted&&self._bgNodes.length===0){
@@ -171,6 +171,29 @@ const audio={
         ctx.resume().catch(function(){});
       }
     }catch(e){}
+  },
+  _prerenderIOS(){
+    var self=this;
+    var sr=44100;
+    var jobs={
+      buttonClick:[0.12,function(c,o){var g=c.createGain();g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.5,0.008);g.gain.exponentialRampToValueAtTime(0.0001,0.1);var osc=c.createOscillator();osc.type="sine";osc.frequency.value=900;osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.12);}],
+      cardSelect:[0.1,function(c,o){var g=c.createGain();g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.4,0.008);g.gain.exponentialRampToValueAtTime(0.0001,0.08);var osc=c.createOscillator();osc.type="sine";osc.frequency.value=1200;osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.1);}],
+      cardDeal:[0.22,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.setValueAtTime(280,0);osc.frequency.exponentialRampToValueAtTime(1500,0.15);g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.5,0.012);g.gain.exponentialRampToValueAtTime(0.0001,0.18);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.22);}],
+      cardPickup:[0.2,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.setValueAtTime(900,0);osc.frequency.exponentialRampToValueAtTime(280,0.15);g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.4,0.012);g.gain.exponentialRampToValueAtTime(0.0001,0.16);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.2);}],
+      cardPlay:[0.28,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.setValueAtTime(1800,0);osc.frequency.exponentialRampToValueAtTime(180,0.22);g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.55,0.01);g.gain.exponentialRampToValueAtTime(0.0001,0.22);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.28);}],
+      declare:[0.9,function(c,o){[[261.6,0],[329.6,0.08],[392,0.16],[523.2,0.25],[659.2,0.36]].forEach(function(p){var osc=c.createOscillator(),g=c.createGain();osc.type="triangle";osc.frequency.value=p[0];g.gain.setValueAtTime(0.0001,p[1]);g.gain.linearRampToValueAtTime(0.4,p[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,p[1]+0.35);osc.connect(g);g.connect(o);osc.start(p[1]);osc.stop(p[1]+0.4);});}],
+      cobraStrike:[0.6,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sawtooth";osc.frequency.setValueAtTime(800,0);osc.frequency.exponentialRampToValueAtTime(40,0.4);g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.6,0.01);g.gain.exponentialRampToValueAtTime(0.0001,0.4);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.6);}],
+      win:[1.2,function(c,o){[[523.2,0,0.4],[659.2,0.1,0.35],[783.9,0.2,0.3],[1046.5,0.3,0.5],[783.9,0.45,0.28],[1046.5,0.55,0.6]].forEach(function(p){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.value=p[0];g.gain.setValueAtTime(0.0001,p[1]);g.gain.linearRampToValueAtTime(p[2],p[1]+0.02);g.gain.exponentialRampToValueAtTime(0.0001,p[1]+0.5);osc.connect(g);g.connect(o);osc.start(p[1]);osc.stop(p[1]+0.6);});}],
+      purchase:[0.4,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.setValueAtTime(300,0);osc.frequency.exponentialRampToValueAtTime(900,0.12);g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.5,0.012);g.gain.exponentialRampToValueAtTime(0.0001,0.3);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.4);}],
+      turnChange:[0.15,function(c,o){var osc=c.createOscillator(),g=c.createGain();osc.type="sine";osc.frequency.value=520;g.gain.setValueAtTime(0.0001,0);g.gain.linearRampToValueAtTime(0.3,0.008);g.gain.exponentialRampToValueAtTime(0.0001,0.12);osc.connect(g);g.connect(o);osc.start(0);osc.stop(0.15);}],
+    };
+    Object.keys(jobs).forEach(function(k){
+      var j=jobs[k];
+      _render(j[0],sr,j[1]).then(function(url){if(url)self._blobs[k]=url;});
+    });
+  },
+  _playIOS(name,vol){
+    if(this._blobs[name])_playBlob(this._blobs[name],vol||0.9);
   },
   resume(){
     if(!this._ctx)return;
@@ -252,11 +275,11 @@ const audio={
       src.connect(filt);filt.connect(g);g.connect(this._sfxGain);src.start(now);
     }catch(e){}
   },
-  buttonClick(){this._tone(200,"sine",0.25,0.055,0);this._noise(0.2,0.035,4500);this._tone(1600,"sine",0.07,0.04,0.006);},
-  cardDeal(){this._sweep(280,1500,0.14,0.15);this._noise(0.1,0.12,6000);},
-  cardPickup(){this._sweep(900,280,0.1,0.15);},
-  cardSelect(){this._tone(1000,"sine",0.08,0.06,0);this._tone(1300,"sine",0.05,0.04,0.012);},
-  cardPlay(){
+  buttonClick(){if(this._muted)return;if(this._isIOS){this._playIOS("buttonClick");return;}this._tone(200,"sine",0.25,0.055,0);this._noise(0.2,0.035,4500);this._tone(1600,"sine",0.07,0.04,0.006);},
+  cardDeal(){if(this._muted)return;if(this._isIOS){this._playIOS("cardDeal");return;}this._sweep(280,1500,0.14,0.15);this._noise(0.1,0.12,6000);},
+  cardPickup(){if(this._muted)return;if(this._isIOS){this._playIOS("cardPickup");return;}this._sweep(900,280,0.1,0.15);},
+  cardSelect(){if(this._muted)return;if(this._isIOS){this._playIOS("cardSelect");return;}this._tone(1000,"sine",0.08,0.06,0);this._tone(1300,"sine",0.05,0.04,0.012);},
+  cardPlay(){if(this._isIOS){if(!this._muted)this._playIOS("cardPlay");return;}
     try{
       if(!this._ctx||this._muted)return;
       const ctx=this._ctx,now=ctx.currentTime;
@@ -277,6 +300,7 @@ const audio={
   declare(){
     try{
       if(!this._ctx||this._muted)return;
+      if(this._isIOS){this._playIOS("declare");return;}
       const ctx=this._ctx,now=ctx.currentTime;
       // Rising triumphant arpeggio
       [[261.6,0],[329.6,0.08],[392,0.16],[523.2,0.25],[659.2,0.36]].forEach(function([f,t]){
@@ -291,6 +315,7 @@ const audio={
   cobraStrike(){
     try{
       if(!this._ctx||this._muted)return;
+      if(this._isIOS){this._playIOS("cobraStrike");return;}
       const ctx=this._ctx,now=ctx.currentTime;
       // Deep thud + descending alarm
       this._sweep(800,40,0.3,0.4);
@@ -308,6 +333,7 @@ const audio={
   win(){
     try{
       if(!this._ctx||this._muted)return;
+      if(this._isIOS){this._playIOS("win");return;}
       const ctx=this._ctx,now=ctx.currentTime;
       [[523.2,0,0.18],[659.2,0.1,0.16],[783.9,0.2,0.14],[1046.5,0.3,0.22],[783.9,0.45,0.12],[1046.5,0.55,0.28]].forEach(function([f,t,v]){
         const o=ctx.createOscillator(),g=ctx.createGain();
@@ -318,11 +344,11 @@ const audio={
       }.bind(this));
     }catch(e){}
   },
-  turnChange(){this._tone(520,"sine",0.06,0.1,0);},
+  turnChange(){if(this._muted)return;if(this._isIOS){this._playIOS("turnChange");return;}this._tone(520,"sine",0.06,0.1,0);},
   timerTick(){this._tone(800,"sine",0.04,0.05,0);},
   timerUrgent(){this._tone(1000,"sine",0.1,0.07,0);},
   achievement(){[784,988,1174].forEach((f,i)=>this._tone(f,"sine",0.15,0.3,i*0.1));},
-  purchase(){this._sweep(300,900,0.18,0.12);this._tone(1200,"sine",0.12,0.2,0.08);this._tone(1600,"sine",0.08,0.15,0.18);},
+  purchase(){if(this._muted)return;if(this._isIOS){this._playIOS("purchase");return;}this._sweep(300,900,0.18,0.12);this._tone(1200,"sine",0.12,0.2,0.08);this._tone(1600,"sine",0.08,0.15,0.18);},
   crateOpen(){this._noise(0.25,0.18,3000);this._sweep(200,1200,0.2,0.35);[523,659,784,988,1174,1568].forEach((f,i)=>this._tone(f,"triangle",0.14,0.3,0.08+i*0.07));},
   levelUp(){[392,494,587,784,988].forEach((f,i)=>this._tone(f,"sine",0.2,0.5,i*0.09));this._tone(1568,"sine",0.18,0.8,0.5);this._noise(0.12,0.2,5000);},
   shuffle_sfx(){for(let i=0;i<7;i++)setTimeout(()=>this.cardDeal(),i*85);},
