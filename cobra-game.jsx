@@ -2687,7 +2687,7 @@ export default function Cobra(){
   const [dealAnim,setDealAnim]=useState(false);
   const [shuffleAnim,setShuffleAnim]=useState(false);
   const [pileLandAnim,setPileLandAnim]=useState(false);
-  const prevPileLenRef=React.useRef(0);
+  const prevPileLenRef=useRef(0);
   const [playingCardIds,setPlayingCardIds]=useState([]);
   const [pickingUp,setPickingUp]=useState(false);
   const [flashScores,setFlashScores]=useState([]);
