@@ -4158,44 +4158,96 @@ export default function Cobra(){
         return;
       }
       setCurrentPlayer(idx);setCpuThinking(true);
-      var p=CPU_P[idx%CPU_P.length];
-      var thinkTime=p.thinkMs*([1.4,1.0,0.7][cpuDiff]||1)+rnd(-80,80);
+      var thinkTime=[1400,900,500][cpuDiff]*CPU_P[idx%CPU_P.length].thinkMs/1000+rnd(-80,80);
       setTimeout(function(){
         var hand=[...ch[idx]];
         var myTotal=ht(hand);
-        if(myTotal<=10&&rnd(0,1)<p.risk){
-          var totals=ch.map(function(h){return ht(h);});
-          var minT=Math.min.apply(null,totals);
-          if(myTotal===minT&&totals.filter(function(t){return t===minT;}).length===1){
-            audio.win();haptic.success();
-            var ns=scores.map(function(s,i){return i===idx?s:s+totals[i];});
-            var res=names.map(function(n,i){return{name:n,total:totals[i],added:i===idx?0:totals[i],cobra:false,winner:i===idx};});
-            setHands([...ch]);
-            setRevealData({ns:ns,res:res,declarerIdx:idx,hands:ch.map(function(h){return h.slice();})});
-            setScreen("reveal");setCpuThinking(false);return;
-          }
+        var totals=ch.map(function(h){return ht(h);});
+        var minT=Math.min.apply(null,totals);
+        var iAmLowest=myTotal===minT&&totals.filter(function(t){return t===minT;}).length===1;
+
+        // ── DECLARE COBRA LOGIC ───────────────────────────────────────────
+        var shouldDeclare=false;
+        if(cpuDiff===0){
+          // Easy: only declares if total <= 5, rare
+          shouldDeclare=myTotal<=5&&Math.random()<0.3;
+        } else if(cpuDiff===1){
+          // Medium: current behaviour
+          shouldDeclare=myTotal<=10&&iAmLowest&&Math.random()<CPU_P[idx%CPU_P.length].risk;
+        } else {
+          // Hard: smart declare — checks if truly lowest, considers opponent hand sizes
+          var opponentMin=Math.min.apply(null,totals.filter(function(_,i){return i!==idx;}));
+          var safeMargin=myTotal<opponentMin-3;
+          shouldDeclare=myTotal<=8&&iAmLowest&&(safeMargin||Math.random()<0.8);
         }
-        var best=null;
-        for(var sz=Math.min(hand.length,cpuDiff===2?hand.length:4);sz>=1;sz--){
-          for(var i=0;i<=hand.length-sz;i++){
-            var c=hand.slice(i,i+sz);
-            if(isValidSeq(c)){var score=ht(c)*(sz>1?sz*1.2:1);if(!best||score>ht(best))best=c;}
-          }
+
+        if(shouldDeclare){
+          audio.win();haptic.success();
+          var res=names.map(function(n,i){return{name:n,total:totals[i],added:i===idx?0:totals[i],cobra:false,winner:i===idx};});
+          var ns=scores.map(function(s,i){return i===idx?s:s+totals[i];});
+          setHands([...ch]);
+          setRevealData({ns:ns,res:res,declarerIdx:idx,hands:ch.map(function(h){return h.slice();})});
+          setScreen("reveal");setCpuThinking(false);return;
         }
-        var played=best||[[...hand].sort(function(a,b){return cv(b)-cv(a);})[0]];
+
+        // ── CARD PLAY LOGIC ───────────────────────────────────────────────
+        var played=null;
+        if(cpuDiff===0){
+          // Easy: always plays single highest card, no sequences
+          var sorted=[...hand].sort(function(a,b){return cv(b)-cv(a);});
+          played=[sorted[0]];
+        } else if(cpuDiff===1){
+          // Medium: tries sequences up to 4 cards
+          var best=null;
+          for(var sz=Math.min(hand.length,4);sz>=1;sz--){
+            for(var i=0;i<=hand.length-sz;i++){
+              var c=hand.slice(i,i+sz);
+              if(isValidSeq(c)){var score=ht(c)*(sz>1?sz*1.2:1);if(!best||score>ht(best))best=c;}
+            }
+          }
+          played=best||[[...hand].sort(function(a,b){return cv(b)-cv(a);})[0]];
+        } else {
+          // Hard: full hand search for best sequence, prefers multi-card plays
+          var best2=null,bestScore2=-1;
+          for(var sz2=hand.length;sz2>=1;sz2--){
+            for(var j=0;j<=hand.length-sz2;j++){
+              var c2=hand.slice(j,j+sz2);
+              if(isValidSeq(c2)){
+                // Bonus for multi-card plays that reduce hand total significantly
+                var playScore=ht(c2)*(sz2>1?sz2*1.5:1)+(sz2>2?10:0);
+                if(playScore>bestScore2){bestScore2=playScore;best2=c2;}
+              }
+            }
+          }
+          played=best2||[[...hand].sort(function(a,b){return cv(b)-cv(a);})[0]];
+        }
+
         audio.cardPlay();haptic.light();
         setLastCpuPlay({cards:played,player:names[idx]||"CPU",seq:seqLabel(played)});
         setShowCpuPlay(true);setTimeout(function(){setShowCpuPlay(false);},2000);
         ch=[...ch];ch[idx]=hand.filter(function(c){return!played.find(function(pp){return pp.id===c.id;});});
+
+        // ── PICKUP LOGIC ──────────────────────────────────────────────────
         var prev=cp.cards||[];
         var pileVal=prev.length>0?cv(prev[0]):99;
         var playerHandSize=ch[0]?ch[0].length:7;
-        var myHandTot=ht(ch[idx]);
-        // CPU adapts — gets more aggressive as rounds progress
-        var roundCount=(scores[idx]||0)/5+1;
-        var aggression=Math.min(roundCount*0.5,3);
-        var threshold=cpuDiff===2?(playerHandSize<=3?6:4+aggression):(cpuDiff===1?5+aggression:7+aggression);
-        if(prev.length>0&&cp.owner!==idx&&pileVal<=threshold&&myHandTot>12){
+        var pickFromPile=false;
+        if(prev.length>0&&cp.owner!==idx){
+          if(cpuDiff===0){
+            // Easy: rarely picks from pile, only if very high value card
+            pickFromPile=pileVal>=10&&Math.random()<0.2;
+          } else if(cpuDiff===1){
+            var roundCount=(scores[idx]||0)/5+1;
+            var aggression=Math.min(roundCount*0.5,3);
+            pickFromPile=pileVal<=(5+aggression);
+          } else {
+            // Hard: strategic — steal if pile card is high value OR opponent has few cards (pressure)
+            var opponentHandsSmall=ch.some(function(h,i){return i!==idx&&h.length<=3;});
+            pickFromPile=pileVal>=8||(opponentHandsSmall&&pileVal>=5);
+          }
+        }
+
+        if(pickFromPile){
           ch[idx]=[...ch[idx],prev[0]];
           setTimeout(function(){audio.cardPickup();},80);
         } else if(cd.length>0){
@@ -4897,12 +4949,13 @@ export default function Cobra(){
             </div>
             <SLabel>DIFFICULTY</SLabel>
             <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:22}}>
-              {[{l:"EASY",c:"#4ade80"},{l:"MEDIUM",c:"#d4a843"},{l:"HARD",c:"#f87171"}].map(function(item,i){
+              {[{l:"EASY",sub:"Plays randomly",c:"#4ade80"},{l:"MEDIUM",sub:"Some strategy",c:"#d4a843"},{l:"HARD",sub:"Plays to win",c:"#f87171"}].map(function(item,i){
                 var l=item.l,c=item.c;
                 return(
                   <button key={l} className="btn" onClick={function(){audio.buttonClick();setCpuDiff(i);}}
-                    style={{flex:1,padding:"12px 6px",fontSize:10,fontFamily:"Cinzel,serif",fontWeight:700,borderRadius:11,letterSpacing:1,background:cpuDiff===i?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.05)",border:cpuDiff===i?"2px solid "+c:"1.5px solid rgba(255,255,255,0.08)",color:cpuDiff===i?c:"#2a3d28",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",minHeight:48,touchAction:"manipulation"}}>
-                    {l}
+                    style={{flex:1,padding:"10px 4px",fontFamily:"Cinzel,serif",fontWeight:700,borderRadius:11,letterSpacing:1,background:cpuDiff===i?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.05)",border:cpuDiff===i?"2px solid "+c:"1.5px solid rgba(255,255,255,0.08)",color:cpuDiff===i?c:"#2a3d28",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:52,touchAction:"manipulation",gap:2}}>
+                    <span style={{fontSize:10,letterSpacing:1}}>{l}</span>
+                    <span style={{fontSize:8,fontFamily:"Crimson Text,serif",opacity:0.7,letterSpacing:0,fontWeight:400}}>{item.sub}</span>
                   </button>
                 );
               })}
