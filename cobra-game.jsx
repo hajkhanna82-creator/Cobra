@@ -381,7 +381,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes emojiFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}
 @keyframes achievePop{0%{opacity:0;transform:translateX(120px)}15%{opacity:1;transform:translateX(-8px)}85%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(120px)}}
 @keyframes fadeOut{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
-@keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}20%{transform:translateY(-12px) scale(1.12);opacity:1}100%{transform:translateY(-130px) scale(0.65) rotate(8deg);opacity:0}}
+@keyframes cardPlay{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}30%{transform:translateY(-20px) rotate(-5deg) scale(1.1);opacity:1}100%{transform:translateY(-140px) rotate(12deg) scale(0.6);opacity:0}}
+@keyframes cardShuffle{0%{transform:translateX(0) rotate(0deg);opacity:1}25%{transform:translateX(-8px) rotate(-3deg);opacity:0.8}50%{transform:translateX(8px) rotate(3deg);opacity:0.8}75%{transform:translateX(-4px) rotate(-1deg);opacity:0.9}100%{transform:translateX(0) rotate(0deg);opacity:1}}
+@keyframes cardFan{0%{opacity:0;transform:translateY(60px) rotate(var(--fan-rot,0deg)) scale(0.6)}60%{transform:translateY(-4px) rotate(var(--fan-rot,0deg)) scale(1.03)}100%{opacity:1;transform:translateY(0) rotate(var(--fan-rot,0deg)) scale(1)}}
+@keyframes cardLand{0%{transform:scale(1.15) rotate(-3deg)}60%{transform:scale(0.97) rotate(1deg)}100%{transform:scale(1) rotate(0deg)}}
 @keyframes cardPickup{0%{opacity:0;transform:translateY(-60px) rotate(-5deg) scale(0.75)}50%{transform:translateY(5px) rotate(1deg) scale(1.04)}100%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}}
 @keyframes yourTurnGlow{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.5),0 0 40px rgba(212,168,67,0.2),inset 0 0 20px rgba(212,168,67,0.05)}50%{box-shadow:0 0 50px rgba(212,168,67,0.9),0 0 90px rgba(212,168,67,0.5),inset 0 0 30px rgba(212,168,67,0.12)}}
 @keyframes glowPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
@@ -2666,6 +2669,9 @@ export default function Cobra(){
   const [lastCpuPlay,setLastCpuPlay]=useState(null);
   const [showCpuPlay,setShowCpuPlay]=useState(false);
   const [dealAnim,setDealAnim]=useState(false);
+  const [shuffleAnim,setShuffleAnim]=useState(false);
+  const [pileLandAnim,setPileLandAnim]=useState(false);
+  const prevPileLenRef=React.useRef(0);
   const [playingCardIds,setPlayingCardIds]=useState([]);
   const [pickingUp,setPickingUp]=useState(false);
   const [flashScores,setFlashScores]=useState([]);
@@ -2733,6 +2739,11 @@ export default function Cobra(){
   const roomCodeRef=useRef(roomCode);
   const screenRef=useRef(screen);
   const broadcastMoveRef=useRef(null);
+  useEffect(function(){
+    var newLen=(openPile.cards||[]).length;
+    if(newLen>prevPileLenRef.current){setPileLandAnim(true);setTimeout(function(){setPileLandAnim(false);},350);}
+    prevPileLenRef.current=newLen;
+  },[openPile]);
   useEffect(function(){phaseRef.current=phase;},[phase]);
   useEffect(function(){handsRef.current=hands;},[hands]);
   useEffect(function(){deckRef.current=deck;},[deck]);
@@ -3116,19 +3127,25 @@ export default function Cobra(){
   const getMissions=function(type){
     var seed=type==="daily"?Math.floor(Date.now()/(1000*60*60*24)):Math.floor(Date.now()/(1000*60*60*24*7));
     var pool=type==="daily"?[
-      {id:"play3",desc:"Play 3 games",icon:"🃏",goal:3,stat:"rounds",reward:{xp:100,coins:150,gems:0}},
-      {id:"win2",desc:"Win 2 games",icon:"🏆",goal:2,stat:"wins",reward:{xp:200,coins:300,gems:1}},
-      {id:"daily",desc:"Claim daily reward",icon:"📅",goal:1,stat:"dailyClaims",reward:{xp:150,coins:200,gems:0}},
-      {id:"spin",desc:"Use lucky spin",icon:"🎡",goal:1,stat:"spinCount",reward:{xp:100,coins:150,gems:0}},
-      {id:"play5",desc:"Play 5 games",icon:"🃏",goal:5,stat:"rounds",reward:{xp:200,coins:250,gems:1}},
-      {id:"win3",desc:"Win 3 games",icon:"🥇",goal:3,stat:"wins",reward:{xp:300,coins:400,gems:2}},
+      {id:"play3",desc:"Play 3 rounds",icon:"🃏",goal:3,stat:"rounds",reward:{xp:100,coins:100,gems:0}},
+      {id:"win2",desc:"Win 2 games today",icon:"🏆",goal:2,stat:"wins",reward:{xp:150,coins:150,gems:0}},
+      {id:"daily",desc:"Claim daily reward",icon:"📅",goal:1,stat:"dailyClaims",reward:{xp:120,coins:120,gems:0}},
+      {id:"spin",desc:"Use lucky spin",icon:"🎡",goal:1,stat:"spinCount",reward:{xp:100,coins:100,gems:0}},
+      {id:"play5",desc:"Play 5 rounds",icon:"🃏",goal:5,stat:"rounds",reward:{xp:120,coins:100,gems:0}},
+      {id:"win3",desc:"Win 3 games",icon:"🥇",goal:3,stat:"wins",reward:{xp:200,coins:200,gems:0}},
+      {id:"cobra3",desc:"Survive 3 cobra penalties",icon:"🐍",goal:3,stat:"cobras",reward:{xp:250,coins:200,gems:0}},
+      {id:"declare3",desc:"Declare 3 times",icon:"📣",goal:3,stat:"rounds",reward:{xp:180,coins:175,gems:0}},
+      {id:"cards20",desc:"Play 20 rounds total",icon:"🃏",goal:20,stat:"rounds",reward:{xp:150,coins:120,gems:0}},
+      {id:"winnocobra",desc:"Win a game without getting cobra",icon:"✨",goal:1,stat:"wins",reward:{xp:350,coins:300,gems:1}},
     ]:[
       {id:"w_win15",desc:"Win 15 games",icon:"👑",goal:15,stat:"wins",reward:{xp:500,coins:1000,gems:5}},
-      {id:"w_play30",desc:"Play 30 games",icon:"🃏",goal:30,stat:"rounds",reward:{xp:400,coins:800,gems:3}},
+      {id:"w_play30",desc:"Play 30 rounds",icon:"🃏",goal:30,stat:"rounds",reward:{xp:400,coins:800,gems:3}},
       {id:"w_coins",desc:"Earn 1000 coins",icon:"🪙",goal:1000,stat:"coinsEarned",reward:{xp:600,coins:1200,gems:5}},
-      {id:"w_streak3",desc:"Get a 3-win streak",icon:"🔥",goal:3,stat:"bestStreak",reward:{xp:700,coins:1500,gems:8}},
+      {id:"w_streak3",desc:"Win 3 games in a row",icon:"🔥",goal:3,stat:"bestStreak",reward:{xp:600,coins:500,gems:2}},
       {id:"w_spin5",desc:"Use lucky spin 5 times",icon:"🎡",goal:5,stat:"spinCount",reward:{xp:300,coins:600,gems:3}},
       {id:"w_daily5",desc:"Claim daily reward 5 times",icon:"📅",goal:5,stat:"dailyClaims",reward:{xp:400,coins:700,gems:4}},
+      {id:"w_play20",desc:"Play 20 rounds this week",icon:"🃏",goal:20,stat:"rounds",reward:{xp:450,coins:400,gems:2}},
+      {id:"w_cobra5win",desc:"Get cobra 5 times and still win",icon:"🐍",goal:5,stat:"cobras",reward:{xp:700,coins:600,gems:3}},
     ];
     // deterministic pick based on seed
     var picked=[];var used={};
@@ -3203,6 +3220,7 @@ export default function Cobra(){
     for(var i=0;i<n;i++)h.push(d.splice(0,7));
     setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
     setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(s);setPrevHand(null);
+    setShuffleAnim(true);setTimeout(function(){setShuffleAnim(false);},400);
     setDealAnim(true);setTimeout(function(){setDealAnim(false);},900);
     setRoundStart(Date.now());
     setRoundNum(function(r){return r+1;});
@@ -4952,8 +4970,8 @@ export default function Cobra(){
                   <div style={{fontSize:28,marginBottom:4}}>🂠</div>
                   <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#1a2e1a",letterSpacing:3}}>EMPTY</div>
                 </div>
-                :pile.map(function(c,i){return(
-                  <div key={i} style={{animation:pickingUp?"cardPickup 0.35s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:(i*0.05)+"s",transform:canPickPile?"translateY(-4px)":"none",transition:"transform 0.3s cubic-bezier(.34,1.56,.64,1)"}}>
+                :pile.map(function(c,i){var isTopCard=i===pile.length-1;return(
+                  <div key={i} style={{animation:pickingUp?"cardPickup 0.35s cubic-bezier(.22,1,.36,1) both":isTopCard&&pileLandAnim?"cardLand 0.3s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:(i*0.05)+"s",transform:canPickPile?"translateY(-4px)":"none",transition:"transform 0.3s cubic-bezier(.34,1.56,.64,1)"}}>
                     <Card card={c} clickable={canPickPile} glow={canPickPile} onClick={function(){pickFromPile(c);}} size="md"/>
                   </div>
                 );})}
@@ -5036,10 +5054,15 @@ export default function Cobra(){
         <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108}}>
           {myHand.map(function(card,idx){
             var isPlaying=playingCardIds.includes(card.id);
+            var total=myHand.length;
+            var fanRot=(idx-(total-1)/2)*1.8;
+            var fanY=Math.abs(idx-(total-1)/2)*2;
+            var isSelected=!!sel.find(function(c){return c.id===card.id;});
+            var fanTransform=isSelected||isPlaying?"rotate("+fanRot+"deg) translateY(-18px) scale(1.08)":"rotate("+fanRot+"deg) translateY("+fanY+"px)";
             return(
-              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":dealAnim?"cardDeal 0.42s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:dealAnim?(idx*0.07)+"s":"0s",display:"inline-block"}}>
+              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":shuffleAnim?"cardShuffle 0.4s ease-in-out both":dealAnim?"cardDeal 0.42s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:shuffleAnim?(idx*0.03)+"s":dealAnim?(0.15+idx*0.09)+"s":"0s",display:"inline-block",transform:isPlaying?"none":fanTransform,transition:isPlaying?"none":"transform 0.2s cubic-bezier(.34,1.56,.64,1)"}}>
                 <Card card={card}
-                  selected={!!sel.find(function(c){return c.id===card.id;})}
+                  selected={isSelected}
                   clickable={isMyTurn&&(phase==="play"||phase==="declare")&&!playingCardIds.length}
                   onClick={function(){if(isMyTurn&&(phase==="play"||phase==="declare")&&!playingCardIds.length)toggleSel(card);}}
                   size="lg"/>
