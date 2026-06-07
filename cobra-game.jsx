@@ -53,6 +53,10 @@ const TITLES=[
   {id:"void_walker",name:"Void Walker",rarity:"epic",color:"linear-gradient(135deg,#666,#aaa,#666)",glow:"rgba(150,150,150,0.6)",unlock:"achievement",achId:"win_50"},
   {id:"serpent_king",name:"Serpent King",rarity:"legendary",color:"linear-gradient(135deg,#40c060,#d4a843,#40c060)",glow:"rgba(64,192,96,0.8)",unlock:"achievement",achId:"win_100"},
   {id:"the_collector",name:"The Collector",rarity:"epic",color:"linear-gradient(135deg,#c084fc,#818cf8)",glow:"rgba(192,132,252,0.7)",unlock:"achievement",achId:"play_200"},
+  {id:"vip_emperor",name:"Emperor",rarity:"legendary",color:"linear-gradient(135deg,#f0c060,#fff,#f0c060)",glow:"rgba(255,255,255,0.9)",unlock:"vip",vipOnly:true},
+  {id:"vip_apex",name:"Apex Predator",rarity:"legendary",color:"linear-gradient(135deg,#ff4444,#ff8800,#ff4444)",glow:"rgba(255,68,68,0.9)",unlock:"vip",vipOnly:true},
+  {id:"vip_phantom",name:"Phantom",rarity:"legendary",color:"linear-gradient(135deg,#888,#fff,#888)",glow:"rgba(200,200,200,0.8)",unlock:"vip",vipOnly:true},
+  {id:"vip_divine",name:"Divine",rarity:"legendary",color:"linear-gradient(135deg,#c084fc,#f0c060,#c084fc)",glow:"rgba(192,132,252,0.9)",unlock:"vip",vipOnly:true},
 ];
 
 const FRAMES=[
@@ -478,6 +482,14 @@ const CARD_THEMES={
   serpent:{bg:"linear-gradient(148deg,#0a1a0a,#051005,#081508)",border:"rgba(40,180,60,0.8)",pat:"rgba(60,200,80,0.22)",pat2:"rgba(40,160,55,0.15)"},
   void:{bg:"linear-gradient(148deg,#080808,#030303,#060606)",border:"rgba(80,80,80,0.6)",pat:"rgba(100,100,100,0.1)",pat2:"rgba(80,80,80,0.08)"},
   vip_gold:{bg:"linear-gradient(148deg,#1a1000,#0d0800,#151000)",border:"rgba(212,168,67,0.95)",pat:"rgba(255,200,0,0.35)",pat2:"rgba(212,168,0,0.25)"},
+  vip_obsidian:{bg:"linear-gradient(148deg,#080808,#020202,#060606)",border:"rgba(60,60,60,0.95)",pat:"rgba(120,120,120,0.12)",pat2:"rgba(80,80,80,0.08)"},
+  vip_diamond:{bg:"linear-gradient(148deg,#0a1020,#050810,#08101a)",border:"rgba(180,220,255,0.9)",pat:"rgba(180,220,255,0.2)",pat2:"rgba(140,180,255,0.15)"},
+  vip_ruby:{bg:"linear-gradient(148deg,#1a0005,#0d0003,#150004)",border:"rgba(220,0,60,0.9)",pat:"rgba(255,0,80,0.2)",pat2:"rgba(200,0,50,0.15)"},
+  vip_emerald_royal:{bg:"linear-gradient(148deg,#001a08,#000d04,#001506)",border:"rgba(0,200,80,0.9)",pat:"rgba(0,220,80,0.22)",pat2:"rgba(0,180,60,0.16)"},
+  vip_sunset:{bg:"linear-gradient(148deg,#1a0800,#0d0400,#150600)",border:"rgba(255,140,0,0.9)",pat:"rgba(255,160,0,0.22)",pat2:"rgba(220,100,0,0.16)"},
+  vip_ocean:{bg:"linear-gradient(148deg,#000d1a,#00060d,#000f1a)",border:"rgba(0,140,255,0.85)",pat:"rgba(0,160,255,0.2)",pat2:"rgba(0,120,220,0.15)"},
+  vip_nebula:{bg:"linear-gradient(148deg,#0a0015,#05000d,#080012)",border:"rgba(180,80,255,0.85)",pat:"rgba(200,100,255,0.2)",pat2:"rgba(160,60,220,0.15)"},
+  vip_toxic:{bg:"linear-gradient(148deg,#051500,#020a00,#041000)",border:"rgba(80,255,40,0.85)",pat:"rgba(100,255,50,0.2)",pat2:"rgba(60,220,30,0.15)"},
 };
 
 const SHOP_THEMES=[
@@ -490,6 +502,14 @@ const SHOP_THEMES=[
   {id:"vip_gold",name:"VIP Gold",price:0,currency:"coins",color:"#1a1000",desc:"Exclusive VIP members only ✦",rarity:"legendary",vipOnly:true},
   {id:"vip_royal",name:"Royal VIP",price:0,currency:"coins",color:"#1a0e00",desc:"Exclusive VIP members only",rarity:"legendary",vipOnly:true},
   {id:"vip_crown",name:"Crown Edition",price:0,currency:"coins",color:"#0a0010",desc:"The crown jewel — VIP exclusive",rarity:"legendary",vipOnly:true},
+  {id:"vip_obsidian",name:"Obsidian",price:0,currency:"coins",color:"#050505",desc:"Pure black volcanic glass",rarity:"legendary",vipOnly:true},
+  {id:"vip_diamond",name:"Diamond",price:0,currency:"coins",color:"#0a1020",desc:"Crystal clear luxury",rarity:"legendary",vipOnly:true},
+  {id:"vip_ruby",name:"Ruby",price:0,currency:"coins",color:"#1a0005",desc:"Deep crimson gemstone",rarity:"legendary",vipOnly:true},
+  {id:"vip_emerald_royal",name:"Royal Emerald",price:0,currency:"coins",color:"#001a08",desc:"Emerald dynasty edition",rarity:"legendary",vipOnly:true},
+  {id:"vip_sunset",name:"Sunset",price:0,currency:"coins",color:"#1a0800",desc:"Golden hour gradient",rarity:"legendary",vipOnly:true},
+  {id:"vip_ocean",name:"Deep Ocean",price:0,currency:"coins",color:"#000d1a",desc:"Abyssal blue depths",rarity:"legendary",vipOnly:true},
+  {id:"vip_nebula",name:"Nebula",price:0,currency:"coins",color:"#0a0015",desc:"Cosmic dust and starlight",rarity:"legendary",vipOnly:true},
+  {id:"vip_toxic",name:"Toxic",price:0,currency:"coins",color:"#051500",desc:"Radioactive neon green",rarity:"legendary",vipOnly:true},
   {id:"neon",name:"Neon Nights",price:1800,currency:"coins",color:"#001a1a",desc:"Electric cyan glow on deep black",rarity:"rare",isNew:true},
   {id:"royal",name:"Royal Flush",price:2400,currency:"coins",color:"#0d0020",desc:"Deep purple with gold filigree",rarity:"epic",isNew:true},
   {id:"inferno",name:"Inferno",price:2200,currency:"coins",color:"#1a0500",desc:"Blazing orange and red flames",rarity:"rare"},
@@ -548,6 +568,16 @@ const SHOP_AVATARS=[
   {id:"🦄",name:"Unicorn",price:35,currency:"gems"},
   {id:"👁️",name:"Eye",price:45,currency:"gems"},
   {id:"🔮",name:"Crystal",price:50,currency:"gems"},
+  {id:"🐲",name:"Dragon Lord",price:0,currency:"coins",vipOnly:true},
+  {id:"👸",name:"Queen",price:0,currency:"coins",vipOnly:true},
+  {id:"🧬",name:"DNA",price:0,currency:"coins",vipOnly:true},
+  {id:"🌠",name:"Shooting Star",price:0,currency:"coins",vipOnly:true},
+  {id:"🦚",name:"Peacock",price:0,currency:"coins",vipOnly:true},
+  {id:"🎆",name:"Fireworks",price:0,currency:"coins",vipOnly:true},
+  {id:"🔱",name:"Trident",price:0,currency:"coins",vipOnly:true},
+  {id:"⚜️",name:"Fleur",price:0,currency:"coins",vipOnly:true},
+  {id:"🌊",name:"Tsunami",price:0,currency:"coins",vipOnly:true},
+  {id:"🦋",name:"Emperor Butterfly",price:0,currency:"coins",vipOnly:true},
 ];
 
 function Card({card,selected,onClick,size,faceDown,clickable,dimmed,glow,dealIdx,theme}){
@@ -2105,7 +2135,7 @@ function CrateOpenModal({reveal,setReveal,onEquipTheme}){
 }
 
 function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme,myAvatar,onEquipAvatar,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,showSettings,setShowSettings,isVIP}){
-  var CATS=["ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
+  var CATS=["👑 VIP","ALL","FEATURED","THEMES","AVATARS","BUNDLES","CRATES"];
   var [cat,setCat]=useState("ALL");
   var [timeLeft,setTimeLeft]=useState("00:00:00");
   var daySeed=Math.floor(Date.now()/(1000*60*60*24));
@@ -2137,7 +2167,11 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     );
   }
 
-  var effectiveUnlockedThemes=isVIP?[...ownedItems,"vip_gold"]:ownedItems;
+  var vipThemeIds=SHOP_THEMES.filter(function(t){return t.vipOnly;}).map(function(t){return t.id;});
+  var effectiveUnlockedThemes=isVIP?[...ownedItems,...vipThemeIds]:ownedItems;
+  var effectiveUnlockedTitles=isVIP?["vip_emperor","vip_apex","vip_phantom","vip_divine"]:[];
+  var vipAvatarIds=SHOP_AVATARS.filter(function(a){return a.vipOnly;}).map(function(a){return a.id;});
+  var effectiveUnlockedAvatars=isVIP?[...vipAvatarIds]:[];
 
   function ThemeCard({item,compact}){
     var owned=item.price===0||effectiveUnlockedThemes.indexOf(item.id)>=0;
@@ -2283,11 +2317,12 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
     );
   }
 
-  var showFeatured=cat==="ALL"||cat==="FEATURED";
-  var showThemes=cat==="ALL"||cat==="THEMES";
-  var showAvatars=cat==="ALL"||cat==="AVATARS";
-  var showBundles=cat==="ALL"||cat==="BUNDLES";
-  var showCrates=cat==="ALL"||cat==="CRATES";
+  var showVIP=cat==="👑 VIP"||cat==="ALL";
+  var showFeatured=(cat==="ALL"||cat==="FEATURED")&&cat!=="👑 VIP";
+  var showThemes=(cat==="ALL"||cat==="THEMES")&&cat!=="👑 VIP";
+  var showAvatars=(cat==="ALL"||cat==="AVATARS")&&cat!=="👑 VIP";
+  var showBundles=(cat==="ALL"||cat==="BUNDLES")&&cat!=="👑 VIP";
+  var showCrates=(cat==="ALL"||cat==="CRATES")&&cat!=="👑 VIP";
   var newItems=SHOP_THEMES.filter(function(t){return t.isNew;});
   var featuredItems=SHOP_THEMES.filter(function(t){return t.rarity==="epic"||t.rarity==="legendary";}).slice(0,3);
 
@@ -2366,6 +2401,77 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
 
       {/* SCROLLABLE CONTENT */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 16px calc(32px + env(safe-area-inset-bottom))"}}>
+
+        {/* VIP EXCLUSIVE SECTION */}
+        {showVIP&&(
+          <div style={{marginBottom:24}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+              <div style={{height:1,flex:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.4))"}}/>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:3,display:"flex",alignItems:"center",gap:6}}>
+                <span>👑</span> VIP EXCLUSIVE <span>👑</span>
+              </div>
+              <div style={{height:1,flex:1,background:"linear-gradient(90deg,rgba(212,168,67,0.4),transparent)"}}/>
+            </div>
+            {!isVIP&&(
+              <div style={{background:"linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.05))",border:"1.5px solid rgba(212,168,67,0.3)",borderRadius:16,padding:"16px",textAlign:"center",marginBottom:16}}>
+                <div style={{fontSize:28,marginBottom:6}}>👑</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:2,marginBottom:4}}>UNLOCK ALL VIP ITEMS</div>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a8a",fontSize:13,marginBottom:12}}>8 exclusive themes · 10 avatars · 4 legendary titles</div>
+                <button onClick={function(){audio.buttonClick();goScreen("vip");}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#d4a843,#f0c060)",border:"none",borderRadius:10,fontFamily:"Cinzel,serif",fontSize:11,fontWeight:900,color:"#010603",letterSpacing:2,cursor:"pointer"}}>GET VIP — 💎50</button>
+              </div>
+            )}
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>CARD THEMES</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
+              {SHOP_THEMES.filter(function(t){return t.vipOnly;}).map(function(theme){
+                var owned=effectiveUnlockedThemes.includes(theme.id);
+                var active=cardTheme===theme.id;
+                var th=CARD_THEMES[theme.id]||CARD_THEMES.classic;
+                return(
+                  <div key={theme.id} style={{position:"relative",background:owned?theme.color:"rgba(0,0,0,0.4)",border:active?"2px solid #f0c060":owned?"1.5px solid rgba(212,168,67,0.4)":"1px solid rgba(212,168,67,0.15)",borderRadius:14,padding:"14px 12px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.7}}
+                    onClick={function(){if(!isVIP)return;if(owned){onEquipTheme(theme.id);}else{onBuy(theme);}}}>
+                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:"inherit",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:18}}>👑</span><span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:3}}>VIP ONLY</span></div>}
+                    <div style={{width:32,height:32,borderRadius:8,background:th.bg||theme.color,marginBottom:8,border:"1px solid "+(th.border||"rgba(212,168,67,0.3)")}}/>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",marginBottom:2}}>{theme.name}</div>
+                    <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:11}}>{theme.desc}</div>
+                    {active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>✓ ACTIVE</div>}
+                    {owned&&!active&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,marginTop:4}}>OWNED</div>}
+                    {!owned&&isVIP&&<div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#4ade80",letterSpacing:2,marginTop:4}}>FREE WITH VIP</div>}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>EXCLUSIVE AVATARS</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
+              {SHOP_AVATARS.filter(function(a){return a.vipOnly;}).map(function(av){
+                var owned=isVIP||effectiveUnlockedAvatars.includes(av.id);
+                var active=myAvatar===av.id;
+                return(
+                  <div key={av.id} style={{position:"relative",width:52,height:52,borderRadius:12,background:active?"rgba(212,168,67,0.2)":"rgba(0,0,0,0.3)",border:active?"2px solid #f0c060":"1px solid rgba(212,168,67,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.6}}
+                    onClick={function(){if(!isVIP)return;onEquipAvatar(av.id);}}>
+                    {av.id}
+                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.6)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontSize:12}}>👑</span></div>}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8a7a3e",letterSpacing:3,marginBottom:10}}>LEGENDARY TITLES</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {TITLES.filter(function(t){return t.vipOnly;}).map(function(title){
+                var active=myAvatar===title.id;
+                return(
+                  <div key={title.id} style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(0,0,0,0.3)",border:active?"1.5px solid rgba(212,168,67,0.5)":"1px solid rgba(212,168,67,0.15)",borderRadius:12,padding:"12px 14px",cursor:isVIP?"pointer":"default",opacity:isVIP?1:0.7}}>
+                    {!isVIP&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:"inherit",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10}}><span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:2}}>👑 VIP ONLY</span></div>}
+                    <div>
+                      <span style={{fontFamily:"Cinzel,serif",fontSize:12,background:title.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",fontWeight:900}}>{title.name}</span>
+                      <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#8a7a3e",letterSpacing:2,marginTop:2}}>LEGENDARY · FREE WITH VIP</div>
+                    </div>
+                    {active&&<span style={{color:"#4ade80",fontSize:14}}>✓</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* FEATURED CAROUSEL */}
         {showFeatured&&(
