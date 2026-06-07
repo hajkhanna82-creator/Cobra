@@ -126,8 +126,23 @@ function _bufToWav(buf){
   var off=44;for(var i=0;i<n;i++)for(var c=0;c<nc;c++){var s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));v.setInt16(off,s<0?s*0x8000:s*0x7FFF,true);off+=2;}
   return new Blob([out],{type:"audio/wav"});
 }
+// Pre-create a small pool of Audio elements per sound key to avoid creation overhead
+var _audioPool={};
 function _playBlob(url,vol){
-  try{var a=new Audio(url);a.volume=vol||1;a.play().catch(function(){});}catch(e){}
+  try{
+    if(!_audioPool[url])_audioPool[url]=[];
+    var pool=_audioPool[url];
+    // Find an element that's free (ended or never started)
+    var el=null;
+    for(var i=0;i<pool.length;i++){if(pool[i].paused||pool[i].ended){el=pool[i];break;}}
+    if(!el){
+      if(pool.length>=3)el=pool[0]; // max 3 per sound, reuse oldest
+      else{el=new Audio(url);el.setAttribute("playsinline","");pool.push(el);}
+    }
+    el.volume=vol||1;
+    el.currentTime=0;
+    el.play().catch(function(){});
+  }catch(e){}
 }
 // Pre-render a sound builder fn in an OfflineAudioContext and return a blob URL promise
 function _render(dur,sr,builder){
@@ -154,9 +169,30 @@ const audio={
       const ctx=new(window.AudioContext||window.webkitAudioContext)();
       this._ctx=ctx;
       this._master=ctx.createGain();this._master.gain.value=this._muted?0:0.7;
-      this._master.connect(ctx.destination);
       this._sfxGain=ctx.createGain();this._sfxGain.gain.value=1;this._sfxGain.connect(this._master);
       this._bgGain=ctx.createGain();this._bgGain.gain.value=0;this._bgGain.connect(this._master);
+      if(this._isIOS){
+        // Route bg music (only thing going through _master on iOS) via stream audio element
+        // so it bypasses the silent switch too
+        try{
+          var streamDest=ctx.createMediaStreamDestination();
+          this._master.connect(streamDest);
+          var bgKeeper=document.getElementById("_cobra_bgkeeper");
+          if(!bgKeeper){
+            bgKeeper=document.createElement("audio");
+            bgKeeper.id="_cobra_bgkeeper";
+            bgKeeper.setAttribute("playsinline","");
+            bgKeeper.setAttribute("webkit-playsinline","");
+            bgKeeper.style.cssText="position:fixed;width:0;height:0;opacity:0;pointer-events:none";
+            document.body.appendChild(bgKeeper);
+          }
+          bgKeeper.srcObject=streamDest.stream;
+          bgKeeper.volume=1;
+          bgKeeper.play().catch(function(){});
+        }catch(e){this._master.connect(ctx.destination);}
+      }else{
+        this._master.connect(ctx.destination);
+      }
       this._ready=true;
       if(this._isIOS)this._prerenderIOS();
       var self=this;
