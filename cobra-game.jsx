@@ -38,6 +38,17 @@ const ACHIEVEMENTS=[
   {id:"big_run",icon:"🃏",name:"Full House",desc:"Play a run of 5+ cards",cat:"gameplay",goal:1,stat:"bigRun",reward:{coins:200,gems:1},title:null},
   {id:"daily_7",icon:"📅",name:"Faithful",desc:"Claim daily reward 7 times",cat:"rewards",goal:7,stat:"dailyClaims",reward:{coins:500,gems:5},title:null},
   {id:"spin_10",icon:"🎡",name:"Spin Doctor",desc:"Use lucky spin 10 times",cat:"rewards",goal:10,stat:"spinCount",reward:{coins:400,gems:3},title:null},
+  // New achievements (feature 10)
+  {id:"streak5",name:"On Fire",desc:"Win 5 in a row",icon:"🔥",cat:"streak",goal:5,stat:"bestStreak",xp:200,reward:{coins:150,gems:0},condition:"streak",target:5},
+  {id:"streak10",name:"Unstoppable",desc:"Win 10 in a row",icon:"⚡",cat:"streak",goal:10,stat:"bestStreak",xp:500,reward:{coins:400,gems:0},condition:"streak",target:10},
+  {id:"prestige1",name:"Reborn",desc:"Reach Prestige 1",icon:"⭐",cat:"progression",goal:1,stat:"prestige",xp:1000,reward:{coins:1000,gems:0},condition:"prestige",target:1},
+  {id:"elo1200",name:"Rising Serpent",desc:"Reach 1200 ELO",icon:"📈",cat:"progression",goal:1200,stat:"elo",xp:300,reward:{coins:200,gems:0},condition:"elo",target:1200},
+  {id:"elo1500",name:"Elite Snake",desc:"Reach 1500 ELO",icon:"💎",cat:"progression",goal:1500,stat:"elo",xp:600,reward:{coins:500,gems:0},condition:"elo",target:1500},
+  {id:"lowscore",name:"Perfect Hand",desc:"Win a round with score 0",icon:"🎯",cat:"gameplay",goal:1,stat:"lowScore",xp:250,reward:{coins:200,gems:0},condition:"lowscore",target:0},
+  {id:"cobra10",name:"Venom Master",desc:"Get 10 cobra hits",icon:"🐍",cat:"gameplay",goal:10,stat:"cobras",xp:300,reward:{coins:250,gems:0},condition:"cobras",target:10},
+  {id:"coins5000",name:"Coin Hoarder",desc:"Collect 5000 coins total",icon:"🪙",cat:"rewards",goal:5000,stat:"coins",xp:200,reward:{coins:0,gems:0},condition:"coins",target:5000},
+  {id:"clan1",name:"Pack Animal",desc:"Join a clan",icon:"🏰",cat:"social",goal:1,stat:"clan",xp:150,reward:{coins:100,gems:0},condition:"clan",target:1},
+  {id:"vip1",name:"Royalty",desc:"Become a VIP member",icon:"👑",cat:"social",goal:1,stat:"vip",xp:500,reward:{coins:0,gems:0},condition:"vip",target:1},
 ];
 
 const TITLES=[
@@ -3839,6 +3850,17 @@ export default function Cobra(){
   const [achProgress,setAchProgress]=useState(function(){try{var v=localStorage.getItem("cobra_ach_progress");return v?JSON.parse(v):{};;}catch(e){return{};}});
   const [dailyMissions,setDailyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_daily_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
   const [shakeHand,setShakeHand]=useState(false);
+  // Feature 8: Prestige
+  const [prestige,setPrestige]=useState(function(){try{return parseInt(localStorage.getItem("cobra_prestige")||"0");}catch(e){return 0;}});
+  const [showPrestigeModal,setShowPrestigeModal]=useState(false);
+  // Feature 9: Win streak
+  const [winStreak,setWinStreak]=useState(function(){try{return parseInt(localStorage.getItem("cobra_win_streak")||"0");}catch(e){return 0;}});
+  // Feature 13: SFX Pack
+  const [sfxPack,setSfxPack]=useState(function(){try{return localStorage.getItem("cobra_sfx_pack")||"classic";}catch(e){return"classic";}});
+  // Feature 6: Profile modal
+  const [profileModal,setProfileModal]=useState(null); // {name,avatar,elo,level,winRate,cobras,title,frame}
+  // Feature 15: Gift modal
+  const [giftModal,setGiftModal]=useState({friend:null,open:false});
   const [quickMatchOpen,setQuickMatchOpen]=useState(false);
   const [quickMatchStatus,setQuickMatchStatus]=useState("finding"); // "finding"|"notfound"|"unavailable"
   const quickMatchRowRef=useRef(null);
@@ -4907,12 +4929,21 @@ export default function Cobra(){
     if(iWin){
       ns=ns.map(function(s,i){return i===H?s:s+totals[i];});
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?0:totals[i],cobra:false,winner:i===H};});
-      setTimeout(function(){audio.win();haptic.win();haptic.heavy();},600);
+      setTimeout(function(){audio.win();haptic.success();haptic.heavy();},600);
       unlockAch("first_win");
-      if(myTotal<=5)unlockAch("low_score");
+      if(myTotal<=5){unlockAch("low_score");unlockAch("lowscore");}
       var elapsed=(Date.now()-roundStart)/1000;
       if(elapsed<10)unlockAch("speed_win");
       setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      // Feature 9: win streak rewards
+      setWinStreak(function(ws){
+        var ns2=ws+1;
+        try{localStorage.setItem("cobra_win_streak",String(ns2));}catch(e){}
+        if(ns2===3){setTimeout(function(){addCoins(50);pop("🔥 3 Win Streak! +50 coins","success");},700);}
+        else if(ns2===5){setTimeout(function(){addCoins(100);addGems(1);pop("🔥 5 Win Streak! +100 coins +1 gem","success");},700);unlockAch("streak5");}
+        else if(ns2===10){setTimeout(function(){addCoins(300);addGems(5);pop("⚡ 10 Win Streak! +300 coins +5 gems!","success");},700);unlockAch("streak10");}
+        return ns2;
+      });
       // ELO: +12 win vs AI, standard formula vs human
       if(mode==="cpu"){applyEloChange(12);}else{var exp=1/(1+Math.pow(10,(1200-elo)/400));applyEloChange(Math.round(32*(1-exp)));}
       // Confetti
