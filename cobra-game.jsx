@@ -5577,60 +5577,183 @@ export default function Cobra(){
           </button>
         </div>
 
-        {/* ── NAV TILES ── */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
-          {[
-            {icon:"🏆",label:"Tournament",action:function(){setScreen("tournament");},color:"#f0c060",bg:"rgba(240,192,96,0.08)",border:"rgba(240,192,96,0.2)"},
-            {icon:"🛒",label:"Shop",action:function(){goScreen("shop");},color:"#c084fc",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.2)"},
-            {icon:"📊",label:"Ranks",action:function(){goScreen("leaderboard");},color:"#60a5fa",bg:"rgba(96,165,250,0.08)",border:"rgba(96,165,250,0.2)"},
-            {icon:"⚔️",label:"Clan",action:function(){goScreen("clan");},color:"#f87171",bg:"rgba(248,113,113,0.08)",border:"rgba(248,113,113,0.2)"},
-            {icon:"👥",label:"Friends",action:function(){goScreen("friends");},color:"#4ade80",bg:"rgba(74,222,128,0.08)",border:"rgba(74,222,128,0.2)"},
-            {icon:"🎫",label:"Season",action:function(){goScreen("season");},badge:SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;}),color:"#c084fc",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.2)"},
-            {icon:"🎯",label:"Missions",action:function(){goScreen("missions");},badge:(function(){var dm2=dailyMissions;return dm2&&dm2.missions&&dm2.missions.some(function(m){return!m.claimed;});}()),color:"#fb923c",bg:"rgba(251,146,60,0.08)",border:"rgba(251,146,60,0.2)"},
-            {icon:"📚",label:"Collection",action:function(){goScreen("collection");},color:"#a3e635",bg:"rgba(163,230,53,0.08)",border:"rgba(163,230,53,0.2)"},
-          ].map(function(t){return(
-            <button key={t.label} onClick={function(){audio.buttonClick();haptic.light();t.action();}}
-              style={{padding:"12px 4px",background:t.bg,border:"1px solid "+t.border,borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}>
-              {t.badge&&<div style={{position:"absolute",top:6,right:6,width:7,height:7,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 5px rgba(239,68,68,0.8)"}}/>}
-              <span style={{fontSize:22}}>{t.icon}</span>
-              <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:t.color,letterSpacing:0.5,fontWeight:700,textAlign:"center",lineHeight:1.2}}>{t.label}</span>
-            </button>
-          );})}
+        {/* ── EXPLORE SECTION ── */}
+        <div style={{marginBottom:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.25))"}}/>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(212,168,67,0.5)",letterSpacing:3}}>EXPLORE</span>
+            <div style={{flex:1,height:1,background:"linear-gradient(90deg,rgba(212,168,67,0.25),transparent)"}}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
+            {[
+              {icon:"🏆",label:"Tournament",action:function(){setScreen("tournament");},color:"#f0c060",glow:"rgba(240,192,96,0.3)",bg:"linear-gradient(145deg,#1a1200,#120d00)",border:"rgba(240,192,96,0.3)"},
+              {icon:"🛒",label:"Shop",action:function(){goScreen("shop");},color:"#c084fc",glow:"rgba(192,132,252,0.3)",bg:"linear-gradient(145deg,#160a28,#0f0618)",border:"rgba(192,132,252,0.3)"},
+              {icon:"📊",label:"Ranks",action:function(){goScreen("leaderboard");},color:"#60a5fa",glow:"rgba(96,165,250,0.3)",bg:"linear-gradient(145deg,#06122a,#040c1e)",border:"rgba(96,165,250,0.3)"},
+              {icon:"⚔️",label:"Clan",action:function(){goScreen("clan");},color:"#f87171",glow:"rgba(248,113,113,0.3)",bg:"linear-gradient(145deg,#280808,#1a0404)",border:"rgba(248,113,113,0.3)"},
+              {icon:"👥",label:"Friends",action:function(){goScreen("friends");},color:"#4ade80",glow:"rgba(74,222,128,0.3)",bg:"linear-gradient(145deg,#061a0e,#041008)",border:"rgba(74,222,128,0.3)"},
+              {icon:"🎫",label:"Season",action:function(){goScreen("season");},badge:SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;}),color:"#e879f9",glow:"rgba(232,121,249,0.3)",bg:"linear-gradient(145deg,#1a0620,#100414)",border:"rgba(232,121,249,0.3)"},
+              {icon:"🎯",label:"Missions",action:function(){goScreen("missions");},badge:(function(){var dm2=dailyMissions;return dm2&&dm2.missions&&dm2.missions.some(function(m){return!m.claimed;});}()),color:"#fb923c",glow:"rgba(251,146,60,0.3)",bg:"linear-gradient(145deg,#1a0e04,#120800)",border:"rgba(251,146,60,0.3)"},
+              {icon:"📚",label:"Collection",action:function(){goScreen("collection");},color:"#a3e635",glow:"rgba(163,230,53,0.3)",bg:"linear-gradient(145deg,#0e1a02,#081000)",border:"rgba(163,230,53,0.3)"},
+            ].map(function(t){return(
+              <button key={t.label} onClick={function(){audio.buttonClick();haptic.light();t.action();}}
+                style={{padding:"14px 4px 12px",background:t.bg,border:"1px solid "+t.border,borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:6,position:"relative",boxShadow:"0 4px 12px rgba(0,0,0,0.4)"}}>
+                {t.badge&&<div style={{position:"absolute",top:7,right:7,width:8,height:8,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 6px rgba(239,68,68,0.9)",animation:"availablePulse 1.5s ease-in-out infinite"}}/>}
+                <span style={{fontSize:24,filter:"drop-shadow(0 0 6px "+t.glow+")"}}>{t.icon}</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:t.color,letterSpacing:0.5,fontWeight:700,textAlign:"center",lineHeight:1.2}}>{t.label}</span>
+              </button>
+            );})}
+          </div>
         </div>
 
-        {/* ── SECONDARY ROW ── */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-          {!isVIP?(
-            <button onClick={function(){audio.buttonClick();setScreen("vip");}}
-              style={{padding:"13px 12px",background:"linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.05))",border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8,boxShadow:"0 0 16px rgba(212,168,67,0.1)"}}>
-              <span style={{fontSize:20}}>👑</span>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:1,fontWeight:700}}>GET VIP</div>
-                <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(240,192,96,0.4)"}}>Unlock perks</div>
+        {/* ── PLAYER CARD ── */}
+        <div style={{marginBottom:14,borderRadius:20,overflow:"hidden",border:"1.5px solid rgba(212,168,67,0.2)",background:"linear-gradient(145deg,#0e1a0e,#080f08)",boxShadow:"0 8px 32px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+          <div style={{padding:"16px",display:"flex",alignItems:"center",gap:14}}>
+            <div onClick={function(){audio.buttonClick();setShowAvatarPicker(true);}} style={{position:"relative",flexShrink:0,cursor:"pointer"}}>
+              {isVIP&&<div style={{position:"absolute",inset:-3,borderRadius:"50%",background:"linear-gradient(135deg,#f0c060,#d4a843,#f0c060,#a87020)",animation:"tileSpinWheel 3s linear infinite",zIndex:0}}/>}
+              {isVIP&&<div style={{position:"absolute",inset:-1,borderRadius:"50%",background:"#080f08",zIndex:1}}/>}
+              <div style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#1a2a1a,#0e180e)",border:isVIP?"none":"2px solid rgba(212,168,67,0.35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,position:"relative",zIndex:2}}>{myAvatar||"🐍"}</div>
+              <div style={{position:"absolute",bottom:-1,right:-1,width:16,height:16,borderRadius:"50%",background:"#d4a843",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,zIndex:3,boxShadow:"0 2px 4px rgba(0,0,0,0.5)"}}>✏️</div>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2,flexWrap:"wrap"}}>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:1,fontWeight:900}}>{myName||"Player"}</span>
+                {isVIP&&<VIPBadge/>}
+                {prestige>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",background:"rgba(240,192,96,0.15)",border:"1px solid rgba(240,192,96,0.35)",borderRadius:8,padding:"1px 6px"}}>{"⭐".repeat(Math.min(prestige,10))}</span>}
               </div>
-            </button>
-          ):(
-            <button onClick={function(){audio.buttonClick();setScreen("vip");}}
-              style={{padding:"13px 12px",background:"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.08))",border:"1.5px solid rgba(212,168,67,0.55)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:20}}>👑</span>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:1,fontWeight:700}}>VIP MEMBER</div>
-                <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(240,192,96,0.4)"}}>Active</div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(212,168,67,0.6)",letterSpacing:1}}>LVL {playerLevel}</span>
+                <span style={{color:"rgba(255,255,255,0.15)",fontSize:10}}>·</span>
+                {(function(){var tier=getEloTier(elo);return(<span style={{fontFamily:"Cinzel,serif",fontSize:10,background:tier.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:1}}>{tier.icon} {tier.name}</span>);}())}
               </div>
-            </button>
+              <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                <div style={{height:"100%",width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 6px rgba(212,168,67,0.5)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:5,background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"4px 10px"}}>
+                <span style={{fontSize:13}}>🪙</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",fontWeight:700}}>{coins.toLocaleString()}</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:5,background:"rgba(192,132,252,0.1)",border:"1px solid rgba(192,132,252,0.2)",borderRadius:10,padding:"4px 10px"}}>
+                <span style={{fontSize:13}}>💎</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#c084fc",fontWeight:700}}>{gems}</span>
+              </div>
+            </div>
+          </div>
+          {/* Stats row */}
+          {gameStats.rounds>0&&(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+              {[["🏆",gameStats.wins,"Wins"],["🐍",gameStats.cobras,"Cobras"],["🔥",gameStats.streak||0,"Streak"],["🃏",gameStats.rounds,"Rounds"]].map(function(row){return(
+                <div key={row[2]} style={{padding:"10px 0",textAlign:"center",borderRight:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div style={{fontSize:16,marginBottom:2}}>{row[0]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:700,color:"#d4a843"}}>{row[1]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{row[2]}</div>
+                </div>
+              );})}
+            </div>
           )}
+          {/* View profile */}
+          <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("profile");}} style={{width:"100%",padding:"10px",background:"rgba(255,255,255,0.02)",border:"none",borderTop:"1px solid rgba(255,255,255,0.04)",cursor:"pointer",touchAction:"manipulation",fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(212,168,67,0.4)",letterSpacing:2}}>
+            VIEW FULL PROFILE →
+          </button>
+        </div>
+
+        {/* ── DAILY REWARDS ROW ── */}
+        <div style={{marginBottom:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.25))"}}/>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(212,168,67,0.5)",letterSpacing:3}}>DAILY</span>
+            <div style={{flex:1,height:1,background:"linear-gradient(90deg,rgba(212,168,67,0.25),transparent)"}}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+            {/* Battle Pass */}
+            <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("battlepass");}}
+              style={{padding:"14px 10px",background:"linear-gradient(145deg,#0f2010,#0a1408)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:8,boxShadow:"0 4px 12px rgba(0,0,0,0.4)"}}>
+              <span style={{fontSize:26,filter:"drop-shadow(0 0 6px rgba(212,168,67,0.5))"}}>🎭</span>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1,fontWeight:700}}>BATTLE PASS</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.35)",marginTop:2}}>Lv {bpLevel}/50</div>
+              </div>
+              <div style={{width:"100%",height:3,borderRadius:2,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((bpLevel/50)*100))+"%",borderRadius:2}}/>
+              </div>
+            </button>
+            {/* Daily Reward */}
+            {(function(){
+              var canClaim=Date.now()-dailyLast>=86400000;
+              var msUntil=Math.max(0,86400000-(Date.now()-dailyLast));
+              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+              return(
+                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}}
+                  style={{padding:"14px 10px",background:canClaim?"linear-gradient(145deg,#2a1a00,#1a1000)":"linear-gradient(145deg,#1a1200,#100c00)",border:canClaim?"1.5px solid rgba(251,191,36,0.5)":"1px solid rgba(160,120,48,0.2)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:8,position:"relative",boxShadow:canClaim?"0 0 20px rgba(251,191,36,0.15),0 4px 12px rgba(0,0,0,0.4)":"0 4px 12px rgba(0,0,0,0.4)",animation:canClaim?"availablePulse 2s ease-in-out infinite":"none"}}>
+                  {canClaim&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 8px rgba(239,68,68,0.9)"}}/>}
+                  <span style={{fontSize:26,filter:canClaim?"drop-shadow(0 0 8px rgba(251,191,36,0.8))":"none"}}>📅</span>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canClaim?"#fbbf24":"#a07830",letterSpacing:1,fontWeight:700}}>DAILY</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canClaim?"rgba(251,191,36,0.6)":"rgba(160,120,48,0.3)",marginTop:2}}>{canClaim?"CLAIM!":hrs+"h "+mins+"m"}</div>
+                  </div>
+                </button>
+              );
+            })()}
+            {/* Lucky Spin */}
+            {(function(){
+              var canSp=Date.now()-spinLast>=86400000;
+              var msUntil=Math.max(0,86400000-(Date.now()-spinLast));
+              var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
+              return(
+                <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}}
+                  style={{padding:"14px 10px",background:canSp?"linear-gradient(145deg,#1e0830,#160420)":"linear-gradient(145deg,#160616,#0e040e)",border:canSp?"1.5px solid rgba(168,85,247,0.5)":"1px solid rgba(122,74,122,0.2)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:8,position:"relative",boxShadow:canSp?"0 0 20px rgba(168,85,247,0.15),0 4px 12px rgba(0,0,0,0.4)":"0 4px 12px rgba(0,0,0,0.4)",animation:canSp?"availablePulse 2.2s ease-in-out infinite":"none"}}>
+                  {canSp&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#a855f7",boxShadow:"0 0 8px rgba(168,85,247,0.9)"}}/>}
+                  <span style={{fontSize:26,filter:canSp?"drop-shadow(0 0 8px rgba(168,85,247,0.8))":"none"}}>🎡</span>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:canSp?"#c084fc":"#7a4a7a",letterSpacing:1,fontWeight:700}}>LUCKY SPIN</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canSp?"rgba(192,132,252,0.6)":"rgba(122,74,122,0.3)",marginTop:2}}>{canSp?"SPIN!":hrs+"h "+mins+"m"}</div>
+                  </div>
+                </button>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* ── ACHIEVEMENTS ── */}
+        <div style={{marginBottom:14,borderRadius:18,overflow:"hidden",border:"1px solid rgba(212,168,67,0.18)",background:"linear-gradient(145deg,#0e1408,#080e04)",boxShadow:"0 6px 24px rgba(0,0,0,0.4)",cursor:"pointer"}}
+          onClick={function(){audio.buttonClick();haptic.light();goScreen("achievements");}}>
+          <div style={{padding:"14px 16px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:2,fontWeight:700}}>ACHIEVEMENTS</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(212,168,67,0.4)",marginTop:2}}>{unlockedAchs.length} of {ACHIEVEMENTS.length} unlocked</div>
+            </div>
+            <div style={{background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:10,padding:"5px 12px",fontFamily:"Cinzel,serif",fontSize:9,color:"#d4a843",letterSpacing:1}}>VIEW ALL →</div>
+          </div>
+          <div style={{display:"flex",height:6,borderRadius:0,background:"rgba(255,255,255,0.04)",overflow:"hidden",margin:"0 16px 12px"}}>
+            <div style={{height:"100%",width:Math.round(unlockedAchs.length/ACHIEVEMENTS.length*100)+"%",background:"linear-gradient(90deg,#c49030,#f0c060,#c49030)",backgroundSize:"200% 100%",animation:"legendaryShimmer 2s ease-in-out infinite"}}/>
+          </div>
+          <div style={{display:"flex",gap:8,padding:"0 16px 14px",flexWrap:"wrap"}}>
+            {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:22,opacity:unlockedAchs.includes(a.id)?1:0.15,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 5px rgba(212,168,67,0.6))":"grayscale(1)",transition:"all 0.3s"}}>{a.icon}</div>);})}
+          </div>
+        </div>
+        {/* ── BOTTOM ROW: VIP + REFER + HOW TO ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+          <button onClick={function(){audio.buttonClick();setScreen("vip");}}
+            style={{padding:"13px 12px",background:isVIP?"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.08))":"linear-gradient(135deg,rgba(212,168,67,0.1),rgba(212,168,67,0.04))",border:isVIP?"1.5px solid rgba(212,168,67,0.55)":"1.5px solid rgba(212,168,67,0.3)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8,boxShadow:isVIP?"0 0 18px rgba(212,168,67,0.12)":"none"}}>
+            <span style={{fontSize:20}}>👑</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:1,fontWeight:700}}>{isVIP?"VIP MEMBER":"GET VIP"}</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(240,192,96,0.4)"}}>{isVIP?"Active":"Unlock all perks"}</div>
+            </div>
+          </button>
           <button onClick={function(){audio.buttonClick();goScreen("referral");}}
             style={{padding:"13px 12px",background:"rgba(74,222,128,0.07)",border:"1px solid rgba(74,222,128,0.25)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:20}}>🎁</span>
             <div style={{textAlign:"left"}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",letterSpacing:1,fontWeight:700}}>REFER</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",letterSpacing:1,fontWeight:700}}>REFER FRIENDS</div>
               <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(74,222,128,0.4)"}}>Earn coins</div>
             </div>
           </button>
         </div>
         {playerLevel>=100&&(
           <button onClick={function(){audio.buttonClick();haptic.medium();setShowPrestigeModal(true);}}
-            style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.08))",border:"2px solid rgba(240,192,96,0.55)",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:10,animation:"legendaryShimmer 2s ease-in-out infinite",boxShadow:"0 0 24px rgba(240,192,96,0.2)"}}>
+            style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.08))",border:"2px solid rgba(240,192,96,0.55)",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,animation:"legendaryShimmer 2s ease-in-out infinite",boxShadow:"0 0 24px rgba(240,192,96,0.2)"}}>
             <span style={{fontSize:22}}>⭐</span> PRESTIGE — Level 100!
           </button>
         )}
@@ -5638,124 +5761,8 @@ export default function Cobra(){
           <button className="btn_btn_ghost" style={{flex:1,padding:"11px",fontSize:10,letterSpacing:1.5,color:"#8a9a8a"}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
           <button className="btn_btn_ghost" style={{flex:1,padding:"11px",fontSize:10,letterSpacing:1.5,color:"#8a9a8a"}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
         </div>
-
-        {/* ── REWARDS & PROGRESSION ── */}
-        <div style={{marginTop:20}}>
-          <div className="section-label">REWARDS & PROGRESSION</div>
-          <div style={{borderRadius:20,overflow:"hidden",border:"1px solid rgba(212,168,67,0.18)",background:"linear-gradient(170deg,#0c1e0c,#060e06,#010603)",boxShadow:"0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-            {/* Player header */}
-            <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:12}}>
-              <div onClick={function(){audio.buttonClick();setShowAvatarPicker(true);}} style={{width:42,height:42,borderRadius:"50%",background:isVIP?"none":"linear-gradient(135deg,#d4a843,#a87020)",padding:isVIP?0:2.5,flexShrink:0,boxShadow:"0 0 12px rgba(212,168,67,0.25)",cursor:"pointer",position:"relative"}}>
-                {isVIP&&<div style={{position:"absolute",inset:-3,borderRadius:"50%",background:"linear-gradient(135deg,#f0c060,#d4a843,#f0c060,#a87020)",animation:"tileSpinWheel 3s linear infinite",zIndex:0}}/>}
-                {isVIP&&<div style={{position:"absolute",inset:-1,borderRadius:"50%",background:"#010603",zIndex:1}}/>}
-                <div style={{width:"100%",height:"100%",borderRadius:"50%",background:"#0a140a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,position:"relative",zIndex:2}}>{myAvatar||"🐍"}</div>
-                <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,borderRadius:"50%",background:"#d4a843",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,zIndex:3}}>✏️</div>
-              </div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                  <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1,fontWeight:700}}>LEVEL {playerLevel}</span>
-                  <span style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(255,255,255,0.2)"}}>·</span>
-                  <span style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>{myName||"Player"}</span>{isVIP&&<VIPBadge/>}
-                  {prestige>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",letterSpacing:0,background:"rgba(240,192,96,0.12)",border:"1px solid rgba(240,192,96,0.3)",borderRadius:8,padding:"1px 5px"}}>{"⭐".repeat(Math.min(prestige,10))}</span>}
-                </div>
-                <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
-                  <div style={{height:"100%",width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 4px rgba(212,168,67,0.4)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
-                </div>
-              </div>
-              <div style={{display:"flex",gap:10,flexShrink:0}}>
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",fontWeight:700}}>{coins.toLocaleString()}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>🪙</div>
-                </div>
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#c084fc",fontWeight:700}}>{gems}</div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:1}}>💎</div>
-                </div>
-              </div>
-            </div>
-            {/* Tiles grid */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(255,255,255,0.03)"}}>
-              {/* Battle Pass */}
-              <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("battlepass");}} style={{background:"linear-gradient(145deg,#0f2010,#0a1408)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,transition:"background 0.15s"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:24,filter:"drop-shadow(0 0 4px rgba(212,168,67,0.4))"}}>🎭</span>
-                  <div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#d4a843",letterSpacing:1,fontWeight:700}}>Battle Pass</div>
-                    <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(212,168,67,0.35)"}}>Season 1</div>
-                  </div>
-                </div>
-                <div>
-                  <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.05)",overflow:"hidden",marginBottom:3}}>
-                    <div style={{height:"100%",background:"linear-gradient(90deg,#d4a843,#f0c060)",width:Math.min(100,Math.round((bpLevel/50)*100))+"%",borderRadius:2}}/>
-                  </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(212,168,67,0.3)",letterSpacing:1}}>LV {bpLevel} / 50</div>
-                </div>
-              </button>
-              {/* Profile */}
-              <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("profile");}} style={{background:"linear-gradient(145deg,#0e0e1e,#090912)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:24}}>{myAvatar||"😎"}</span>
-                  <div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#a0c0ff",letterSpacing:1,fontWeight:700}}>{myName||"Player"}</div>
-                    <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(160,192,255,0.3)"}}>{gameStats.wins} wins</div>
-                  </div>
-                </div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(160,192,255,0.25)",letterSpacing:1}}>VIEW PROFILE →</div>
-              </button>
-              {/* Daily Rewards */}
-              {(function(){
-                var canClaim=Date.now()-dailyLast>=86400000;
-                var msUntil=Math.max(0,86400000-(Date.now()-dailyLast));
-                var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
-                return(
-                  <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("daily");}} style={{background:"linear-gradient(145deg,#1c1000,#120a00)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canClaim?"availablePulse 2s ease-in-out infinite":"none"}}>
-                    {canClaim&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 6px rgba(239,68,68,0.8)"}}/>}
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{fontSize:24,filter:canClaim?"drop-shadow(0 0 4px rgba(251,191,36,0.6))":"none"}}>📅</span>
-                      <div>
-                        <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:canClaim?"#fbbf24":"#a07830",letterSpacing:1,fontWeight:700}}>Daily Reward</div>
-                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.35)"}}>{canClaim?"Ready now!":"Day "+(Math.min(dailyStreak%7+1,7))+" / 7"}</div>
-                      </div>
-                    </div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canClaim?"rgba(251,191,36,0.5)":"rgba(160,120,48,0.25)",letterSpacing:1}}>{canClaim?"CLAIM NOW ✦":hrs+"h "+mins+"m"}</div>
-                  </button>
-                );
-              })()}
-              {/* Lucky Spin */}
-              {(function(){
-                var canSp=Date.now()-spinLast>=86400000;
-                var msUntil=Math.max(0,86400000-(Date.now()-spinLast));
-                var hrs=Math.floor(msUntil/3600000),mins=Math.floor((msUntil%3600000)/60000);
-                return(
-                  <button onClick={function(){audio.buttonClick();haptic.light();setActiveScreen("spin");}} style={{background:"linear-gradient(145deg,#160616,#0e040e)",border:"none",padding:"14px 12px 12px",cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:8,position:"relative",animation:canSp?"availablePulse 2.2s ease-in-out infinite":"none"}}>
-                    {canSp&&<div style={{position:"absolute",top:8,right:8,width:8,height:8,borderRadius:"50%",background:"#a855f7",boxShadow:"0 0 6px rgba(168,85,247,0.8)"}}/>}
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{fontSize:24,display:"inline-block",filter:canSp?"drop-shadow(0 0 4px rgba(168,85,247,0.6))":"none"}}>🎡</span>
-                      <div>
-                        <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:canSp?"#c084fc":"#7a4a7a",letterSpacing:1,fontWeight:700}}>Lucky Spin</div>
-                        <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:canSp?"rgba(192,132,252,0.5)":"rgba(122,74,122,0.35)"}}>{canSp?"Win prizes!":"Cooldown"}</div>
-                      </div>
-                    </div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:canSp?"rgba(192,132,252,0.5)":"rgba(122,74,122,0.25)",letterSpacing:1}}>{canSp?"SPIN NOW 🎰":hrs+"h "+mins+"m"}</div>
-                  </button>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-
-        <div style={{marginTop:14,padding:"12px 16px",background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.1)",borderRadius:12,cursor:"pointer"}}
-          onClick={function(){audio.buttonClick();haptic.light();goScreen("achievements");}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#6b5a20",letterSpacing:2}}>ACHIEVEMENTS ({unlockedAchs.length}/{ACHIEVEMENTS.length})</div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#d4a843",letterSpacing:1}}>VIEW ALL</div>
-          </div>
-          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-            {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
-          </div>
-        </div>
         {gameStats.rounds>0&&(
-          <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
+          <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:6,width:"100%",color:"rgba(255,255,255,0.2)"}}
             onClick={function(){
               audio.buttonClick();
               try{localStorage.removeItem("cobra_stats");localStorage.removeItem("cobra_achs");}catch(e){}
