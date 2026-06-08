@@ -5521,51 +5521,61 @@ export default function Cobra(){
             );})}
           </div>
         )}
-        {/* ── HERO: QUICK MATCH ── */}
-        <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();startQuickMatch();}}
-          style={{width:"100%",padding:"18px 20px",marginBottom:14,background:"linear-gradient(135deg,#1a3a70,#1e50a0,#1a3a70)",border:"1.5px solid rgba(96,165,250,0.5)",borderRadius:18,cursor:"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:"0 0 32px rgba(96,165,250,0.25),0 4px 20px rgba(0,0,0,0.5)"}}>
-          <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,transparent,rgba(96,165,250,0.08),transparent)",animation:"legendaryShimmer 2.5s ease-in-out infinite"}}/>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,position:"relative"}}>
-            <span style={{fontSize:26,filter:"drop-shadow(0 0 8px rgba(96,165,250,0.8))"}}>⚡</span>
-            <div style={{textAlign:"left"}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:3,color:"#93c5fd",fontWeight:900}}>QUICK MATCH</div>
-              <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(147,197,253,0.55)",letterSpacing:1}}>Jump in instantly · 2-4 players</div>
-            </div>
-            <div style={{marginLeft:"auto",width:32,height:32,borderRadius:"50%",background:"rgba(96,165,250,0.2)",border:"1px solid rgba(96,165,250,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#93c5fd"}}>▶</div>
-          </div>
-        </button>
-
-        {/* ── PLAY MODES ── */}
+        {/* ── PRIMARY PLAY MODES ── */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupCPU");}}
-            style={{padding:"16px 12px",background:"linear-gradient(145deg,#1a1200,#2a1e00)",border:"1.5px solid rgba(212,168,67,0.35)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:10,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
-            <div style={{position:"absolute",top:-20,right:-20,fontSize:64,opacity:0.08}}>🤖</div>
-            <span style={{fontSize:28,filter:"drop-shadow(0 0 6px rgba(212,168,67,0.5))"}}>🤖</span>
+          {/* VS COMPUTER — big hero card */}
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();goScreen("setupCPU");}}
+            style={{padding:"20px 14px 16px",background:"linear-gradient(160deg,#211500,#2e1c00,#1a1000)",border:"2px solid rgba(212,168,67,0.5)",borderRadius:20,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:12,position:"relative",overflow:"hidden",boxShadow:"0 0 24px rgba(212,168,67,0.15),0 6px 20px rgba(0,0,0,0.5)"}}>
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,rgba(212,168,67,0.06),transparent 60%)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-10,right:-10,fontSize:72,opacity:0.1,lineHeight:1}}>🤖</div>
+            <div style={{width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.1))",border:"1px solid rgba(212,168,67,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>🤖</div>
             <div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:1,fontWeight:900}}>VS COMPUTER</div>
-              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(240,192,96,0.45)",marginTop:2}}>AI opponents</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:1,fontWeight:900,marginBottom:3}}>VS COMPUTER</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(240,192,96,0.5)",lineHeight:1.4}}>Solo · Easy to Hard</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5,marginTop:"auto"}}>
+              <div style={{flex:1,height:2,borderRadius:1,background:"rgba(212,168,67,0.2)"}}/>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(212,168,67,0.5)",letterSpacing:1}}>PLAY</span>
+              <span style={{fontSize:10,color:"rgba(212,168,67,0.5)"}}>▶</span>
             </div>
           </button>
-          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupRoom");}}
-            style={{padding:"16px 12px",background:"linear-gradient(145deg,#0a0e2a,#0e1440)",border:"1.5px solid rgba(96,165,250,0.3)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:10,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
-            <div style={{position:"absolute",top:-20,right:-20,fontSize:64,opacity:0.08}}>👥</div>
-            <span style={{fontSize:28,filter:"drop-shadow(0 0 6px rgba(96,165,250,0.5))"}}>👥</span>
+          {/* MULTIPLAYER — big hero card */}
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();goScreen("setupRoom");}}
+            style={{padding:"20px 14px 16px",background:"linear-gradient(160deg,#070d28,#0c1438,#060c20)",border:"2px solid rgba(96,165,250,0.45)",borderRadius:20,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:12,position:"relative",overflow:"hidden",boxShadow:"0 0 24px rgba(96,165,250,0.12),0 6px 20px rgba(0,0,0,0.5)"}}>
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,rgba(96,165,250,0.06),transparent 60%)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-10,right:-10,fontSize:72,opacity:0.1,lineHeight:1}}>👥</div>
+            <div style={{width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,rgba(96,165,250,0.25),rgba(96,165,250,0.1))",border:"1px solid rgba(96,165,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>👥</div>
             <div>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#93c5fd",letterSpacing:1,fontWeight:900}}>MULTIPLAYER</div>
-              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(147,197,253,0.45)",marginTop:2}}>Private room</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#93c5fd",letterSpacing:1,fontWeight:900,marginBottom:3}}>MULTIPLAYER</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(147,197,253,0.5)",lineHeight:1.4}}>Friends · Private room</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5,marginTop:"auto"}}>
+              <div style={{flex:1,height:2,borderRadius:1,background:"rgba(96,165,250,0.2)"}}/>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(96,165,250,0.5)",letterSpacing:1}}>PLAY</span>
+              <span style={{fontSize:10,color:"rgba(96,165,250,0.5)"}}>▶</span>
             </div>
           </button>
         </div>
-        <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupGlobal");}}
-          style={{width:"100%",padding:"14px 18px",marginBottom:14,background:"linear-gradient(145deg,#071a0e,#0a2214)",border:"1.5px solid rgba(74,222,128,0.3)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:14,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
-          <div style={{position:"absolute",top:-20,right:-10,fontSize:64,opacity:0.07}}>🌐</div>
-          <span style={{fontSize:26,filter:"drop-shadow(0 0 6px rgba(74,222,128,0.5))"}}>🌐</span>
-          <div style={{flex:1,textAlign:"left"}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#4ade80",letterSpacing:2,fontWeight:900}}>ONLINE GAMEPLAY</div>
-            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(74,222,128,0.45)"}}>Play with anyone · Global matchmaking</div>
-          </div>
-          <div style={{fontSize:12,color:"rgba(74,222,128,0.4)"}}>▶</div>
-        </button>
+
+        {/* ── SECONDARY PLAY ROW ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupGlobal");}}
+            style={{padding:"12px 14px",background:"linear-gradient(145deg,#071a0e,#0a2214)",border:"1px solid rgba(74,222,128,0.25)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:10,position:"relative",overflow:"hidden"}}>
+            <span style={{fontSize:22,filter:"drop-shadow(0 0 5px rgba(74,222,128,0.5))"}}>🌐</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#4ade80",letterSpacing:1,fontWeight:900}}>ONLINE</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(74,222,128,0.4)"}}>Global matchmaking</div>
+            </div>
+          </button>
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();startQuickMatch();}}
+            style={{padding:"12px 14px",background:"linear-gradient(145deg,#0a0f28,#0c1235)",border:"1px solid rgba(147,197,253,0.2)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:10,position:"relative",overflow:"hidden"}}>
+            <span style={{fontSize:22,filter:"drop-shadow(0 0 5px rgba(147,197,253,0.5))"}}>⚡</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#93c5fd",letterSpacing:1,fontWeight:900}}>QUICK MATCH</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(147,197,253,0.4)"}}>Instant game</div>
+            </div>
+          </button>
+        </div>
 
         {/* ── NAV TILES ── */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
