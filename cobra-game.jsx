@@ -557,6 +557,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes trophyBounce{0%,100%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.2) rotate(-8deg)}75%{transform:scale(1.15) rotate(8deg)}}
 @keyframes rankReveal{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 @keyframes shimmerSlide{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes cardFlip3D{0%{transform:rotateY(90deg);opacity:0}100%{transform:rotateY(0deg);opacity:1}}
+@keyframes turnPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,168,67,0.7)}50%{box-shadow:0 0 0 8px rgba(212,168,67,0)}}
+@keyframes scoreSlideIn{0%{transform:translateX(40px);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes goldFlash{0%{background:rgba(212,168,67,0.3)}50%{background:rgba(212,168,67,0.6)}100%{background:rgba(212,168,67,0.15)}}
 `;
 
 const CARD_THEMES={
@@ -789,6 +793,7 @@ function ScoreStrip({names,scores,currentPlayer,nPlayers,flashScores,avatars,sco
             border:out?"1px solid rgba(255,255,255,0.04)":active?"1.5px solid rgba(212,168,67,0.5)":danger?"1.5px solid rgba(185,28,28,0.44)":"1px solid rgba(255,255,255,0.05)",
             boxShadow:active?"0 0 20px rgba(212,168,67,0.18)":danger?"0 0 14px rgba(185,28,28,0.22)":"none",
             opacity:out?0.45:1,
+            animation:active?"turnPulse 1.2s ease-in-out infinite":"none",
             transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
             <div style={{fontFamily:"Cinzel,serif",fontSize:8,letterSpacing:1,marginBottom:2,color:out?"#4b5563":active?"#d4a843":danger?"#f87171":warn?"#f59e0b":"#2a3d20",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:60,display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>{avatars[i]?<span style={{marginRight:2}}>{avatars[i]}</span>:null}{out?"ELIMINATED":n}{i===0&&<div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:18,height:18,borderRadius:"50%",background:"linear-gradient(135deg,#d4a843,#a87020)",fontFamily:"Cinzel,serif",fontSize:8,fontWeight:900,color:"#010603",boxShadow:"0 0 8px rgba(212,168,67,0.6)",animation:"pulse 2s ease-in-out infinite",marginLeft:4,flexShrink:0}}>D</div>}</div>
             <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,lineHeight:1,color:out?"#4b5563":danger?"#f87171":warn?"#fbbf24":active?"#d4a843":"#1a2d14",animation:flashScores[i]?"scoreFlash 0.6s ease both":"none",transition:"color 0.4s"}}>
@@ -4100,6 +4105,11 @@ export default function Cobra(){
   const quickMatchTimerRef=useRef(null);
   const quickMatchPollRef=useRef(null);
   const [weeklyMissions,setWeeklyMissions]=useState(function(){try{var v=localStorage.getItem("cobra_weekly_missions");return v?JSON.parse(v):null;}catch(e){return null;}});
+  // Feature: Score reveal animation
+  const [scoreRevealIdx,setScoreRevealIdx]=useState(0);
+  // Feature: New player offer
+  const [showNewPlayerOffer,setShowNewPlayerOffer]=useState(false);
+  const [newPlayerOfferSeen,setNewPlayerOfferSeen]=useState(function(){try{return localStorage.getItem("cobra_offer_seen")==="1";}catch(e){return false;}});
   const [equippedTitle,setEquippedTitle]=useState(function(){try{return localStorage.getItem("cobra_title")||"";}catch(e){return"";}});
   const [equippedFrame,setEquippedFrame]=useState(function(){try{return localStorage.getItem("cobra_frame")||"none";}catch(e){return"none";}});
   const [unlockedTitles,setUnlockedTitles]=useState(function(){try{var v=localStorage.getItem("cobra_titles");return v?JSON.parse(v):[];}catch(e){return[];}});
@@ -4239,6 +4249,7 @@ export default function Cobra(){
     if(item.currency==="coins"){
       if(coins<cost){pop("Not enough coins! Need 🪙"+cost.toLocaleString(),"error");_buyLock.current=false;return;}
       setCoins(function(v){var n=v-cost;try{localStorage.setItem("cobra_coins",String(n));}catch(e){}return n;});
+      if(cost>0)pop("-"+cost+" 🪙","spend",1200);
     } else {
       if(gems<cost){pop("Not enough gems! Need 💎"+cost,"error");_buyLock.current=false;return;}
       setGems(function(v){var n=v-cost;try{localStorage.setItem("cobra_gems",String(n));}catch(e){}return n;});
@@ -4555,6 +4566,21 @@ export default function Cobra(){
   };
   _settingsPop=pop;
   _notifsEnabled=notifsEnabled;
+
+  // Feature 4: Animated score reveal — reset and animate when roundRes changes
+  useEffect(function(){
+    if(!roundRes)return;
+    setScoreRevealIdx(0);
+    var total=roundRes.length;
+    var timer=setInterval(function(){
+      setScoreRevealIdx(function(idx){
+        var next=idx+1;
+        if(next>=total){clearInterval(timer);}
+        return next;
+      });
+    },400);
+    return function(){clearInterval(timer);};
+  },[roundRes]);
 
   // Turn timer
   useEffect(function(){
@@ -5168,7 +5194,10 @@ export default function Cobra(){
       if(myTotal<=5){unlockAch("low_score");unlockAch("lowscore");}
       var elapsed=(Date.now()-roundStart)/1000;
       if(elapsed<10)unlockAch("speed_win");
-      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      setGameStats(function(g){var streak=(g.streak||0)+1;var n={...g,wins:g.wins+1,rounds:g.rounds+1,streak:streak,bestStreak:Math.max(streak,g.bestStreak||0)};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}
+        // Feature 11: first game offer
+        if(g.rounds===0&&!newPlayerOfferSeen){setTimeout(function(){setShowNewPlayerOffer(true);try{localStorage.setItem("cobra_offer_seen","1");}catch(e){}setNewPlayerOfferSeen(true);},2000);}
+        return n;});
       // Feature 9: win streak rewards
       setWinStreak(function(ws){
         var ns2=ws+1;
@@ -5192,7 +5221,9 @@ export default function Cobra(){
       gameSummaryRef.current.cobraHits[names[H]]=(gameSummaryRef.current.cobraHits[names[H]]||0)+1;
       setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
-      setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}
+        if(g.rounds===0&&!newPlayerOfferSeen){setTimeout(function(){setShowNewPlayerOffer(true);try{localStorage.setItem("cobra_offer_seen","1");}catch(e){}setNewPlayerOfferSeen(true);},2000);}
+        return n;});
       setWinStreak(0);try{localStorage.setItem("cobra_win_streak","0");}catch(e){}
       gainSeasonXP(30); // cobra declaration bonus XP
       // ELO cobra penalty: -5
@@ -6344,8 +6375,8 @@ export default function Cobra(){
                   </span>
                   <span style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:total<=DECLARE_MAX?"#4ade80":"#f87171"}}>{total} pts</span>
                 </div>
-                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                  {(rd.hands[i]||[]).map(function(card,j){return(<Card key={j} card={card} size="md"/>);})}
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",perspective:"600px"}}>
+                  {(rd.hands[i]||[]).map(function(card,j){return(<div key={j} style={{transformOrigin:"center",animation:"cardFlip3D 0.4s ease-out both",animationDelay:((i*rd.hands[i].length+j)*0.07)+"s"}}><Card card={card} size="md"/></div>);})}
                 </div>
               </div>
             );
@@ -6419,14 +6450,15 @@ export default function Cobra(){
             </div>
             {redResults.map(function(r,i){
               var ns=r.newScore||0;
+              var visible=i<=scoreRevealIdx;
               return(
-                <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 80px 80px",padding:"14px 20px",alignItems:"center",borderBottom:i<redResults.length-1?"1px solid rgba(255,255,255,0.04)":"none",background:r.winner?"rgba(212,168,67,0.06)":r.cobra?"rgba(185,28,28,0.08)":"transparent"}}>
+                <div key={i} style={{display:visible?"grid":"none",gridTemplateColumns:"1fr 80px 80px",padding:"14px 20px",alignItems:"center",borderBottom:i<redResults.length-1?"1px solid rgba(255,255,255,0.04)":"none",background:r.winner?"rgba(212,168,67,0.06)":r.cobra?"rgba(185,28,28,0.08)":"transparent",animation:visible?(i===scoreRevealIdx?"scoreSlideIn 0.35s cubic-bezier(.22,1,.36,1) both":"none"):"none"}}>
                   <span style={{fontFamily:"Crimson Text,serif",fontSize:17,color:r.winner?"#d4a843":r.cobra?"#f87171":"#9aad9a"}}>{r.winner?"👑 ":r.cobra?"🐍 ":""}{r.name}</span>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:700,color:r.winner?"#4ade80":r.cobra?"#f87171":"#9aad9a",animation:"splashPop 0.4s cubic-bezier(.22,1.4,.36,1) both",animationDelay:(i*0.12)+"s"}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:700,color:r.winner?"#4ade80":r.cobra?"#f87171":"#9aad9a",animation:visible&&i===scoreRevealIdx?"splashPop 0.4s cubic-bezier(.22,1.4,.36,1) both":"none",animationDelay:(i*0.12)+"s"}}>
                     {r.winner?"+0":r.added>0?"+"+r.added:"+0"}
                     <div style={{fontSize:8,color:"#8aaa8a",fontWeight:400,marginTop:2}}>{r.winner?"won":r.cobra?"cobra":"added"}</div>
                   </div>
-                  <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#c8d8c8",animation:"scorePop 0.5s cubic-bezier(.22,1,.36,1) both",animationDelay:(i*0.1)+"s"}}>{ns}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:900,textAlign:"right",color:ns>=80?"#f87171":ns>=50?"#fbbf24":r.winner?"#d4a843":"#c8d8c8",animation:visible&&i===scoreRevealIdx?(r.winner?"goldFlash 0.6s ease both":"scorePop 0.5s cubic-bezier(.22,1,.36,1) both"):"none",animationDelay:(i*0.1)+"s",borderRadius:r.winner&&i===scoreRevealIdx?6:0}}>{ns}</div>
                 </div>
               );
             })}
@@ -7111,7 +7143,7 @@ export default function Cobra(){
 
       {/* TOAST */}
       {toast.msg&&(
-        <div style={{position:"fixed",top:"36%",left:"50%",transform:"translate(-50%,-50%)",background:toast.type==="error"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":toast.type==="success"?"linear-gradient(135deg,rgba(3,16,6,0.97),rgba(2,10,4,0.97))":"linear-gradient(135deg,rgba(12,9,2,0.97),rgba(9,7,2,0.97))",color:toast.type==="error"?"#fca5a5":toast.type==="success"?"#86efac":"#d4a843",padding:"13px 28px",borderRadius:14,fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:2.5,border:"1px solid rgba(212,168,67,0.44)",boxShadow:"0 18px 55px rgba(0,0,0,0.88)",zIndex:500,textAlign:"center",maxWidth:"82vw",backdropFilter:"blur(20px)",animation:"toastIn 0.32s cubic-bezier(.22,1,.36,1) both"}}>{toast.msg}</div>
+        <div style={{position:"fixed",top:"36%",left:"50%",transform:"translate(-50%,-50%)",background:toast.type==="error"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":toast.type==="success"?"linear-gradient(135deg,rgba(3,16,6,0.97),rgba(2,10,4,0.97))":toast.type==="spend"?"linear-gradient(135deg,rgba(28,4,4,0.97),rgba(16,3,3,0.97))":"linear-gradient(135deg,rgba(12,9,2,0.97),rgba(9,7,2,0.97))",color:toast.type==="error"?"#fca5a5":toast.type==="success"?"#86efac":toast.type==="spend"?"#f87171":"#d4a843",padding:"13px 28px",borderRadius:14,fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:2.5,border:"1px solid rgba(212,168,67,0.44)",boxShadow:"0 18px 55px rgba(0,0,0,0.88)",zIndex:500,textAlign:"center",maxWidth:"82vw",backdropFilter:"blur(20px)",animation:"toastIn 0.32s cubic-bezier(.22,1,.36,1) both"}}>{toast.msg}</div>
       )}
 
       {/* MY HAND or SPECTATOR */}
@@ -7200,6 +7232,14 @@ export default function Cobra(){
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"rgba(248,113,113,0.7)",fontSize:18,marginTop:14}}>Reached 100 points</p>
         </div>
       )}
+      {/* EMOJI BAR — Feature 2 */}
+      {mode!=="cpu"&&(
+        <div style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom) + 6px)",left:0,right:0,zIndex:90,display:"flex",justifyContent:"center",gap:4,padding:"6px 12px",background:"rgba(0,0,0,0.55)",backdropFilter:"blur(10px)",borderTop:"1px solid rgba(255,255,255,0.06)",pointerEvents:"auto"}}>
+          {EMOJIS.map(function(e){return(
+            <button key={e} onClick={function(){sendEmoji(e);}} style={{fontSize:22,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,width:38,height:38,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"manipulation",WebkitTapHighlightColor:"transparent"}}>{e}</button>
+          );})}
+        </div>
+      )}
       {/* CHAT DRAWER */}
       {mode==="online"&&(
         <>
@@ -7244,6 +7284,36 @@ export default function Cobra(){
         />
       )}
       {dailyLoginData&&<DailyLoginModal data={dailyLoginData} onClose={function(){setDailyLoginData(null);}}/>}
+      {/* Feature 11: New Player Bundle Offer */}
+      {showNewPlayerOffer&&(
+        <div style={{position:"fixed",inset:0,zIndex:600,background:"rgba(0,0,0,0.88)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"linear-gradient(160deg,rgba(8,20,10,0.99),rgba(4,12,6,0.99))",border:"2px solid rgba(212,168,67,0.55)",borderRadius:24,padding:"28px 24px",maxWidth:360,width:"100%",boxShadow:"0 0 60px rgba(212,168,67,0.25),0 20px 60px rgba(0,0,0,0.9)",textAlign:"center",animation:"splashPop 0.4s cubic-bezier(.22,1.4,.36,1) both"}}>
+            <div style={{fontSize:56,marginBottom:8}}>🎁</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:16,fontWeight:900,color:"#f0c060",letterSpacing:3,marginBottom:4}}>NEW PLAYER BUNDLE</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#7a9a7a",fontSize:14,marginBottom:16}}>Limited time offer just for you!</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+              {[["🪙","2000 Coins"],["💎","5 Gems"],["🎨","Crimson Theme"]].map(function(row){return(
+                <div key={row[1]} style={{display:"flex",alignItems:"center",gap:10,background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"8px 14px"}}>
+                  <span style={{fontSize:20}}>{row[0]}</span>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1}}>{row[1]}</span>
+                </div>
+              );})}
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:20}}>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#f0c060",fontWeight:900}}>₹49 only</span>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#5a5a5a",textDecoration:"line-through"}}>₹199</span>
+            </div>
+            <button className="btn_btn_gold" style={{width:"100%",padding:16,fontSize:14,letterSpacing:2,marginBottom:10}} onClick={function(){
+              audio.purchase();haptic.success();
+              addCoins(2000);addGems(5);
+              setOwnedItems(function(prev){if(prev.indexOf("crimson")>=0)return prev;var n=[...prev,"crimson"];try{localStorage.setItem("cobra_owned_items",JSON.stringify(n));}catch(e){}return n;});
+              pop("🎁 Bundle claimed! +2000 coins, +5 gems, Crimson theme!","success",3000);
+              setShowNewPlayerOffer(false);
+            }}>CLAIM FOR ₹49</button>
+            <button className="btn_btn_ghost" style={{width:"100%",padding:12,fontSize:11,letterSpacing:2}} onClick={function(){setShowNewPlayerOffer(false);}}>No thanks</button>
+          </div>
+        </div>
+      )}
       {/* Multiplayer Reconnection Modal */}
       {rejoinData&&(
         <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
