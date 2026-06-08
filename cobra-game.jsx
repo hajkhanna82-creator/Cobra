@@ -4300,7 +4300,6 @@ export default function Cobra(){
   };
   _settingsPop=pop;
   _notifsEnabled=notifsEnabled;
-  _notifToggle=notifToggle;
 
   // Turn timer
   useEffect(function(){
@@ -5057,6 +5056,7 @@ export default function Cobra(){
       pop("Notifications disabled","info");
     }
   };
+  _notifToggle=notifToggle;
 
   if(showSplash)return(
     <div>
