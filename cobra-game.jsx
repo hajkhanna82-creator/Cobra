@@ -875,7 +875,11 @@ function PremiumToggle({active,onToggle}){
 var _settingsPop=null;
 var _notifsEnabled=false;
 var _notifToggle=null;
-function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme,notifsEnabled,onToggleNotifs}){
+var _sfxPackGlobal="classic";
+var _setSfxPackGlobal=null;
+function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme,notifsEnabled,onToggleNotifs,sfxPack,onSetSfxPack}){
+  var resolvedSfxPack=sfxPack||_sfxPackGlobal||"classic";
+  var resolvedSetSfxPack=onSetSfxPack||_setSfxPackGlobal||null;
   var resolvedNotifsEnabled=notifsEnabled!==undefined?notifsEnabled:_notifsEnabled;
   var resolvedNotifToggle=typeof onToggleNotifs==="function"?onToggleNotifs:(typeof _notifToggle==="function"?_notifToggle:null);
   var onPop=_settingsPop;
@@ -935,6 +939,24 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
               </div>
             );})}
           </div>
+
+          {/* SFX PACK */}
+          {!sfxMuted&&(
+            <div style={{marginBottom:16}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#8ab08a",letterSpacing:3,marginBottom:10,display:"flex",alignItems:"center",gap:6}}><span>🎵</span> SFX PACK</div>
+              <div style={{display:"flex",gap:6}}>
+                {[{id:"classic",label:"Classic",icon:"🎵"},{id:"retro",label:"Retro",icon:"👾"},{id:"minimal",label:"Minimal",icon:"🔇"}].map(function(pack){
+                  var active=resolvedSfxPack===pack.id;
+                  return(
+                    <button key={pack.id} onClick={function(){if(resolvedSetSfxPack)resolvedSetSfxPack(pack.id);audio.buttonClick();}} style={{flex:1,padding:"8px 4px",borderRadius:10,border:active?"1.5px solid rgba(212,168,67,0.6)":"1px solid rgba(255,255,255,0.1)",background:active?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.04)",cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                      <span style={{fontSize:16}}>{pack.icon}</span>
+                      <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:active?"#d4a843":"#8a9a8a",letterSpacing:1}}>{pack.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {"Notification" in window && (
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
@@ -2098,65 +2120,171 @@ function getEloTierStatic(e){
   if(e>=1000)return{name:"Silver",icon:"🥈",color:"#c0c0c0"};
   return{name:"Bronze",icon:"🥉",color:"#cd7f32"};
 }
+// ── ProfileModal (Feature 6) ────────────────────────────────────────────────
+function ProfileModal({profile,onClose,friends,onAddFriend}){
+  if(!profile)return null;
+  var tier=getEloTierStatic(profile.elo||1000);
+  var isFriend=friends&&friends.some(function(f){return f.name===profile.name;});
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9990,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.82)",backdropFilter:"blur(8px)",padding:20}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(160deg,#0a1a0a,#060e06)",border:"1.5px solid rgba(212,168,67,0.3)",borderRadius:24,padding:24,width:"100%",maxWidth:340,boxShadow:"0 24px 60px rgba(0,0,0,0.9)",animation:"declarePop 0.3s cubic-bezier(.22,1,.36,1)"}}>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:52,marginBottom:6}}>{profile.avatar||"😎"}</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:18,color:"#d4a843",letterSpacing:2,fontWeight:700}}>{profile.name}</div>
+          {profile.title&&<div style={{fontFamily:"Cinzel,serif",fontSize:10,color:tier.color,letterSpacing:2,marginTop:3}}>{profile.title}</div>}
+          <div style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:8,padding:"4px 12px",borderRadius:20,background:"rgba(212,168,67,0.1)",border:"1px solid rgba(212,168,67,0.2)"}}>
+            <span style={{fontSize:16}}>{tier.icon}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:tier.color,letterSpacing:1}}>{tier.name}</span>
+            <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"rgba(212,168,67,0.6)"}}>{profile.elo||1000}</span>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+          {[["LEVEL",profile.level||1,"⭐"],["WIN RATE",(profile.winRate||0)+"%","🏆"],["COBRAS",profile.cobras||0,"🐍"]].map(function(s){return(
+            <div key={s[0]} style={{background:"rgba(0,0,0,0.3)",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid rgba(255,255,255,0.05)"}}>
+              <div style={{fontSize:16,marginBottom:2}}>{s[2]}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#d4a843",fontWeight:700}}>{s[1]}</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#7a9a7a",letterSpacing:1,marginTop:2}}>{s[0]}</div>
+            </div>
+          );})}
+        </div>
+        {profile.frame&&profile.frame!=="none"&&<div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#8a9a7a",textAlign:"center",marginBottom:12}}>🖼️ Frame: {profile.frame}</div>}
+        <div style={{display:"flex",gap:10}}>
+          <button className="btn_btn_ghost" style={{flex:1,padding:"12px",fontSize:11,letterSpacing:1}} onClick={onClose}>CLOSE</button>
+          {!isFriend&&<button className="btn_btn_gold" style={{flex:1,padding:"12px",fontSize:11,letterSpacing:1}} onClick={function(){onAddFriend&&onAddFriend(profile);onClose();}}>+ ADD FRIEND</button>}
+          {isFriend&&<div style={{flex:1,padding:"12px",textAlign:"center",fontFamily:"Cinzel,serif",fontSize:11,color:"#4ade80"}}>✓ FRIENDS</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── GiftModal (Feature 15) ──────────────────────────────────────────────────
+function GiftModal({friend,open,onClose,coins,onSendGift}){
+  var [selected,setSelected]=useState(null);
+  var options=[
+    {label:"100 coins",coins:100,icon:"🪙"},
+    {label:"250 coins",coins:250,icon:"🪙"},
+    {label:"500 coins",coins:500,icon:"🪙"},
+    {label:"Random Theme",coins:200,icon:"🎁",special:true},
+  ];
+  if(!open||!friend)return null;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:9995,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.82)",backdropFilter:"blur(8px)",padding:20}} onClick={onClose}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(160deg,#0a1a0a,#060e06)",border:"1.5px solid rgba(240,192,96,0.35)",borderRadius:24,padding:24,width:"100%",maxWidth:320,animation:"declarePop 0.3s cubic-bezier(.22,1,.36,1)"}}>
+        <div style={{textAlign:"center",marginBottom:16}}>
+          <div style={{fontSize:36,marginBottom:4}}>🎁</div>
+          <div style={{fontFamily:"Cinzel,serif",fontSize:15,color:"#f0c060",letterSpacing:2}}>SEND GIFT</div>
+          <div style={{fontFamily:"Crimson Text,serif",fontSize:13,color:"#8a9a7a",marginTop:4}}>To: {friend.name}</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+          {options.map(function(opt){
+            var canAfford=coins>=opt.coins;
+            return(
+              <button key={opt.label} onClick={function(){if(canAfford)setSelected(opt);}} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",borderRadius:12,border:selected===opt?"1.5px solid #f0c060":"1px solid rgba(255,255,255,0.1)",background:selected===opt?"rgba(240,192,96,0.1)":"rgba(0,0,0,0.25)",cursor:canAfford?"pointer":"not-allowed",opacity:canAfford?1:0.4,touchAction:"manipulation"}}>
+                <span style={{fontSize:20}}>{opt.icon}</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:selected===opt?"#f0c060":"#c8d8c8",flex:1,textAlign:"left"}}>{opt.label}</span>
+                <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#7a9a7a"}}>({opt.coins} 🪙)</span>
+              </button>
+            );
+          })}
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <button className="btn_btn_ghost" style={{flex:1,padding:"12px",fontSize:11}} onClick={onClose}>CANCEL</button>
+          <button className="btn_btn_gold" style={{flex:1,padding:"12px",fontSize:11}} disabled={!selected} onClick={function(){if(selected)onSendGift(friend,selected);onClose();}}>SEND</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+var MOCK_LEADERBOARD=[
+  {rank:1,name:"CobraKing88",avatar:"👑",elo:2420,wins:312,tier:"Grandmaster"},
+  {rank:2,name:"VenomStrike",avatar:"🐍",elo:2210,wins:287,tier:"Grandmaster"},
+  {rank:3,name:"ShadowAce",avatar:"😈",elo:2080,wins:251,tier:"Master"},
+  {rank:4,name:"DarkPhoenix",avatar:"🦅",elo:1980,wins:228,tier:"Master"},
+  {rank:5,name:"NightBlade",avatar:"🥷",elo:1870,wins:196,tier:"Master"},
+  {rank:6,name:"CrimsonFang",avatar:"🦊",elo:1760,wins:174,tier:"Diamond"},
+  {rank:7,name:"IronSerpent",avatar:"⚔️",elo:1650,wins:152,tier:"Diamond"},
+  {rank:8,name:"ThunderAce",avatar:"⚡",elo:1590,wins:138,tier:"Platinum"},
+  {rank:9,name:"FrostByte",avatar:"🧊",elo:1510,wins:122,tier:"Platinum"},
+  {rank:10,name:"GoldRush",avatar:"💎",elo:1440,wins:108,tier:"Gold"},
+];
+
 function LeaderboardScreen({goScreen,showSettings,setShowSettings,sfxMuted,musicMuted,sfxToggle,musToggle,gameStats,cardTheme,setCardTheme,elo,myName}){
   var localTier=getEloTierStatic(elo||1000);
   const [leaders,setLeaders]=useState(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(false);
+  const [lbTab,setLbTab]=useState("global");
+  const [viewProfile,setViewProfile]=useState(null);
+  const [friends,setFriends]=useState(function(){try{var v=localStorage.getItem("cobra_friends");return v?JSON.parse(v):[];}catch(e){return[];}});
   useEffect(function(){
     if(!supabase){setError(true);setLoading(false);return;}
-    supabase.from("cobra_scores").select("*").order("wins",{ascending:false}).limit(20).then(function(res){
+    supabase.from("cobra_scores").select("*").order("wins",{ascending:false}).limit(100).then(function(res){
       if(res.error||!res.data){setError(true);setLoading(false);return;}
       setLeaders(res.data);setLoading(false);
     }).catch(function(){setError(true);setLoading(false);});
   },[]);
+
+  var myRankInMock=MOCK_LEADERBOARD.findIndex(function(r){return r.name===myName;});
+  var myMockRank=myRankInMock>=0?myRankInMock+1:null;
+  var displayList=lbTab==="global"?(leaders&&leaders.length>0?leaders:MOCK_LEADERBOARD):friends.map(function(f,i){return{...f,rank:i+1,wins:f.wins||0};});
+  var tabStyle=function(t){return{fontFamily:"Cinzel,serif",fontSize:11,letterSpacing:2,padding:"10px 0",cursor:"pointer",background:"none",border:"none",borderBottom:lbTab===t?"2px solid #d4a843":"2px solid transparent",color:lbTab===t?"#d4a843":"#6a8a6e",flex:1,touchAction:"manipulation"};};
   return(
     <div className="feltbg" style={{display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"28px 20px",overflowY:"auto"}}>
       <style>{GS}</style>
       <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
       <div style={{maxWidth:420,width:"100%",position:"relative",zIndex:1}} className="anim_up_screen_in">
         <button className="btn_btn_ghost" style={{marginBottom:18,padding:"12px 18px",fontSize:12}} onClick={function(){audio.buttonClick();goScreen("home");}}>BACK</button>
-        <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{textAlign:"center",marginBottom:16}}>
           <span style={{fontSize:40}}>🏆</span>
           <h2 style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:22,letterSpacing:4,marginTop:8}}>LEADERBOARD</h2>
-          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#8aaa8a",fontSize:14,marginTop:4}}>Top 20 players by wins</p>
+          <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"#8aaa8a",fontSize:14,marginTop:4}}>Top players worldwide</p>
         </div>
-        {/* Local ELO rank card */}
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,marginBottom:16,background:"rgba(0,0,0,0.35)",border:"1px solid rgba(212,168,67,0.2)"}}>
+        {/* Tabs */}
+        <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.08)",marginBottom:16}}>
+          <button style={tabStyle("global")} onClick={function(){setLbTab("global");}}>🌍 GLOBAL</button>
+          <button style={tabStyle("friends")} onClick={function(){setLbTab("friends");}}>👥 FRIENDS</button>
+        </div>
+        {/* Local ELO rank card (highlighted as "You") */}
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:14,marginBottom:16,background:"rgba(212,168,67,0.08)",border:"1.5px solid rgba(212,168,67,0.35)"}}>
           <span style={{fontSize:24}}>{localTier.icon}</span>
           <div style={{flex:1}}>
             <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:localTier.color,letterSpacing:1,fontWeight:700}}>{localTier.name}</div>
-            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.4)"}}>{myName||"You"}</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.5)"}}>{myName||"You"} {myMockRank?"· Rank #"+myMockRank:""}</div>
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontFamily:"Cinzel,serif",fontSize:18,fontWeight:900,color:localTier.color}}>{elo||1000}</div>
             <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.3)",letterSpacing:1}}>ELO</div>
           </div>
         </div>
-        {loading&&<div style={{textAlign:"center",padding:40}}><ThinkingDots/></div>}
-        {error&&!loading&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
-        {leaders&&leaders.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>No scores yet — play a game to appear here!</div>}
-        {leaders&&leaders.map(function(row,i){
-          var medal=i===0?"👑":i===1?"🥈":i===2?"🥉":""+(i+1);
-          var rowElo=row.elo||1000;
-          var rowTier=getEloTierStatic(rowElo);
-          return(
-            <div key={row.id||i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",borderRadius:14,marginBottom:8,background:i===0?"rgba(212,168,67,0.1)":"rgba(0,0,0,0.28)",border:i===0?"1.5px solid rgba(212,168,67,0.3)":"1px solid rgba(255,255,255,0.06)"}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:i<3?22:14,width:28,textAlign:"center",flexShrink:0,color:i===0?"#d4a843":i===1?"#c0c0c0":i===2?"#cd7f32":"#3a5a3a"}}>{medal}</div>
-              <div style={{fontSize:22,flexShrink:0}}>{row.avatar||"😎"}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:i===0?"#d4a843":"#c8d8c8",letterSpacing:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.name}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:rowTier.color,letterSpacing:1}}>{rowTier.icon} {rowTier.name}</div>
+        {loading&&lbTab==="global"&&<div style={{textAlign:"center",padding:20}}><ThinkingDots/></div>}
+        {lbTab==="friends"&&friends.length===0&&<div style={{fontFamily:"Crimson Text,serif",color:"#5a7a60",fontSize:15,textAlign:"center",padding:24,fontStyle:"italic"}}>Add friends to see them here!</div>}
+        {(function(){
+          var rows=lbTab==="global"?(leaders&&leaders.length>0?leaders:MOCK_LEADERBOARD):friends.map(function(f,i){return{name:f.name,avatar:f.avatar||"😎",elo:f.elo||1000,wins:0,id:f.name,rank:i+1};});
+          return rows.slice(0,lbTab==="global"?100:50).map(function(row,i){
+            var medal=i===0?"👑":i===1?"🥈":i===2?"🥉":"#"+(i+1);
+            var rowElo=row.elo||1000;
+            var rowTier=getEloTierStatic(rowElo);
+            var isMe=row.name===myName;
+            return(
+              <div key={row.id||i} onClick={function(){setViewProfile({name:row.name,avatar:row.avatar||"😎",elo:rowElo,level:Math.max(1,Math.floor(rowElo/100)),winRate:row.wins>0?Math.round(row.wins/(row.wins+10)*100):0,cobras:0,title:rowTier.name,frame:"none"});}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",borderRadius:14,marginBottom:8,background:isMe?"rgba(212,168,67,0.12)":i===0?"rgba(212,168,67,0.06)":"rgba(0,0,0,0.28)",border:isMe?"1.5px solid rgba(212,168,67,0.5)":i===0?"1.5px solid rgba(212,168,67,0.2)":"1px solid rgba(255,255,255,0.06)",cursor:"pointer"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:i<3?22:13,width:28,textAlign:"center",flexShrink:0,color:i===0?"#d4a843":i===1?"#c0c0c0":i===2?"#cd7f32":"#3a5a3a"}}>{medal}</div>
+                <div style={{fontSize:22,flexShrink:0}}>{row.avatar||"😎"}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:isMe?"#f0c060":i===0?"#d4a843":"#c8d8c8",letterSpacing:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.name}{isMe?" (You)":""}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:rowTier.color,letterSpacing:1}}>{rowTier.icon} {rowTier.name}</div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                  {row.wins>0&&<div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:900,color:isMe?"#f0c060":"#4ade80"}}>{row.wins}<span style={{fontSize:8,marginLeft:2,color:"#7a9a7a"}}>W</span></div>}
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,color:rowTier.color}}>{rowElo} ELO</div>
+                </div>
               </div>
-              <div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,color:i===0?"#d4a843":"#4ade80"}}>{row.wins}</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>WINS</div>
-                <div style={{fontFamily:"Cinzel,serif",fontSize:11,fontWeight:700,color:rowTier.color}}>{rowElo} ELO</div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
+      {viewProfile&&<ProfileModal profile={viewProfile} onClose={function(){setViewProfile(null);}} friends={friends} onAddFriend={function(p){var newF=[...friends,{name:p.name,avatar:p.avatar,elo:p.elo}];setFriends(newF);try{localStorage.setItem("cobra_friends",JSON.stringify(newF));}catch(e){}}}/>}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
     </div>
   );
@@ -2906,6 +3034,52 @@ function ShopScreen({goScreen,coins,gems,ownedItems,onBuy,cardTheme,onEquipTheme
           </div>
         )}
 
+        {/* Feature 16: LIMITED-TIME EVENTS */}
+        {(cat==="ALL"||cat==="FEATURED")&&(
+          <div style={{marginBottom:20}}>
+            <SectionHeader>⏳ LIMITED TIME</SectionHeader>
+            {(function(){
+              var now=new Date();
+              var msLeft=Math.max(0,47*3600000+59*60000+59000-(now.getTime()%(48*3600000)));
+              var h=Math.floor(msLeft/3600000);var m=Math.floor((msLeft%3600000)/60000);var s=Math.floor((msLeft%60000)/1000);
+              var countdown=(h<10?"0"+h:h)+":"+(m<10?"0"+m:m)+":"+(s<10?"0"+s:s);
+              var limitedItems=[
+                {id:"bundle_serpent_king",name:"Serpent King Bundle",desc:"3 exclusive card backs + avatar",icon:"🐍",price:999,currency:"coins",originalPrice:1800,rarity:"legendary",badge:"BEST VALUE"},
+                {id:"venom_crate_3x",name:"Venom Crate ×3",desc:"3 legendary crates for gems",icon:"🎰",price:180,currency:"gems",originalPrice:240,rarity:"epic",badge:"SALE"},
+              ];
+              return limitedItems.map(function(item){
+                var rc=RARITY_COLORS[item.rarity]||"#9ca3af";
+                var canAfford=item.currency==="coins"?coins>=item.price:gems>=item.price;
+                return(
+                  <div key={item.id} style={{borderRadius:18,overflow:"hidden",border:"2px solid rgba(239,68,68,0.5)",background:"rgba(20,5,5,0.95)",marginBottom:12,boxShadow:"0 0 20px rgba(239,68,68,0.15)",position:"relative"}}>
+                    <div style={{background:"linear-gradient(90deg,rgba(239,68,68,0.25),rgba(239,68,68,0.1))",padding:"8px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(239,68,68,0.2)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <div style={{background:"#ef4444",borderRadius:6,padding:"2px 8px",fontFamily:"Cinzel,serif",fontSize:8,color:"#fff",letterSpacing:1,fontWeight:700}}>ENDS IN</div>
+                        <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#fca5a5",letterSpacing:1}}>{countdown}</div>
+                      </div>
+                      {item.badge&&<div style={{background:rc+"22",border:"1px solid "+rc+"55",borderRadius:6,padding:"2px 8px",fontFamily:"Cinzel,serif",fontSize:8,color:rc,letterSpacing:1,fontWeight:700}}>{item.badge}</div>}
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px"}}>
+                      <div style={{fontSize:36,flexShrink:0}}>{item.icon}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"Cinzel,serif",fontSize:14,color:"#f0c060",fontWeight:900,marginBottom:2}}>{item.name}</div>
+                        <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.6)",marginBottom:8}}>{item.desc}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#4ade80",fontWeight:900}}>{item.currency==="coins"?"🪙":"💎"} {item.price.toLocaleString()}</div>
+                          <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"rgba(255,255,255,0.3)",textDecoration:"line-through"}}>{item.originalPrice.toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <button onClick={function(){audio.buttonClick();haptic&&haptic.medium&&haptic.medium();if(canAfford){if(item.currency==="coins"){addCoins(-item.price);}else{addGems(-item.price);}pop("🎉 "+item.name+" purchased!","success");}else{pop("Not enough "+(item.currency==="coins"?"coins":"gems"),"error");}}} style={{flexShrink:0,padding:"10px 14px",borderRadius:12,border:canAfford?"1.5px solid rgba(74,222,128,0.5)":"1.5px solid rgba(255,255,255,0.1)",background:canAfford?"rgba(74,222,128,0.12)":"rgba(255,255,255,0.04)",fontFamily:"Cinzel,serif",fontSize:10,color:canAfford?"#4ade80":"rgba(255,255,255,0.3)",cursor:canAfford?"pointer":"default",touchAction:"manipulation",letterSpacing:1}}>
+                        {canAfford?"BUY":"NEED\nMORE"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
+
       </div>
 
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={onEquipTheme} onHowToPlay={function(){setShowSettings(false);goScreen("howto");}}/>
@@ -3292,6 +3466,13 @@ function ClanScreen({goScreen,myName,myAvatar,elo,coins,onSpendCoins}){
   var [clanTag,setClanTag]=useState("");
   var [clanIcon,setClanIcon]=useState("🐍");
   var [leaveConfirm,setLeaveConfirm]=useState(false);
+  var [warScore,setWarScore]=useState(function(){try{return parseInt(localStorage.getItem("cobra_war_score")||"0");}catch(e){return 0;}});
+  var [warCountdown,setWarCountdown]=useState("47:59:59");
+  useEffect(function(){
+    if(tab!=="wars")return;
+    function tick(){var now=new Date();var endMs=new Date(now.getFullYear(),now.getMonth(),now.getDate()+Math.ceil((48*3600000-now%86400000)/86400000)).getTime();var left=Math.max(0,endMs-Date.now());var h=Math.floor(left/3600000);var m=Math.floor((left%3600000)/60000);var s=Math.floor((left%60000)/1000);setWarCountdown((h<10?"0"+h:h)+":"+(m<10?"0"+m:m)+":"+(s<10?"0"+s:s));}
+    tick();var id=setInterval(tick,1000);return function(){clearInterval(id);};
+  },[tab]);
 
   function saveClan(c){
     setClan(c);
@@ -3345,6 +3526,7 @@ function ClanScreen({goScreen,myName,myAvatar,elo,coins,onSpendCoins}){
           {!clan&&<button style={tabStyle("browse")} onClick={function(){setTab("browse");}}>BROWSE</button>}
           {!clan&&<button style={tabStyle("create")} onClick={function(){setTab("create");}}>CREATE</button>}
           <button style={tabStyle("leaderboard")} onClick={function(){setTab("leaderboard");}}>TOP CLANS</button>
+          <button style={tabStyle("wars")} onClick={function(){setTab("wars");}}>⚔️ WARS</button>
         </div>
       </div>
 
@@ -3447,6 +3629,51 @@ function ClanScreen({goScreen,myName,myAvatar,elo,coins,onSpendCoins}){
               </div>
             </div>
             <button className="btn_btn_ghost" style={{width:"100%",padding:"16px",fontSize:12,letterSpacing:3,color:coins>=500?"#ef4444":"#4a5a4e",border:coins>=500?"1.5px solid rgba(239,68,68,0.5)":"1.5px solid rgba(255,255,255,0.06)",cursor:coins>=500?"pointer":"not-allowed"}} onClick={function(){if(coins>=500&&clanName.trim().length>=2&&clanTag.length===3)createClan();}}>⚔️ CREATE CLAN (500 🪙)</button>
+          </div>
+        )}
+
+        {tab==="wars"&&(
+          <div>
+            <div style={{textAlign:"center",marginBottom:16,padding:"12px",background:"rgba(239,68,68,0.08)",borderRadius:14,border:"1px solid rgba(239,68,68,0.2)"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#ef4444",letterSpacing:3,marginBottom:4}}>⚔️ CLAN WARS</div>
+              <div style={{fontFamily:"Crimson Text,serif",color:"#8a9a7a",fontSize:13}}>War ends in: <span style={{color:"#f0c060",fontFamily:"Cinzel,serif"}}>{warCountdown}</span></div>
+            </div>
+            {clan?(
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,padding:"16px",background:"rgba(0,0,0,0.3)",borderRadius:14,border:"1px solid rgba(255,255,255,0.08)"}}>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:28,marginBottom:4}}>{clan.icon}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#ef4444",fontWeight:700}}>{clan.name}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:24,color:"#4ade80",fontWeight:900,marginTop:4}}>{(1240+warScore).toLocaleString()}</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>YOUR CLAN</div>
+                  </div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#ef4444"}}>VS</div>
+                  <div style={{flex:1,textAlign:"center"}}>
+                    <div style={{fontSize:28,marginBottom:4}}>⚡</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#f97316",fontWeight:700}}>Thunder Blades</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:24,color:"#f87171",fontWeight:900,marginTop:4}}>1450</div>
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#7a9a7a",letterSpacing:1}}>OPPONENT</div>
+                  </div>
+                </div>
+                <div style={{marginBottom:12}}>
+                  <div style={{height:10,background:"rgba(255,255,255,0.06)",borderRadius:5,overflow:"hidden",marginBottom:4}}>
+                    <div style={{height:"100%",width:Math.round((1240+warScore)/(1240+warScore+1450)*100)+"%",background:"linear-gradient(90deg,#4ade80,#22c55e)",borderRadius:5,transition:"width 0.5s"}}/>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",fontFamily:"Cinzel,serif",fontSize:9,color:"#6a8a6e"}}>
+                    <span>{clan.name}</span><span>Thunder Blades</span>
+                  </div>
+                </div>
+                <button className="btn_btn_green" style={{width:"100%",padding:"14px",fontSize:12,letterSpacing:2}} onClick={function(){var pts=Math.floor(Math.random()*20)+10;var ns=warScore+pts;setWarScore(ns);try{localStorage.setItem("cobra_war_score",String(ns));}catch(e){}audio.buttonClick&&audio.buttonClick();haptic.light&&haptic.light();}}>
+                  ⚔️ CONTRIBUTE (+10–30 pts)
+                </button>
+                <div style={{fontFamily:"Crimson Text,serif",color:"#6a8a6e",fontSize:12,textAlign:"center",marginTop:8}}>Your contribution: <span style={{color:"#f0c060"}}>{warScore} pts</span></div>
+              </div>
+            ):(
+              <div style={{textAlign:"center",padding:"32px 0",color:"#4a6a4e",fontFamily:"Crimson Text,serif",fontSize:15}}>
+                <div style={{fontSize:40,marginBottom:12}}>⚔️</div>
+                <div>Join a clan to participate in Clan Wars!</div>
+              </div>
+            )}
           </div>
         )}
 
@@ -3555,8 +3782,9 @@ function ReferralScreen({goScreen,myName,addCoins,pop}){
   );
 }
 
-function FriendsScreen({goScreen,myName,myAvatar,elo}){
+function FriendsScreen({goScreen,myName,myAvatar,elo,coins,addCoins,pop}){
   const [tab,setTab]=useState("friends");
+  const [localGiftModal,setLocalGiftModal]=useState({friend:null,open:false});
   const [searchQuery,setSearchQuery]=useState("");
   const [searchResults,setSearchResults]=useState([]);
   const [searching,setSearching]=useState(false);
@@ -3663,8 +3891,10 @@ function FriendsScreen({goScreen,myName,myAvatar,elo}){
                     <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:tier.color}}>{tier.icon} {tier.name} · {f.elo||1000}</div>
                   </div>
                   <div style={{display:"flex",gap:6,flexShrink:0}}>
+                    <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(240,192,96,0.4)",color:"#f0c060"}}
+                      onClick={function(){setLocalGiftModal({friend:f,open:true});}}>🎁</button>
                     <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(74,222,128,0.35)",color:"#4ade80"}}
-                      onClick={function(){goScreen("multiplayer");}}>⚔️ CHALLENGE</button>
+                      onClick={function(){goScreen("multiplayer");}}>⚔️</button>
                     <button className="btn_btn_ghost" style={{fontSize:10,padding:"8px 10px",letterSpacing:1,border:"1.5px solid rgba(255,80,80,0.3)",color:"#f87171"}}
                       onClick={function(){removeFriend(f.name);}}>✕</button>
                   </div>
@@ -3746,6 +3976,7 @@ function FriendsScreen({goScreen,myName,myAvatar,elo}){
         )}
 
       </div>
+      {localGiftModal.open&&<GiftModal friend={localGiftModal.friend} open={localGiftModal.open} onClose={function(){setLocalGiftModal({friend:null,open:false});}} coins={coins||0} onSendGift={function(friend,opt){if((coins||0)>=opt.coins){if(addCoins)addCoins(-opt.coins);if(pop)pop("🎁 Gift sent to "+friend.name+"!","success");}else{if(pop)pop("Not enough coins","error");}}}/>}
     </div>
   );
 }
@@ -3857,6 +4088,8 @@ export default function Cobra(){
   const [winStreak,setWinStreak]=useState(function(){try{return parseInt(localStorage.getItem("cobra_win_streak")||"0");}catch(e){return 0;}});
   // Feature 13: SFX Pack
   const [sfxPack,setSfxPack]=useState(function(){try{return localStorage.getItem("cobra_sfx_pack")||"classic";}catch(e){return"classic";}});
+  _sfxPackGlobal=sfxPack;
+  _setSfxPackGlobal=function(p){setSfxPack(p);try{localStorage.setItem("cobra_sfx_pack",p);}catch(e){};};
   // Feature 6: Profile modal
   const [profileModal,setProfileModal]=useState(null); // {name,avatar,elo,level,winRate,cobras,title,frame}
   // Feature 15: Gift modal
@@ -4515,6 +4748,7 @@ export default function Cobra(){
     setShowYourTurn(true);
     clearTimeout(yourTurnTimer.current);
     yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);
+    haptic.light();
     audio.init();audio.resume();
     audio.turnChange();
     setTimeout(function(){audio.shuffle_sfx();},100);
@@ -4959,6 +5193,7 @@ export default function Cobra(){
       setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}return n;});
+      setWinStreak(0);try{localStorage.setItem("cobra_win_streak","0");}catch(e){}
       gainSeasonXP(30); // cobra declaration bonus XP
       // ELO cobra penalty: -5
       applyEloChange(-5);
@@ -5306,6 +5541,11 @@ export default function Cobra(){
           onClick={function(){audio.buttonClick();haptic.medium();setScreen("tournament");}}>
           🏆 TOURNAMENT
         </button>
+        {playerLevel>=100&&(
+          <button onClick={function(){audio.buttonClick();haptic.medium();setShowPrestigeModal(true);}} style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.1))",border:"2px solid rgba(240,192,96,0.6)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,animation:"legendaryShimmer 2s ease-in-out infinite"}}>
+            ⭐ PRESTIGE (Level 100!)
+          </button>
+        )}
         {!isVIP&&(
           <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.08))",border:"1.5px solid rgba(212,168,67,0.45)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 0 20px rgba(212,168,67,0.15)"}}>
             👑 GET VIP
@@ -5339,6 +5579,7 @@ export default function Cobra(){
                   <span style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#d4a843",letterSpacing:1,fontWeight:700}}>LEVEL {playerLevel}</span>
                   <span style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(255,255,255,0.2)"}}>·</span>
                   <span style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>{myName||"Player"}</span>{isVIP&&<VIPBadge/>}
+                  {prestige>0&&<span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#f0c060",letterSpacing:0,background:"rgba(240,192,96,0.12)",border:"1px solid rgba(240,192,96,0.3)",borderRadius:8,padding:"1px 5px"}}>{"⭐".repeat(Math.min(prestige,10))}</span>}
                 </div>
                 <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
                   <div style={{height:"100%",width:Math.min(100,Math.round(playerXP/(playerLevel*100)*100))+"%",background:"linear-gradient(90deg,#c49030,#f0c060)",borderRadius:3,boxShadow:"0 0 4px rgba(212,168,67,0.4)",transition:"width 0.8s cubic-bezier(.22,1,.36,1)"}}/>
@@ -5593,6 +5834,36 @@ export default function Cobra(){
         </div>
       )}
       {rewardPopup&&<RewardPopup reward={rewardPopup} onClose={function(){setRewardPopup(null);}}/> }
+      {/* Feature 8: Prestige Confirmation Modal */}
+      {showPrestigeModal&&(
+        <div style={{position:"fixed",inset:0,zIndex:9992,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.88)",backdropFilter:"blur(8px)",padding:20}}>
+          <div style={{background:"linear-gradient(160deg,#1a1000,#0d0800)",border:"2px solid rgba(240,192,96,0.5)",borderRadius:24,padding:28,width:"100%",maxWidth:340,textAlign:"center",animation:"declarePop 0.3s cubic-bezier(.22,1,.36,1)"}}>
+            <div style={{fontSize:52,marginBottom:8}}>{"⭐".repeat(Math.min(prestige+1,5))}</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#f0c060",letterSpacing:3,marginBottom:8}}>PRESTIGE {prestige+1}</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:14,color:"#8a9a8a",marginBottom:16,lineHeight:1.6}}>Reset to Level 1 and earn your Prestige {prestige+1} badge. Your coins, gems, and cosmetics are kept!</div>
+            <div style={{background:"rgba(240,192,96,0.1)",border:"1px solid rgba(240,192,96,0.2)",borderRadius:12,padding:"12px",marginBottom:20}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#8a7a3e",letterSpacing:2,marginBottom:4}}>REWARD</div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#f0c060"}}>{"⭐".repeat(prestige+1)} Prestige Badge + 500 🪙</div>
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:1}} onClick={function(){setShowPrestigeModal(false);}}>CANCEL</button>
+              <button className="btn_btn_gold" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:1}} onClick={function(){
+                var np=prestige+1;setPrestige(np);try{localStorage.setItem("cobra_prestige",String(np));}catch(e){}
+                setPlayerLevel(1);try{localStorage.setItem("cobra_level","1");}catch(e){}
+                setPlayerXP(0);try{localStorage.setItem("cobra_xp","0");}catch(e){}
+                addCoins(500);
+                unlockAch("prestige1");
+                setShowPrestigeModal(false);
+                pop("⭐ Prestige "+np+"! Welcome to a new journey!","success");
+              }}>PRESTIGE!</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Feature 6: Profile Modal */}
+      {profileModal&&<ProfileModal profile={profileModal} onClose={function(){setProfileModal(null);}} friends={(function(){try{var v=localStorage.getItem("cobra_friends");return v?JSON.parse(v):[];}catch(e){return[];}})()} onAddFriend={function(p){var cur=[];try{var v=localStorage.getItem("cobra_friends");if(v)cur=JSON.parse(v);}catch(e){}if(!cur.some(function(f){return f.name===p.name;})){var nf=[...cur,{name:p.name,avatar:p.avatar||"😎",elo:p.elo||1000}];try{localStorage.setItem("cobra_friends",JSON.stringify(nf));}catch(e){}}}}/>}
+      {/* Feature 15: Gift Modal */}
+      {giftModal.open&&<GiftModal friend={giftModal.friend} open={giftModal.open} onClose={function(){setGiftModal({friend:null,open:false});}} coins={coins} onSendGift={function(friend,opt){if(coins>=opt.coins){setCoins(function(c){var n=c-opt.coins;try{localStorage.setItem("cobra_coins",n);}catch(e){}return n;});pop("🎁 Gift sent to "+friend.name+"!","success");}else{pop("Not enough coins","error");}}}/>}
       {eloToast&&(function(){var t=eloToast;var tier=getEloTier(elo);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:500,animation:"statSlideIn 0.4s both",pointerEvents:"none"}}>
         {t.rankUp&&<div style={{background:"linear-gradient(135deg,rgba(20,40,20,0.97),rgba(10,20,10,0.97))",border:"2px solid rgba(212,168,67,0.6)",borderRadius:16,padding:"12px 20px",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.6)",marginBottom:8,whiteSpace:"nowrap"}}>
           <div style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:900,letterSpacing:2,color:"#f0c060",marginBottom:2}}>🎉 RANK UP!</div>
@@ -6413,7 +6684,7 @@ export default function Cobra(){
 
   // ─── FRIENDS ─────────────────────────────────────────
   if(screen==="friends"){
-    return <FriendsScreen goScreen={goScreen} myName={myName} myAvatar={myAvatar} elo={elo}/>;
+    return <FriendsScreen goScreen={goScreen} myName={myName} myAvatar={myAvatar} elo={elo} coins={coins} addCoins={addCoins} pop={pop}/>;
   }
 
   // ─── CLAN ────────────────────────────────────────────
