@@ -5521,45 +5521,112 @@ export default function Cobra(){
             );})}
           </div>
         )}
-        <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:14}}>
-          {[{label:"VS COMPUTER",cls:"btn_btn_gold",s:"setupCPU",sub:"Play against AI opponents",icon:"🤖"},
-            {label:"MULTIPLAYER",cls:"btn_btn_blue",s:"setupRoom",sub:"Create or join a private room",icon:"👥"},
-            {label:"ONLINE GAMEPLAY",cls:"btn_btn_green",s:"setupGlobal",sub:"Play with anyone online",icon:"🌐"}].map(function(b){return(
-            <button key={b.label} className={b.cls}
-              style={{padding:"16px 22px",fontSize:14,letterSpacing:1.5,borderRadius:16,width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,height:"auto",textAlign:"left"}}
-              onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen(b.s);}}>
-              <span style={{fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:2}}>{b.icon} {b.label}</span>
-              <span style={{fontFamily:"Crimson Text,serif",fontSize:14,textTransform:"none",letterSpacing:0,fontWeight:400,opacity:0.7}}>{b.sub}</span>
+        {/* ── HERO: QUICK MATCH ── */}
+        <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();startQuickMatch();}}
+          style={{width:"100%",padding:"18px 20px",marginBottom:14,background:"linear-gradient(135deg,#1a3a70,#1e50a0,#1a3a70)",border:"1.5px solid rgba(96,165,250,0.5)",borderRadius:18,cursor:"pointer",touchAction:"manipulation",position:"relative",overflow:"hidden",boxShadow:"0 0 32px rgba(96,165,250,0.25),0 4px 20px rgba(0,0,0,0.5)"}}>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,transparent,rgba(96,165,250,0.08),transparent)",animation:"legendaryShimmer 2.5s ease-in-out infinite"}}/>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,position:"relative"}}>
+            <span style={{fontSize:26,filter:"drop-shadow(0 0 8px rgba(96,165,250,0.8))"}}>⚡</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:16,letterSpacing:3,color:"#93c5fd",fontWeight:900}}>QUICK MATCH</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(147,197,253,0.55)",letterSpacing:1}}>Jump in instantly · 2-4 players</div>
+            </div>
+            <div style={{marginLeft:"auto",width:32,height:32,borderRadius:"50%",background:"rgba(96,165,250,0.2)",border:"1px solid rgba(96,165,250,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#93c5fd"}}>▶</div>
+          </div>
+        </button>
+
+        {/* ── PLAY MODES ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupCPU");}}
+            style={{padding:"16px 12px",background:"linear-gradient(145deg,#1a1200,#2a1e00)",border:"1.5px solid rgba(212,168,67,0.35)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:10,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
+            <div style={{position:"absolute",top:-20,right:-20,fontSize:64,opacity:0.08}}>🤖</div>
+            <span style={{fontSize:28,filter:"drop-shadow(0 0 6px rgba(212,168,67,0.5))"}}>🤖</span>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:1,fontWeight:900}}>VS COMPUTER</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(240,192,96,0.45)",marginTop:2}}>AI opponents</div>
+            </div>
+          </button>
+          <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupRoom");}}
+            style={{padding:"16px 12px",background:"linear-gradient(145deg,#0a0e2a,#0e1440)",border:"1.5px solid rgba(96,165,250,0.3)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",textAlign:"left",display:"flex",flexDirection:"column",gap:10,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
+            <div style={{position:"absolute",top:-20,right:-20,fontSize:64,opacity:0.08}}>👥</div>
+            <span style={{fontSize:28,filter:"drop-shadow(0 0 6px rgba(96,165,250,0.5))"}}>👥</span>
+            <div>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:"#93c5fd",letterSpacing:1,fontWeight:900}}>MULTIPLAYER</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:11,color:"rgba(147,197,253,0.45)",marginTop:2}}>Private room</div>
+            </div>
+          </button>
+        </div>
+        <button onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.light();goScreen("setupGlobal");}}
+          style={{width:"100%",padding:"14px 18px",marginBottom:14,background:"linear-gradient(145deg,#071a0e,#0a2214)",border:"1.5px solid rgba(74,222,128,0.3)",borderRadius:16,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:14,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.4)"}}>
+          <div style={{position:"absolute",top:-20,right:-10,fontSize:64,opacity:0.07}}>🌐</div>
+          <span style={{fontSize:26,filter:"drop-shadow(0 0 6px rgba(74,222,128,0.5))"}}>🌐</span>
+          <div style={{flex:1,textAlign:"left"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"#4ade80",letterSpacing:2,fontWeight:900}}>ONLINE GAMEPLAY</div>
+            <div style={{fontFamily:"Crimson Text,serif",fontSize:12,color:"rgba(74,222,128,0.45)"}}>Play with anyone · Global matchmaking</div>
+          </div>
+          <div style={{fontSize:12,color:"rgba(74,222,128,0.4)"}}>▶</div>
+        </button>
+
+        {/* ── NAV TILES ── */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
+          {[
+            {icon:"🏆",label:"Tournament",action:function(){setScreen("tournament");},color:"#f0c060",bg:"rgba(240,192,96,0.08)",border:"rgba(240,192,96,0.2)"},
+            {icon:"🛒",label:"Shop",action:function(){goScreen("shop");},color:"#c084fc",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.2)"},
+            {icon:"📊",label:"Ranks",action:function(){goScreen("leaderboard");},color:"#60a5fa",bg:"rgba(96,165,250,0.08)",border:"rgba(96,165,250,0.2)"},
+            {icon:"⚔️",label:"Clan",action:function(){goScreen("clan");},color:"#f87171",bg:"rgba(248,113,113,0.08)",border:"rgba(248,113,113,0.2)"},
+            {icon:"👥",label:"Friends",action:function(){goScreen("friends");},color:"#4ade80",bg:"rgba(74,222,128,0.08)",border:"rgba(74,222,128,0.2)"},
+            {icon:"🎫",label:"Season",action:function(){goScreen("season");},badge:SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;}),color:"#c084fc",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.2)"},
+            {icon:"🎯",label:"Missions",action:function(){goScreen("missions");},badge:(function(){var dm2=dailyMissions;return dm2&&dm2.missions&&dm2.missions.some(function(m){return!m.claimed;});}()),color:"#fb923c",bg:"rgba(251,146,60,0.08)",border:"rgba(251,146,60,0.2)"},
+            {icon:"📚",label:"Collection",action:function(){goScreen("collection");},color:"#a3e635",bg:"rgba(163,230,53,0.08)",border:"rgba(163,230,53,0.2)"},
+          ].map(function(t){return(
+            <button key={t.label} onClick={function(){audio.buttonClick();haptic.light();t.action();}}
+              style={{padding:"12px 4px",background:t.bg,border:"1px solid "+t.border,borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}>
+              {t.badge&&<div style={{position:"absolute",top:6,right:6,width:7,height:7,borderRadius:"50%",background:"#ef4444",boxShadow:"0 0 5px rgba(239,68,68,0.8)"}}/>}
+              <span style={{fontSize:22}}>{t.icon}</span>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:t.color,letterSpacing:0.5,fontWeight:700,textAlign:"center",lineHeight:1.2}}>{t.label}</span>
             </button>
           );})}
         </div>
-        <button className="btn_btn_blue" style={{width:"100%",padding:"14px 20px",fontSize:13,letterSpacing:3,marginBottom:10,background:"linear-gradient(135deg,#1e3a5f,#1e4080)",boxShadow:"0 4px 20px rgba(30,64,128,0.5)"}}
-          onClick={function(){audio.init();audio.resume();audio.buttonClick();haptic.medium();startQuickMatch();}}>
-          ⚡ QUICK MATCH
-        </button>
-        <button className="btn_btn_gold" style={{width:"100%",padding:"14px 20px",fontSize:12,letterSpacing:3,marginBottom:10}}
-          onClick={function(){audio.buttonClick();haptic.medium();setScreen("tournament");}}>
-          🏆 TOURNAMENT
-        </button>
+
+        {/* ── SECONDARY ROW ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+          {!isVIP?(
+            <button onClick={function(){audio.buttonClick();setScreen("vip");}}
+              style={{padding:"13px 12px",background:"linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.05))",border:"1.5px solid rgba(212,168,67,0.4)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8,boxShadow:"0 0 16px rgba(212,168,67,0.1)"}}>
+              <span style={{fontSize:20}}>👑</span>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:1,fontWeight:700}}>GET VIP</div>
+                <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(240,192,96,0.4)"}}>Unlock perks</div>
+              </div>
+            </button>
+          ):(
+            <button onClick={function(){audio.buttonClick();setScreen("vip");}}
+              style={{padding:"13px 12px",background:"linear-gradient(135deg,rgba(212,168,67,0.2),rgba(212,168,67,0.08))",border:"1.5px solid rgba(212,168,67,0.55)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:20}}>👑</span>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#f0c060",letterSpacing:1,fontWeight:700}}>VIP MEMBER</div>
+                <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(240,192,96,0.4)"}}>Active</div>
+              </div>
+            </button>
+          )}
+          <button onClick={function(){audio.buttonClick();goScreen("referral");}}
+            style={{padding:"13px 12px",background:"rgba(74,222,128,0.07)",border:"1px solid rgba(74,222,128,0.25)",borderRadius:14,cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:20}}>🎁</span>
+            <div style={{textAlign:"left"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#4ade80",letterSpacing:1,fontWeight:700}}>REFER</div>
+              <div style={{fontFamily:"Crimson Text,serif",fontSize:10,color:"rgba(74,222,128,0.4)"}}>Earn coins</div>
+            </div>
+          </button>
+        </div>
         {playerLevel>=100&&(
-          <button onClick={function(){audio.buttonClick();haptic.medium();setShowPrestigeModal(true);}} style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.1))",border:"2px solid rgba(240,192,96,0.6)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,animation:"legendaryShimmer 2s ease-in-out infinite"}}>
-            ⭐ PRESTIGE (Level 100!)
+          <button onClick={function(){audio.buttonClick();haptic.medium();setShowPrestigeModal(true);}}
+            style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.08))",border:"2px solid rgba(240,192,96,0.55)",borderRadius:16,fontFamily:"Cinzel,serif",fontSize:13,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"center",gap:10,animation:"legendaryShimmer 2s ease-in-out infinite",boxShadow:"0 0 24px rgba(240,192,96,0.2)"}}>
+            <span style={{fontSize:22}}>⭐</span> PRESTIGE — Level 100!
           </button>
         )}
-        {!isVIP&&(
-          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{width:"100%",padding:"14px 20px",background:"linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.08))",border:"1.5px solid rgba(212,168,67,0.45)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 0 20px rgba(212,168,67,0.15)"}}>
-            👑 GET VIP
-          </button>
-        )}
-        {isVIP&&(
-          <button onClick={function(){audio.buttonClick();setScreen("vip");}} style={{width:"100%",padding:"12px 20px",background:"linear-gradient(135deg,rgba(212,168,67,0.25),rgba(212,168,67,0.12))",border:"1.5px solid rgba(212,168,67,0.6)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:11,color:"#f0c060",letterSpacing:3,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-            👑 VIP MEMBER
-          </button>
-        )}
-        <button className="btn_btn_ghost" style={{width:"100%",padding:"14px",fontSize:11,letterSpacing:2,marginBottom:10,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80"}} onClick={function(){audio.buttonClick();goScreen("referral");}}>🎁 REFER FRIENDS</button>
-        <div style={{display:"flex",gap:10}}>
-          <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
-          <button className="btn_btn_ghost" style={{flex:1,padding:"14px",fontSize:11,letterSpacing:2}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
+        <div style={{display:"flex",gap:8,marginBottom:4}}>
+          <button className="btn_btn_ghost" style={{flex:1,padding:"11px",fontSize:10,letterSpacing:1.5,color:"#8a9a8a"}} onClick={function(){audio.buttonClick();goScreen("howto");}}>📖 HOW TO PLAY</button>
+          <button className="btn_btn_ghost" style={{flex:1,padding:"11px",fontSize:10,letterSpacing:1.5,color:"#8a9a8a"}} onClick={function(){audio.buttonClick();audio.init();audio.resume();var ns=["You","CPU"];setMode("cpu");setNPlayers(2);setNames(ns);setMyIdx(0);setTutorialStep(0);deal(Array(2).fill(0),2);goScreen("game");}}>🎓 TUTORIAL</button>
         </div>
 
         {/* ── REWARDS & PROGRESSION ── */}
@@ -5676,33 +5743,6 @@ export default function Cobra(){
           <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
             {ACHIEVEMENTS.map(function(a){return(<div key={a.id} style={{fontSize:24,opacity:unlockedAchs.includes(a.id)?1:0.18,filter:unlockedAchs.includes(a.id)?"drop-shadow(0 0 6px rgba(212,168,67,0.6))":"none",transition:"all 0.3s"}}>{a.icon}</div>);})}
           </div>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}>
-          <button className="btn_btn_outline_gold" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("leaderboard");}}>🏆 LEADERBOARD</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(212,168,67,0.25)",color:"#d4a843"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("shop");}}>🛒 SHOP</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(96,165,250,0.3)",color:"#60a5fa",position:"relative"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("missions");}}>🎯 MISSIONS
-            {(function(){var dm2=dailyMissions;var hasIncomplete=dm2&&dm2.missions&&dm2.missions.some(function(m){return!m.claimed;});return hasIncomplete?<span style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#ef4444",borderRadius:"50%",border:"1.5px solid rgba(0,0,0,0.5)"}}/>:null;})()}
-          </button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(192,132,252,0.3)",color:"#c084fc"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("collection");}}>📚 COLLECTION</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(74,222,128,0.3)",color:"#4ade80"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("friends");}}>👥 FRIENDS</button>
-          <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(124,58,237,0.45)",color:"#c084fc",position:"relative"}}
-            onClick={function(){audio.buttonClick();haptic.light();goScreen("season");}}>🎫 SEASON PASS
-            {(function(){var hasUnclaimed=SEASON_PASS.tiers.some(function(t){return t.tier<=seasonTier&&seasonClaimed.indexOf(t.tier)<0;});return hasUnclaimed?(<span style={{position:"absolute",top:6,right:6,width:8,height:8,background:"#ef4444",borderRadius:"50%",border:"1.5px solid rgba(0,0,0,0.5)"}}/>):null;})()}
-          </button>
-          {(function(){
-            var clanData=null;
-            try{var _sc=localStorage.getItem("cobra_clan");if(_sc&&_sc!=="null")clanData=JSON.parse(_sc);}catch(e){}
-            return(
-              <button className="btn_btn_ghost" style={{fontSize:11,padding:"12px 8px",letterSpacing:1.5,border:"1.5px solid rgba(239,68,68,0.4)",color:"#ef4444",position:"relative"}}
-                onClick={function(){audio.buttonClick();haptic.light();goScreen("clan");}}>⚔️ CLAN{clanData?<span style={{marginLeft:4,fontSize:9,color:"#f97316"}}>[{clanData.tag}]</span>:null}
-              </button>
-            );
-          })()}
         </div>
         {gameStats.rounds>0&&(
           <button className="btn_btn_ghost" style={{fontSize:10,padding:"10px",letterSpacing:1,marginTop:10,width:"100%",color:"#8a9a8a"}}
