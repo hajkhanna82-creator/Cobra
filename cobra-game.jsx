@@ -486,6 +486,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes yourTurnGlow{0%,100%{box-shadow:0 0 20px rgba(212,168,67,0.5),0 0 40px rgba(212,168,67,0.2),inset 0 0 20px rgba(212,168,67,0.05)}50%{box-shadow:0 0 50px rgba(212,168,67,0.9),0 0 90px rgba(212,168,67,0.5),inset 0 0 30px rgba(212,168,67,0.12)}}
 @keyframes glowPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 @keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(0.3)}}
+@keyframes confettiBurst{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--bx,40px),var(--by,-80px)) rotate(540deg) scale(0.2)}}
+@keyframes snakeSlither{0%,100%{transform:translateY(0) rotate(-5deg) scaleX(1)}25%{transform:translateY(-6px) rotate(5deg) scaleX(1.05)}50%{transform:translateY(-2px) rotate(-3deg) scaleX(0.97)}75%{transform:translateY(-8px) rotate(8deg) scaleX(1.04)}}
+@keyframes dealOverlay{0%{opacity:0;transform:scale(0.8)}20%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+.feltbg_forest{background:radial-gradient(ellipse at 30% 20%,rgba(20,70,25,0.9) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(15,50,20,0.7) 0%,transparent 50%),repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px),linear-gradient(160deg,#0d3010 0%,#0a2010 40%,#071808 100%)!important;}
 @keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
 @keyframes particleFloat{0%{opacity:0;transform:translateY(0) translateX(0)}20%{opacity:0.12}80%{opacity:0.08}100%{opacity:0;transform:translateY(-120px) translateX(15px)}}
@@ -882,9 +886,13 @@ var _notifsEnabled=false;
 var _notifToggle=null;
 var _sfxPackGlobal="classic";
 var _setSfxPackGlobal=null;
+var _feltTheme="dark";
+var _setFeltTheme=null;
 function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMusic,onHowToPlay,gameStats,cardTheme,setCardTheme,notifsEnabled,onToggleNotifs,sfxPack,onSetSfxPack}){
   var resolvedSfxPack=sfxPack||_sfxPackGlobal||"classic";
   var resolvedSetSfxPack=onSetSfxPack||_setSfxPackGlobal||null;
+  var resolvedFeltTheme=_feltTheme||"dark";
+  var resolvedSetFeltTheme=_setFeltTheme||null;
   var resolvedNotifsEnabled=notifsEnabled!==undefined?notifsEnabled:_notifsEnabled;
   var resolvedNotifToggle=typeof onToggleNotifs==="function"?onToggleNotifs:(typeof _notifToggle==="function"?_notifToggle:null);
   var onPop=_settingsPop;
@@ -995,6 +1003,20 @@ function SettingsPanel({open,onClose,sfxMuted,musicMuted,onToggleSfx,onToggleMus
               <span style={{fontSize:18}}>📖</span>
               <span>HOW TO PLAY</span>
             </button>
+          </div>
+
+          {/* APPEARANCE */}
+          <div style={{paddingTop:18}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"#8ab08a",letterSpacing:4,marginBottom:12,display:"flex",alignItems:"center",gap:8}}><span>🎨</span> FELT THEME</div>
+            <div style={{display:"flex",gap:6}}>
+              {[{id:"dark",label:"Midnight",icon:"🌙",accent:"rgba(212,168,67,0.6)"},{id:"forest",label:"Forest",icon:"🌿",accent:"rgba(74,222,128,0.6)"}].map(function(t){
+                var active=resolvedFeltTheme===t.id;
+                return(<button key={t.id} onClick={function(){if(resolvedSetFeltTheme)resolvedSetFeltTheme(t.id);}} style={{flex:1,padding:"10px 4px",borderRadius:12,border:active?"1.5px solid "+t.accent:"1px solid rgba(255,255,255,0.1)",background:active?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.03)",cursor:"pointer",touchAction:"manipulation",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                  <span style={{fontSize:18}}>{t.icon}</span>
+                  <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:active?"#d4a843":"#8a9a8a",letterSpacing:1}}>{t.label}</span>
+                </button>);
+              })}
+            </div>
           </div>
 
           <div style={{height:1,background:"linear-gradient(90deg,transparent,rgba(212,168,67,0.15),transparent)",margin:"18px 0 0"}}/>
@@ -4095,6 +4117,12 @@ export default function Cobra(){
   const [sfxPack,setSfxPack]=useState(function(){try{return localStorage.getItem("cobra_sfx_pack")||"classic";}catch(e){return"classic";}});
   _sfxPackGlobal=sfxPack;
   _setSfxPackGlobal=function(p){setSfxPack(p);try{localStorage.setItem("cobra_sfx_pack",p);}catch(e){};};
+  // Feature 8: Felt theme
+  const [feltTheme,setFeltTheme]=useState(function(){try{return localStorage.getItem("cobra_felt_theme")||"dark";}catch(e){return"dark";}});
+  _feltTheme=feltTheme;
+  _setFeltTheme=function(t){setFeltTheme(t);try{localStorage.setItem("cobra_felt_theme",t);}catch(e){}};
+  // Feature 6: Deal overlay
+  const [showDealOverlay,setShowDealOverlay]=useState(false);
   // Feature 6: Profile modal
   const [profileModal,setProfileModal]=useState(null); // {name,avatar,elo,level,winRate,cobras,title,frame}
   // Feature 15: Gift modal
@@ -4769,6 +4797,7 @@ export default function Cobra(){
     setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(s);setPrevHand(null);
     setShuffleAnim(true);setTimeout(function(){setShuffleAnim(false);},400);
     setDealAnim(true);setTimeout(function(){setDealAnim(false);},900);
+    setShowDealOverlay(true);setTimeout(function(){setShowDealOverlay(false);},1500);
     setRoundStart(Date.now());
     setRoundNum(function(r){return r+1;});
     setShowYourTurn(true);
@@ -5483,7 +5512,7 @@ export default function Cobra(){
 
   // ─── HOME ───────────────────────────────────────────
   if(screen==="home")return(
-    <div className="feltbg" onClick={initAudio} style={{position:"fixed",inset:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+    <div className={"feltbg"+(feltTheme==="forest"?" feltbg_forest":"")} onClick={initAudio} style={{position:"fixed",inset:0,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <style>{GS}</style>
       {/* Background */}
       <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
@@ -5519,6 +5548,7 @@ export default function Cobra(){
               <span style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.25)"}}>· Lv {playerLevel}</span>
             </div>
           );}())}
+          {(function(){if(!equippedTitle)return null;var t=TITLES.find(function(x){return x.id===equippedTitle;});if(!t)return null;return(<div style={{fontFamily:"Cinzel,serif",fontSize:8,background:t.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:1,lineHeight:1,textShadow:"none"}}>{t.name}</div>);}())}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(212,168,67,0.12)",border:"1px solid rgba(212,168,67,0.25)",borderRadius:20,padding:"4px 10px"}}>
@@ -5537,7 +5567,7 @@ export default function Cobra(){
       <div style={{flex:1,position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"12px 16px",gap:10,overflow:"hidden"}}>
         {/* Logo */}
         <div style={{textAlign:"center",marginBottom:2}}>
-          <span style={{fontSize:52,lineHeight:1,display:"block",animation:"float 3s ease-in-out infinite"}}>🐍</span>
+          <span style={{fontSize:52,lineHeight:1,display:"block",animation:"snakeSlither 2.5s ease-in-out infinite",transformOrigin:"center",filter:"drop-shadow(0 0 12px rgba(74,222,128,0.5))"}}>🐍</span>
           <h1 style={{fontFamily:"Cinzel,serif",fontSize:42,fontWeight:900,letterSpacing:8,margin:"2px 0 0",lineHeight:1,background:"linear-gradient(175deg,#f4cc52 0%,#d4a843 36%,#a87020 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>COBRA</h1>
           <p style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",color:"rgba(106,154,110,0.7)",fontSize:11,letterSpacing:3,margin:"2px 0 0"}}>the card game</p>
         </div>
@@ -6352,8 +6382,10 @@ export default function Cobra(){
     // Trigger confetti if local player won (once)
     if(iWonGame&&confetti.length===0){
       setTimeout(function(){audio.win();haptic.heavy();},300);
-      var wConf=[];for(var wci=0;wci<50;wci++){wConf.push({id:wci,x:Math.random()*100,color:["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24","#c084fc"][Math.floor(Math.random()*7)],size:Math.random()*9+4,delay:Math.random()*1.0,dur:Math.random()*1.5+1.4});}
-      setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},4000);},100);
+      var wConf=[];
+      var confColors=["#d4a843","#4ade80","#f87171","#60a5fa","#fff","#fbbf24","#c084fc","#f97316"];
+      for(var wci=0;wci<80;wci++){wConf.push({id:wci,x:Math.random()*100,color:confColors[Math.floor(Math.random()*confColors.length)],size:Math.random()*10+4,delay:Math.random()*1.5,dur:Math.random()*1.8+1.2,burst:wci<30});}
+      setTimeout(function(){setConfetti(wConf);setTimeout(function(){setConfetti([]);},5000);},100);
     }
     var xpEarned=iWonGame?(isVIP?300:150):(isVIP?100:50);
     var coinsEarned=iWonGame?(isVIP?350:200):(isVIP?80:50);
@@ -6363,7 +6395,10 @@ export default function Cobra(){
     return(
       <div className="feltbg" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"0",position:"relative",overflowY:"auto",minHeight:"100%"}}>
         <style>{GS}</style>
-        {confetti.map(function(c){return(<div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>);})}
+        {confetti.map(function(c){
+          var bx=(Math.random()*200-100)+"px";var by=(Math.random()*-200-40)+"px";
+          return(<div key={c.id} style={{position:"fixed",left:c.burst?"50%":c.x+"%",top:c.burst?"40%":"-10px","--bx":bx,"--by":by,width:c.size,height:c.size*1.4,borderRadius:c.burst?4:2,background:c.color,zIndex:300,pointerEvents:"none",animation:(c.burst?"confettiBurst":"confettiFall")+" "+c.dur+"s "+c.delay+"s ease-out forwards",boxShadow:c.burst?"0 0 4px "+c.color:"none"}}/>);
+        })}
         <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
 
         {/* Hero banner */}
@@ -6411,7 +6446,8 @@ export default function Cobra(){
                   <div style={{width:36,height:36,borderRadius:"50%",background:isWinner?"linear-gradient(135deg,#d4a843,#a87020)":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,border:isMe?"2px solid rgba(212,168,67,0.5)":"none"}}>{isMe?myAvatar||"🐍":"🤖"}</div>
                   <div style={{flex:1}}>
                     <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:isWinner?"#f0c060":isLoser?"#f87171":"#e8f0e8",fontWeight:700,letterSpacing:0.5}}>{names[i]}{isMe?" (You)":""}</div>
-                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1,marginTop:2}}>{isWinner?"WINNER":isLoser?"ELIMINATED":"PLAYER"}</div>
+                    {isMe&&equippedTitle&&(function(){var t=TITLES.find(function(x){return x.id===equippedTitle;});return t?(<div style={{fontFamily:"Cinzel,serif",fontSize:8,background:t.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:1}}>{t.name}</div>):null;})()}
+                    <div style={{fontFamily:"Cinzel,serif",fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1,marginTop:1}}>{isWinner?"WINNER":isLoser?"ELIMINATED":"PLAYER"}</div>
                   </div>
                   <div style={{textAlign:"right"}}>
                     <div style={{fontFamily:"Cinzel,serif",fontSize:26,fontWeight:900,color:isWinner?"#f0c060":isLoser?"#f87171":"#c8d8c8",lineHeight:1}}>{gameOverData.scores[i]}</div>
@@ -6787,6 +6823,15 @@ export default function Cobra(){
       {confetti.map(function(c){return(
         <div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>
       );})}
+      {/* DEALING overlay */}
+      {showDealOverlay&&(
+        <div style={{position:"fixed",inset:0,zIndex:200,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.65)",animation:"dealOverlay 1.5s ease forwards"}}>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:8,animation:"snakeSlither 0.8s ease-in-out infinite"}}>🃏</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,letterSpacing:6,color:"#f0c060",animation:"shimmer 0.6s ease-in-out infinite"}}>DEALING...</div>
+          </div>
+        </div>
+      )}
       {/* YOUR TURN splash */}
       {showYourTurn&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:150,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeOut 2s ease forwards"}}>
