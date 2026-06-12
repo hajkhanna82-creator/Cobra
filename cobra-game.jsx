@@ -489,6 +489,12 @@ input::placeholder{color:#2a3d28;}
 @keyframes confettiBurst{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--bx,40px),var(--by,-80px)) rotate(540deg) scale(0.2)}}
 @keyframes snakeSlither{0%,100%{transform:translateY(0) rotate(-5deg) scaleX(1)}25%{transform:translateY(-6px) rotate(5deg) scaleX(1.05)}50%{transform:translateY(-2px) rotate(-3deg) scaleX(0.97)}75%{transform:translateY(-8px) rotate(8deg) scaleX(1.04)}}
 @keyframes dealOverlay{0%{opacity:0;transform:scale(0.8)}20%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes fireworkRocket{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(var(--ry,-220px))}}
+@keyframes fireworkBurst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--fx,0px),var(--fy,0px)) scale(0.2)}}
+@keyframes cardFlip3D{0%{opacity:0;transform:perspective(600px) rotateY(-90deg) scale(0.8)}50%{opacity:1;transform:perspective(600px) rotateY(10deg) scale(1.05)}100%{opacity:1;transform:perspective(600px) rotateY(0deg) scale(1)}}
+@keyframes roundBanner{0%{opacity:0;transform:scale(0.5) translateY(-20px)}20%{opacity:1;transform:scale(1.1) translateY(0)}35%{transform:scale(1) translateY(0)}80%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(0.9) translateY(20px)}}
+@keyframes levelUpPop{0%{opacity:0;transform:scale(0.3) translateY(30px)}25%{opacity:1;transform:scale(1.15) translateY(-5px)}45%{transform:scale(0.95) translateY(0)}60%{transform:scale(1) translateY(0)}85%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(0.8) translateY(-20px)}}
+@keyframes suitDrift{0%{opacity:0;transform:translateY(0) rotate(0deg)}10%{opacity:0.07}80%{opacity:0.05}100%{opacity:0;transform:translateY(var(--dy,-200px)) rotate(var(--dr,45deg)) translateX(var(--dx,20px))}}
 .feltbg_forest{background:radial-gradient(ellipse at 30% 20%,rgba(20,70,25,0.9) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(15,50,20,0.7) 0%,transparent 50%),repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px),linear-gradient(160deg,#0d3010 0%,#0a2010 40%,#071808 100%)!important;}
 @keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
@@ -4123,6 +4129,14 @@ export default function Cobra(){
   _setFeltTheme=function(t){setFeltTheme(t);try{localStorage.setItem("cobra_felt_theme",t);}catch(e){}};
   // Feature 6: Deal overlay
   const [showDealOverlay,setShowDealOverlay]=useState(false);
+  // Feature 8: Round banner
+  const [showRoundBanner,setShowRoundBanner]=useState(false);
+  const prevRoundRef=useRef(0);
+  // Feature 11: Level-up animation
+  const [showLevelUp,setShowLevelUp]=useState(null); // {level}
+  const prevLevelRef=useRef(null);
+  // Feature 13: Opponent mini-profile popup
+  const [opponentCard,setOpponentCard]=useState(null); // {name, idx}
   // Feature 6: Profile modal
   const [profileModal,setProfileModal]=useState(null); // {name,avatar,elo,level,winRate,cobras,title,frame}
   // Feature 15: Gift modal
@@ -4345,11 +4359,13 @@ export default function Cobra(){
     var actualAmount=isVIP?amount*2:amount;
     var curXP=parseInt(lsGet("cobra_xp","0"))+actualAmount;
     var curLvl=parseInt(lsGet("cobra_level","1"));
+    var startLvl=curLvl;
     var bonusCoins=0;
     while(curLvl<100&&curXP>=curLvl*100){curXP-=curLvl*100;curLvl++;bonusCoins+=100;}
     try{localStorage.setItem("cobra_xp",String(curXP));localStorage.setItem("cobra_level",String(curLvl));}catch(e){}
     setPlayerXP(curXP);setPlayerLevel(curLvl);
     if(bonusCoins>0)addCoins(bonusCoins);
+    if(curLvl>startLvl){audio.levelUp&&audio.levelUp();haptic.heavy();setShowLevelUp({level:curLvl});setTimeout(function(){setShowLevelUp(null);},3000);}
   };
 
   const gainSeasonXP=function(amount){
@@ -4798,6 +4814,7 @@ export default function Cobra(){
     setShuffleAnim(true);setTimeout(function(){setShuffleAnim(false);},400);
     setDealAnim(true);setTimeout(function(){setDealAnim(false);},900);
     setShowDealOverlay(true);setTimeout(function(){setShowDealOverlay(false);},1500);
+    setShowRoundBanner(true);setTimeout(function(){setShowRoundBanner(false);},2200);
     setRoundStart(Date.now());
     setRoundNum(function(r){return r+1;});
     setShowYourTurn(true);
@@ -6399,6 +6416,17 @@ export default function Cobra(){
           var bx=(Math.random()*200-100)+"px";var by=(Math.random()*-200-40)+"px";
           return(<div key={c.id} style={{position:"fixed",left:c.burst?"50%":c.x+"%",top:c.burst?"40%":"-10px","--bx":bx,"--by":by,width:c.size,height:c.size*1.4,borderRadius:c.burst?4:2,background:c.color,zIndex:300,pointerEvents:"none",animation:(c.burst?"confettiBurst":"confettiFall")+" "+c.dur+"s "+c.delay+"s ease-out forwards",boxShadow:c.burst?"0 0 4px "+c.color:"none"}}/>);
         })}
+        {iWonGame&&[0,1,2,3,4,5].map(function(fi){
+          var fx=10+fi*16;var fy=70+Math.sin(fi)*20;var delay=fi*0.35;
+          var bColor=["#f0c060","#4ade80","#f87171","#60a5fa","#c084fc","#fbbf24"][fi];
+          return(<div key={"fw"+fi} style={{position:"fixed",left:fx+"%",bottom:"10%",width:4,height:4,borderRadius:"50%",background:bColor,zIndex:299,pointerEvents:"none","--ry":"-"+(180+Math.random()*100)+"px",animation:"fireworkRocket 0.6s "+delay+"s ease-out forwards"}}>
+            {[0,1,2,3,4,5,6,7,8,9,10,11].map(function(bi){
+              var angle=bi*30;var dist=40+Math.random()*30;
+              var bfx=Math.cos(angle*Math.PI/180)*dist+"px";var bfy=Math.sin(angle*Math.PI/180)*dist+"px";
+              return(<div key={bi} style={{position:"absolute",top:0,left:0,width:4,height:4,borderRadius:"50%",background:bColor,boxShadow:"0 0 6px "+bColor,"--fx":bfx,"--fy":bfy,animation:"fireworkBurst 0.7s "+(delay+0.55)+"s ease-out forwards",opacity:0}}/>);
+            })}
+          </div>);
+        })}
         <MenuButton onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} active={showSettings}/>
 
         {/* Hero banner */}
@@ -6477,11 +6505,11 @@ export default function Cobra(){
                 <ThinkingDots/> Waiting for host to rematch...
               </div>
             ):(
-              <button className="btn_btn_gold" style={{width:"100%",padding:18,fontSize:14,letterSpacing:2.5,borderRadius:14}}
+              <button className="btn_btn_gold" style={{width:"100%",padding:20,fontSize:16,letterSpacing:3,borderRadius:16,animation:iWonGame?"glowGreen 1.5s ease-in-out infinite":"none",boxShadow:iWonGame?"0 0 30px rgba(74,222,128,0.4),0 4px 20px rgba(196,144,48,0.45)":"0 4px 20px rgba(196,144,48,0.45)"}}
                 onClick={function(){
                   audio.init();audio.resume();audio.buttonClick();haptic.medium();audio.shuffle_sfx();
                   gameSummaryRef.current={declarations:{},cobraHits:{},roundScores:[],rounds:0};
-                  setShowSummary(false);
+                  setShowSummary(false);setConfetti([]);
                   setGameOverData(null);
                   if(mode==="cpu"){startCPU();}
                   else if(mode==="online"){startOnlineGame();}
@@ -6832,6 +6860,34 @@ export default function Cobra(){
           </div>
         </div>
       )}
+      {/* Feature 7: Floating suit particles background */}
+      <div style={{position:"fixed",inset:0,zIndex:1,pointerEvents:"none",overflow:"hidden"}}>
+        {["♠","♥","♦","♣","♠","♥","♦","♣","♠","♥","♦","♣"].map(function(s,i){
+          var left=(8+i*8)%95;var dur=8+i*1.3;var delay=-(i*2.1);var dy=-(250+i*40)+"px";var dx=((i%3)-1)*30+"px";var dr=((i%3)-1)*60+"deg";
+          return(<div key={i} style={{position:"absolute",bottom:"-10%",left:left+"%",fontSize:14+i%4*4,color:s==="♥"||s==="♦"?"#b91c1c":"#1a1a2e","--dy":dy,"--dx":dx,"--dr":dr,animation:"suitDrift "+dur+"s "+delay+"s linear infinite",pointerEvents:"none"}}>{s}</div>);
+        })}
+      </div>
+      {/* Feature 8: Round number banner */}
+      {showRoundBanner&&(
+        <div style={{position:"fixed",inset:0,zIndex:155,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{textAlign:"center",animation:"roundBanner 2.2s ease forwards"}}>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:"rgba(212,168,67,0.7)",letterSpacing:6,marginBottom:4}}>⚔ ROUND</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:72,fontWeight:900,color:"#f0c060",lineHeight:1,textShadow:"0 0 40px rgba(212,168,67,0.8),0 0 80px rgba(212,168,67,0.4)"}}>{roundNum}</div>
+          </div>
+        </div>
+      )}
+      {/* Feature 11: Level-up animation */}
+      {showLevelUp&&(
+        <div style={{position:"fixed",inset:0,zIndex:500,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{textAlign:"center",animation:"levelUpPop 3s ease forwards"}}>
+            <div style={{fontSize:56,marginBottom:8}}>⭐</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:13,color:"rgba(96,165,250,0.9)",letterSpacing:5,marginBottom:4}}>LEVEL UP!</div>
+            <div style={{fontFamily:"Cinzel,serif",fontSize:64,fontWeight:900,color:"#60a5fa",lineHeight:1,textShadow:"0 0 40px rgba(96,165,250,0.9)"}}>{showLevelUp.level}</div>
+          </div>
+        </div>
+      )}
+      {/* Feature 10: Title badge above hand */}
+      {equippedTitle&&(function(){var t=TITLES.find(function(x){return x.id===equippedTitle;});return t?(<div style={{position:"absolute",bottom:"calc(env(safe-area-inset-bottom)+90px)",left:"50%",transform:"translateX(-50%)",zIndex:20,pointerEvents:"none",fontFamily:"Cinzel,serif",fontSize:9,background:t.color,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:2,textShadow:"none",whiteSpace:"nowrap",animation:"shimmer 2s ease-in-out infinite"}}>{t.name}</div>):null;})()}
       {/* YOUR TURN splash */}
       {showYourTurn&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:150,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeOut 2s ease forwards"}}>
@@ -6945,7 +7001,7 @@ export default function Cobra(){
         {Array(nPlayers-1).fill(0).map(function(_,i){
           var ci=i+1,ch=hands[ci]||[],active=ci===currentPlayer;
           return(
-            <div key={ci} style={{padding:"4px 10px 6px",borderRadius:10,textAlign:"center",background:active?"linear-gradient(160deg,rgba(212,168,67,0.16),rgba(212,168,67,0.07))":"rgba(0,0,0,0.3)",border:active?"1.5px solid rgba(212,168,67,0.42)":"1px solid rgba(255,255,255,0.05)",boxShadow:active?"0 0 22px rgba(212,168,67,0.14)":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)"}}>
+            <div key={ci} onClick={function(){audio.buttonClick();setOpponentCard({name:names[ci],idx:ci,cardCount:ch.length});}} style={{padding:"4px 10px 6px",borderRadius:10,textAlign:"center",background:active?"linear-gradient(160deg,rgba(212,168,67,0.16),rgba(212,168,67,0.07))":"rgba(0,0,0,0.3)",border:active?"1.5px solid rgba(212,168,67,0.42)":"1px solid rgba(255,255,255,0.05)",boxShadow:active?"0 0 22px rgba(212,168,67,0.14)":"none",transition:"all 0.35s cubic-bezier(.22,1,.36,1)",cursor:"pointer",touchAction:"manipulation"}}>
               <div style={{fontFamily:"Cinzel,serif",fontSize:7.5,letterSpacing:1.5,marginBottom:3,color:active?"#d4a843":"#8aaa8a",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
                 {active&&cpuThinking&&mode==="cpu"?<ThinkingDots/>:<>{active&&<div style={{width:5,height:5,borderRadius:"50%",background:"#d4a843",boxShadow:"0 0 7px #d4a843"}} className="pulse"/>}{names[ci]}</>}
               </div>
@@ -7097,7 +7153,7 @@ export default function Cobra(){
             var isSelected=!!sel.find(function(c){return c.id===card.id;});
             var fanTransform=isSelected||isPlaying?"rotate("+fanRot+"deg) translateY(-18px) scale(1.08)":"rotate("+fanRot+"deg) translateY("+fanY+"px)";
             return(
-              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":shuffleAnim?"cardShuffle 0.4s ease-in-out both":dealAnim?"cardDeal 0.42s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:shuffleAnim?(idx*0.03)+"s":dealAnim?(0.15+idx*0.09)+"s":"0s",display:"inline-block",transform:isPlaying?"none":fanTransform,transition:isPlaying?"none":"transform 0.2s cubic-bezier(.34,1.56,.64,1)"}}>
+              <div key={card.id} style={{animation:isPlaying?"cardPlay 0.28s cubic-bezier(.4,0,.6,1) forwards":shuffleAnim?"cardShuffle 0.4s ease-in-out both":dealAnim?"cardFlip3D 0.5s cubic-bezier(.22,1,.36,1) both":"none",animationDelay:shuffleAnim?(idx*0.03)+"s":dealAnim?(0.12+idx*0.11)+"s":"0s",display:"inline-block",transform:isPlaying?"none":fanTransform,transition:isPlaying?"none":"transform 0.2s cubic-bezier(.34,1.56,.64,1)"}}>
                 <Card card={card}
                   selected={isSelected}
                   clickable={isMyTurn&&(phase==="play"||phase==="declare")&&!playingCardIds.length}
@@ -7152,6 +7208,30 @@ export default function Cobra(){
             </div>
           </div>
         </>
+      )}
+      {/* Feature 13: Opponent mini-profile popup */}
+      {opponentCard&&(
+        <div style={{position:"fixed",inset:0,zIndex:400,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={function(){setOpponentCard(null);}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:"linear-gradient(160deg,#0d1f0e,#060e06)",border:"1.5px solid rgba(212,168,67,0.3)",borderRadius:"20px 20px 0 0",padding:"20px 24px calc(24px + env(safe-area-inset-bottom))",width:"100%",maxWidth:400,animation:"slideUp 0.3s cubic-bezier(.22,1,.36,1) both"}}>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><div style={{width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.12)"}}/></div>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}>
+              <div style={{width:52,height:52,borderRadius:"50%",background:"rgba(212,168,67,0.15)",border:"1.5px solid rgba(212,168,67,0.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>🤖</div>
+              <div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:"#f0c060",fontWeight:700,letterSpacing:1}}>{opponentCard.name}</div>
+                <div style={{fontFamily:"Cinzel,serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:2,marginTop:2}}>{opponentCard.cardCount} cards in hand</div>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              {[["🃏","CPU","Type"],["🎴",opponentCard.cardCount,"In Hand"],["⚔️","–","ELO"]].map(function(r,i){return(
+                <div key={i} style={{textAlign:"center",padding:"10px 6px",borderRadius:10,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                  <div style={{fontSize:18,marginBottom:4}}>{r[0]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:14,color:"#d4a843",fontWeight:700}}>{r[1]}</div>
+                  <div style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.35)",letterSpacing:1,marginTop:2}}>{r[2]}</div>
+                </div>
+              );})}
+            </div>
+          </div>
+        </div>
       )}
       <SettingsPanel open={showSettings} onClose={function(){setShowSettings(false);}} sfxMuted={sfxMuted} musicMuted={musicMuted} onToggleSfx={sfxToggle} onToggleMusic={musToggle} gameStats={gameStats} cardTheme={cardTheme} setCardTheme={setCardTheme} onHowToPlay={function(){setShowSettings(false);setShowRules(true);}} notifsEnabled={notifsEnabled} onToggleNotifs={notifToggle}/>
       {tutorialStep>=0&&(
