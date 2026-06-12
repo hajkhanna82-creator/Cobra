@@ -4811,19 +4811,15 @@ export default function Cobra(){
     for(var i=0;i<n;i++)h.push(d.splice(0,7));
     setHands(h);setDeck(d);setOpenPile({cards:[],owner:-1});setMyPlayed([]);
     setCurrentPlayer(0);setPhase("declare");setSel([]);setScores(s);setPrevHand(null);
-    setShuffleAnim(true);setTimeout(function(){setShuffleAnim(false);},400);
-    setDealAnim(true);setTimeout(function(){setDealAnim(false);},900);
-    setShowDealOverlay(true);setTimeout(function(){setShowDealOverlay(false);},1500);
-    setShowRoundBanner(true);setTimeout(function(){setShowRoundBanner(false);},2200);
+    setShuffleAnim(false);setDealAnim(false);
+    setShowRoundBanner(true);setTimeout(function(){setShowRoundBanner(false);},2000);
+    setTimeout(function(){setDealAnim(true);setTimeout(function(){setDealAnim(false);},900);},300);
     setRoundStart(Date.now());
     setRoundNum(function(r){return r+1;});
-    setShowYourTurn(true);
-    clearTimeout(yourTurnTimer.current);
-    yourTurnTimer.current=setTimeout(function(){setShowYourTurn(false);},2000);
+    setShowYourTurn(false);
     haptic.light();
     audio.init();audio.resume();
-    audio.turnChange();
-    setTimeout(function(){audio.shuffle_sfx();},100);
+    setTimeout(function(){audio.shuffle_sfx();},320);
   }
 
   function cancelQuickMatch(){
@@ -6851,15 +6847,6 @@ export default function Cobra(){
       {confetti.map(function(c){return(
         <div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>
       );})}
-      {/* DEALING overlay */}
-      {showDealOverlay&&(
-        <div style={{position:"fixed",inset:0,zIndex:200,pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.65)",animation:"dealOverlay 1.5s ease forwards"}}>
-          <div style={{textAlign:"center"}}>
-            <div style={{fontSize:48,marginBottom:8,animation:"snakeSlither 0.8s ease-in-out infinite"}}>🃏</div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:900,letterSpacing:6,color:"#f0c060",animation:"shimmer 0.6s ease-in-out infinite"}}>DEALING...</div>
-          </div>
-        </div>
-      )}
       {/* Feature 7: Floating suit particles background */}
       <div style={{position:"fixed",inset:0,zIndex:1,pointerEvents:"none",overflow:"hidden"}}>
         {["♠","♥","♦","♣","♠","♥","♦","♣","♠","♥","♦","♣"].map(function(s,i){
