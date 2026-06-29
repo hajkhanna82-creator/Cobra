@@ -495,6 +495,10 @@ input::placeholder{color:#2a3d28;}
 @keyframes roundBanner{0%{opacity:0;transform:scale(0.5) translateY(-20px)}20%{opacity:1;transform:scale(1.1) translateY(0)}35%{transform:scale(1) translateY(0)}80%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(0.9) translateY(20px)}}
 @keyframes levelUpPop{0%{opacity:0;transform:scale(0.3) translateY(30px)}25%{opacity:1;transform:scale(1.15) translateY(-5px)}45%{transform:scale(0.95) translateY(0)}60%{transform:scale(1) translateY(0)}85%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(0.8) translateY(-20px)}}
 @keyframes suitDrift{0%{opacity:0;transform:translateY(0) rotate(0deg)}10%{opacity:0.07}80%{opacity:0.05}100%{opacity:0;transform:translateY(var(--dy,-200px)) rotate(var(--dr,45deg)) translateX(var(--dx,20px))}}
+@keyframes cobraFlash{0%{opacity:0}15%{opacity:0.7}40%{opacity:0.5}70%{opacity:0.2}100%{opacity:0}}
+@keyframes tickerScroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+@keyframes sortBounce{0%,100%{transform:scale(1)}40%{transform:scale(1.2) rotate(-5deg)}70%{transform:scale(0.95)}}
+@keyframes lowCardPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}50%{box-shadow:0 0 0 6px rgba(248,113,113,0.25)}}
 .feltbg_forest{background:radial-gradient(ellipse at 30% 20%,rgba(20,70,25,0.9) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(15,50,20,0.7) 0%,transparent 50%),repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px),linear-gradient(160deg,#0d3010 0%,#0a2010 40%,#071808 100%)!important;}
 @keyframes tutBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes tutPulse{0%,100%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #d4a843,0 0 20px rgba(212,168,67,0.5)}50%{box-shadow:0 0 0 9999px rgba(0,0,0,0.78),0 0 0 3px #fbbf24,0 0 36px rgba(212,168,67,0.9)}}
@@ -4137,6 +4141,16 @@ export default function Cobra(){
   const prevLevelRef=useRef(null);
   // Feature 13: Opponent mini-profile popup
   const [opponentCard,setOpponentCard]=useState(null); // {name, idx}
+  // Feature 8: Cobra screen flash
+  const [cobraFlash,setCobraFlash]=useState(false);
+  // Feature 3: Auto-sort
+  const [handSorted,setHandSorted]=useState(false);
+  // Feature: Online count
+  const [onlineCount,setOnlineCount]=useState(null);
+  // Feature: Room name
+  const [roomName,setRoomName]=useState("");
+  // Feature 5: Declare shake
+  const [declareShake,setDeclareShake]=useState(false);
   // Feature 6: Profile modal
   const [profileModal,setProfileModal]=useState(null); // {name,avatar,elo,level,winRate,cobras,title,frame}
   // Feature 15: Gift modal
@@ -4454,6 +4468,17 @@ export default function Cobra(){
     window.addEventListener("beforeinstallprompt",handleInstall);
     return function(){window.removeEventListener("beforeinstallprompt",handleInstall);};
   },[]);
+
+  // Online player count — fetch from Supabase every 30s when on home screen
+  useEffect(function(){
+    if(screen!=="home"||!supabase)return;
+    function fetchCount(){
+      try{supabase.from("cobra_scores").select("id",{count:"exact",head:true}).then(function(r){if(r&&r.count!=null)setOnlineCount(r.count);}).catch(function(){});}catch(e){}
+    }
+    fetchCount();
+    var iv=setInterval(fetchCount,30000);
+    return function(){clearInterval(iv);};
+  },[screen]);
 
   // ── Push Notifications helper ────────────────────────
   function sendNotification(title,body,icon){
@@ -5261,7 +5286,7 @@ export default function Cobra(){
       var pen=COBRA_PEN+myTotal;ns[H]+=pen;
       res=names.map(function(n,i){return{name:n,total:totals[i],added:i===H?pen:0,cobra:i===H,winner:false};});
       gameSummaryRef.current.cobraHits[names[H]]=(gameSummaryRef.current.cobraHits[names[H]]||0)+1;
-      setTimeout(function(){audio.cobraStrike();haptic.cobra();},300);
+      setTimeout(function(){audio.cobraStrike();haptic.cobra();setCobraFlash(true);setTimeout(function(){setCobraFlash(false);},800);},300);
       unlockAch("cobra_survive");
       setGameStats(function(g){var n={...g,cobras:g.cobras+1,rounds:g.rounds+1,streak:0};try{localStorage.setItem("cobra_stats",JSON.stringify(n));}catch(e){}
         if(g.rounds===0&&!newPlayerOfferSeen){setTimeout(function(){setShowNewPlayerOffer(true);try{localStorage.setItem("cobra_offer_seen","1");}catch(e){}setNewPlayerOfferSeen(true);},2000);}
@@ -5572,6 +5597,7 @@ export default function Cobra(){
             <span style={{fontSize:12}}>💎</span>
             <span style={{fontFamily:"Cinzel,serif",fontSize:11,color:"#c084fc",fontWeight:700}}>{gems}</span>
           </div>
+          {onlineCount!==null&&<div style={{display:"flex",alignItems:"center",gap:3,background:"rgba(74,222,128,0.08)",border:"1px solid rgba(74,222,128,0.2)",borderRadius:20,padding:"4px 8px",flexShrink:0}}><div style={{width:5,height:5,borderRadius:"50%",background:"#4ade80",boxShadow:"0 0 5px #4ade80"}} className="pulse"/><span style={{fontFamily:"Cinzel,serif",fontSize:9,color:"#4ade80"}}>{onlineCount}</span></div>}
           <button onClick={function(){audio.buttonClick();setShowSettings(function(v){return!v;});}} style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",touchAction:"manipulation",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>☰</button>
         </div>
       </div>
@@ -5656,6 +5682,17 @@ export default function Cobra(){
           </div>
         </div>
 
+        {/* Tips ticker */}
+        {(function(){var tips=["Lowest total wins — declare when you're under 30!","Ace = 1pt, King = 13pts. Build low hands fast.","Play runs (5,6,7) or pairs to dump high cards.","Watch the pile — picking up beats drawing blind.","Going cobra on a wrong declare = your total + 30!","Use the SORT button to organize your hand by value.","Win 3 in a row to start a streak bonus! 🔥","VIP members earn 2× XP and 2× coins per game."];var t=tips[Math.floor(Date.now()/8000)%tips.length];return(
+          <div style={{width:"100%",maxWidth:400,overflow:"hidden",borderRadius:10,background:"rgba(212,168,67,0.05)",border:"1px solid rgba(212,168,67,0.12)",padding:"6px 0",position:"relative"}}>
+            <div style={{display:"flex",alignItems:"center",gap:0}}>
+              <span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"#d4a843",letterSpacing:2,flexShrink:0,padding:"0 8px",borderRight:"1px solid rgba(212,168,67,0.15)"}}>TIP</span>
+              <div style={{overflow:"hidden",flex:1,padding:"0 6px"}}>
+                <div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:11,color:"rgba(212,168,67,0.7)",whiteSpace:"nowrap",animation:"tickerScroll 12s linear infinite"}}>{t}</div>
+              </div>
+            </div>
+          </div>
+        );}())}
         {playerLevel>=100&&(
           <button onClick={function(){audio.buttonClick();haptic.heavy();setShowPrestigeModal(true);}}
             style={{width:"100%",maxWidth:400,padding:"12px",background:"linear-gradient(135deg,rgba(240,192,96,0.2),rgba(212,168,67,0.08))",border:"2px solid rgba(240,192,96,0.55)",borderRadius:14,fontFamily:"Cinzel,serif",fontSize:12,color:"#f0c060",letterSpacing:2,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,animation:"legendaryShimmer 2s ease-in-out infinite"}}>
@@ -6007,7 +6044,9 @@ export default function Cobra(){
             );})}
           </div>
           <SLabel>YOUR NAME</SLabel>
-          <input value={myName} onChange={function(e){setMyName(e.target.value);}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:20}} placeholder="Your name"/>
+          <input value={myName} onChange={function(e){setMyName(e.target.value);}} onBlur={function(e){if(e.target.value){try{localStorage.setItem("cobra_player_name",e.target.value);}catch(er){}}}} style={{marginBottom:12}} placeholder="Your name"/>
+          <SLabel>ROOM NAME <span style={{opacity:0.4,fontSize:10}}>(optional)</span></SLabel>
+          <input value={roomName} onChange={function(e){setRoomName(e.target.value);}} style={{marginBottom:18}} placeholder="e.g. Friday Night Game"/>
           <button className="btn_btn_blue" style={{width:"100%",padding:16,fontSize:13,letterSpacing:2.5,marginBottom:14}} disabled={creatingRoom} onClick={function(){audio.buttonClick();haptic.medium();createRoom();}}>{creatingRoom?"CREATING...":"CREATE ROOM"}</button>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
             <div style={{flex:1,height:1,background:"rgba(255,255,255,0.07)"}}/>
@@ -6064,7 +6103,8 @@ export default function Cobra(){
           <button className="btn_btn_ghost" style={{padding:"10px 16px",fontSize:11,letterSpacing:2,display:"inline-flex",alignItems:"center",gap:6}} onClick={function(){audio.buttonClick();goScreen("home");}}>← HOME</button>
         </div>
         <p style={{fontFamily:"Cinzel,serif",color:"#4ade80",fontSize:12,letterSpacing:4,marginBottom:6}}>{roomCode==="COBRA_GLOBAL"?"GLOBAL ROOM":"ROOM CODE"}</p>
-        <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:54,fontWeight:900,letterSpacing:14,marginBottom:6,textShadow:"0 0 32px rgba(212,168,67,0.45)"}}>{roomCode}</div>
+        <div style={{fontFamily:"Cinzel,serif",color:"#d4a843",fontSize:54,fontWeight:900,letterSpacing:14,marginBottom:2,textShadow:"0 0 32px rgba(212,168,67,0.45)"}}>{roomCode}</div>
+        {roomName&&<div style={{fontFamily:"Crimson Text,serif",fontStyle:"italic",fontSize:15,color:"rgba(255,255,255,0.45)",marginBottom:6}}>{roomName}</div>}
         <div className="panel" style={{padding:22,marginBottom:18}}>
           <p style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#1a3020",letterSpacing:3,marginBottom:14}}>{onlineStatus} PLAYERS</p>
           {onlinePlayers.map(function(p,i){
@@ -6847,6 +6887,8 @@ export default function Cobra(){
       {confetti.map(function(c){return(
         <div key={c.id} style={{position:"fixed",left:c.x+"%",top:"-10px",width:c.size,height:c.size*1.4,borderRadius:2,background:c.color,zIndex:300,pointerEvents:"none",animation:"confettiFall "+c.dur+"s "+c.delay+"s ease-in forwards"}}/>
       );})}
+      {/* Cobra hit flash */}
+      {cobraFlash&&<div style={{position:"fixed",inset:0,zIndex:450,pointerEvents:"none",background:"rgba(185,28,28,0.55)",animation:"cobraFlash 0.8s ease forwards"}}/>}
       {/* Feature 7: Floating suit particles background */}
       <div style={{position:"fixed",inset:0,zIndex:1,pointerEvents:"none",overflow:"hidden"}}>
         {["♠","♥","♦","♣","♠","♥","♦","♣","♠","♥","♦","♣"].map(function(s,i){
@@ -7115,8 +7157,8 @@ export default function Cobra(){
             )}
             {isMyTurn&&(phase==="declare"||phase==="play")&&!showYourTurn&&sel.length===0&&(
               <button className="btn_btn_red"
-                style={{padding:"12px 20px",fontSize:13,letterSpacing:2,minHeight:48,opacity:canDeclare?1:0.28,boxShadow:canDeclare?"0 0 22px rgba(185,28,28,0.7),0 0 40px rgba(185,28,28,0.3)":"none",animation:canDeclare?"borderGlow 1.5s ease-in-out infinite":"none"}}
-                onClick={canDeclare?doDeclare:function(){audio.buttonClick();haptic.error();pop("Need total 30 or under (yours: "+myTotal+")","error");}}>
+                style={{padding:"12px 20px",fontSize:13,letterSpacing:2,minHeight:48,opacity:canDeclare?1:0.35,boxShadow:canDeclare?"0 0 22px rgba(185,28,28,0.7),0 0 40px rgba(185,28,28,0.3)":"none",animation:declareShake?"shake 0.4s ease-in-out":canDeclare?"borderGlow 1.5s ease-in-out infinite":"none"}}
+                onClick={canDeclare?doDeclare:function(){audio.buttonClick();haptic.error();pop("Need total 30 or under (yours: "+myTotal+")","error");setDeclareShake(true);setTimeout(function(){setDeclareShake(false);},500);}}>
                 DECLARE
               </button>
             )}
@@ -7131,8 +7173,12 @@ export default function Cobra(){
             </div>
           </div>
         </div>
-        <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108,flexWrap:"wrap",maxWidth:"100%",animation:shakeHand?"shake 0.5s ease-in-out":"none"}}>
-          {myHand.map(function(card,idx){
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:2}}>
+          <span style={{fontFamily:"Cinzel,serif",fontSize:7,color:"rgba(255,255,255,0.2)",letterSpacing:2}}>{myHand.length} CARDS{myHand.length<=2&&myHand.length>0?" — LOW!":""}</span>
+          <button onClick={function(){audio.buttonClick();setHandSorted(function(s){return!s;});}} style={{fontFamily:"Cinzel,serif",fontSize:7,color:handSorted?"#d4a843":"rgba(255,255,255,0.3)",background:"none",border:"none",cursor:"pointer",letterSpacing:1,padding:"2px 4px",touchAction:"manipulation"}}>⇅ SORT</button>
+        </div>
+        <div id="tut-hand" style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:3,paddingTop:2,justifyContent:myHand.length<=6?"center":"flex-start",alignItems:"flex-end",minHeight:108,flexWrap:"wrap",maxWidth:"100%",animation:shakeHand?"shake 0.5s ease-in-out":"none",borderRadius:8,boxShadow:myHand.length<=2&&myHand.length>0?"0 0 0 1.5px rgba(248,113,113,0.4), 0 0 12px rgba(248,113,113,0.15)":"none",transition:"box-shadow 0.5s"}}>
+          {(handSorted?[...myHand].sort(function(a,b){return cv(a)-cv(b);}):myHand).map(function(card,idx){
             var isPlaying=playingCardIds.includes(card.id);
             var total=myHand.length;
             var fanRot=(idx-(total-1)/2)*1.8;
